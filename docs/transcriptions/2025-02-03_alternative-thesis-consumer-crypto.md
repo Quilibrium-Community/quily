@@ -211,7 +211,7 @@ This is ultimately the design philosophy that I have put into place in building 
 Bringing this into the real-world scope: Where have our real-world tests that we've been conducting for the network in the past year brought us? On the precipice of actually finally fully launching, we've achieved:
 
 ### Single Slot Finality BFT
-Over **26,000 nodes** at the time of this talk, drilled all the way down into a single shard.
+Over **26,000 nodes** at the time of this talk *(February 2025 — node count changes continuously; see the network explorer for the current figure)*, drilled all the way down into a single shard.
 
 ### Compute Speed
 Using FERET, which is an oblivious transfer primitive for garbled circuits, as our OT construction, we can obtain a maximum of **54 million OTs** (oblivious transfers, kind of like instructions, binary operations), yielding a clock speed of approximately **54 megahertz**.

@@ -50,14 +50,14 @@ This document compares them across four pillars: **Privacy**, **Developer Experi
 | **Demonstrated breaches** | Yes — ÆPIC Leak (2022) threatened the entire network's consensus seed | **No demonstrated MPC breach in production** |
 | **Developer API / Ease of building** | Rust/CosmWasm; Cosmos-ecosystem tooling required | **S3-compatible storage (drop-in); QCL Go-subset for compute** |
 | **Decentralisation** | Enigma ICO (2017) pre-mine; 50-validator hard cap | **Fair launch — Q Inc. holds <1% of tokens, no VCs** |
-| **Scalability** | 50-validator hard cap; Cosmos-chain bottleneck | **26,000+ nodes; 1.5–2.5M TPS; hypergraph, not a blockchain** |
+| **Scalability** | 50-validator hard cap; sequential TEE; single-chain ceiling | **Sharded hypergraph; no chain ceiling; designed for internet-scale** |
 | Network type | Cosmos SDK blockchain | Hypergraph (not a blockchain) |
 | Validator count | 50 (hard cap) | No fixed cap |
 | Consensus | Tendermint / CometBFT | VDFs + bloom clocks + MPC |
 | Storage | No dedicated decentralised storage | QStorage (S3-compatible, live) |
 | Key management | No dedicated KMS | QKMS (built-in) |
 | Token launch | Enigma ICO (2017) — pre-mine | **Fair launch, no pre-mine** |
-| SCRT price (Feb 2026) | ~$0.08–$0.10 / ~$27M market cap | — |
+| SCRT price | See current market data | — |
 | Live compute | Yes (mainnet since 2020) | In development (QStorage live) |
 | License | Open source | AGPL |
 
@@ -193,7 +193,7 @@ Key decentralisation properties:
 - **No VC token warrants** — structural protection against investor governance capture
 - **Q Inc. holds <1% of tokens** — founding team cannot exert supply-based control
 - **AGPL license** — prevents codebase capture; anyone can fork, run, or build on the protocol
-- **26,000+ nodes** — orders of magnitude more than Secret Network's 50-validator cap
+- **No fixed validator cap** — orders of magnitude more nodes than Secret Network's 50-validator limit
 - **No hardware vendor dependency** — any standard hardware can participate; no Xeon with SGX required
 - **BFT consensus with no fixed validator cap** — the network can grow without governance votes to raise limits
 
@@ -201,25 +201,15 @@ Key decentralisation properties:
 
 ## Pillar 4: Scalability
 
-### Secret Network — Cosmos Chain Constraints
+### Secret Network — Hard Architectural Caps
 
-Secret Network is a Cosmos SDK blockchain. Its scalability is bounded by:
+Secret Network's scalability is determined by three structural constraints built into its design:
 
-- **50-validator hard cap** — throughput cannot grow beyond what 50 validators can process
-- **Sequential TEE computation** — SGX enclaves execute contracts one at a time within a validator
-- **Single-chain architecture** — global state must be replicated and agreed upon by all validators
+- **50-validator hard cap** — this is a governance parameter, not a temporary limit. Raising it requires a vote controlled by the existing 50 validators. Even if raised, throughput scales linearly with validator count — there is no sharding or parallelism
+- **Sequential TEE execution** — each SGX enclave executes one contract at a time. Parallel computation within a validator is not possible because the SGX security model requires serialised, isolated execution
+- **Single-chain architecture** — global state must be replicated and agreed upon by all validators before finality. This is the fundamental throughput ceiling of any single-chain design, regardless of validator count
 
-Current network statistics (February 2026):
-
-| Metric | Value |
-|--------|-------|
-| SCRT price | ~$0.08–$0.10 |
-| Market cap | ~$27M (#558 on CoinMarketCap) |
-| TVL | ~$7M |
-| Active validators | 50 (hard cap) |
-| Staking APR | ~22–23% |
-
-The small TVL ($7M) and low market cap ($27M) reflect limited adoption despite years of operation. The privacy-smart-contract market has not grown to the scale that would challenge the validator cap, but the cap is a ceiling that would constrain any significant growth.
+These constraints are not engineering debt — they are consequences of the core design choices (Cosmos SDK + Intel SGX). Adding more validators increases decentralisation marginally but does not increase throughput proportionally. Secret Network is designed to bring privacy to Cosmos-ecosystem smart contracts, not to host internet-scale workloads.
 
 ### Quilibrium — Hypergraph Scales Without Architectural Limits
 
@@ -238,9 +228,9 @@ Verified metrics from official Quilibrium documentation:
 | Estimated TPS | 1.5–2.5M across shards | Community docs |
 | Per-shard throughput | ~6,000 TPS | Community docs |
 | Finalization time | 200ms – 10s | Communication-Layer docs |
-| Node count | 26,000+ | Q-Story-Vision-Deployment.md |
+| Node count cap | None — scales horizontally | Architecture (no fixed cap by design) |
 
-The contrast with Secret Network's 50-validator cap is stark: Quilibrium runs with 26,000+ nodes and has no architectural cap. The sharded hypergraph design means adding nodes increases total capacity — storage, compute, and communications all scale horizontally. Global consensus requires only 19 KB of synchronisation data, not full chain replication.
+The contrast with Secret Network's 50-validator cap is stark: Quilibrium has no architectural cap on nodes. The sharded hypergraph design means adding nodes increases total capacity — storage, compute, and communications all scale horizontally. Global consensus requires only 19 KB of synchronisation data, not full chain replication.
 
 Quilibrium is explicitly designed to scale to hosting the entire internet. Secret Network is designed to bring privacy to Cosmos-ecosystem smart contracts. These are different ambitions, reflected in different architectural choices.
 

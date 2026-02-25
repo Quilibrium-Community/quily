@@ -53,13 +53,13 @@ IPFS and Filecoin are the most widely deployed decentralised storage technologie
 | **Ease of building** | Simple to start; persistence requires extra setup | Complex deal market; 1.5–3hr sector sealing | **Drop-in S3 replacement; no new SDK, no deal market** |
 | **Decentralisation** | Protocol Labs controls gateways | Large pre-mine to Protocol Labs + VCs | **Fair launch — Q Inc. holds <1% of tokens** |
 | **VC involvement** | Protocol Labs-backed | 2017 ICO, large VC pre-mine | **No VCs, no token warrants** |
-| **Scalability** | Unlimited addressing; persistence requires pinning | 3.0 EiB committed capacity | **Addressing capacity exceeds atoms in the universe** |
+| **Scalability** | No persistence guarantee by design | Single-chain ceiling; archival-optimised | **Sharded hypergraph; no chain ceiling; designed for internet-scale** |
 | Data persistence | Not guaranteed | Guaranteed for deal duration | Guaranteed |
 | Storage proofs | None | PoRep + PoSt + PDP (May 2025) | KZG commitments + Reed-Solomon erasure coding |
 | Compute integration | None | FVM (EVM smart contracts) | Native MPC compute (in development) |
 | Key management | None | None | QKMS (built-in) |
 | License | MIT/Apache | MIT/Apache | AGPL |
-| FIL price (Feb 2026) | N/A | ~$0.89–$1.15 / ~$671M–$1.15B market cap | — |
+| FIL price | N/A | See current market data | — |
 
 ---
 
@@ -143,20 +143,24 @@ Key decentralisation properties:
 - **No VC token warrants** — explicit policy against investor terms that compromise decentralisation
 - **Q Inc. holds <1% of tokens** — the founding team has no disproportionate supply advantage
 - **AGPL license** — the strongest open-source license; ensures the codebase can never be captured by commercial interests. Anyone can fork, run, or build on the protocol.
-- **26,000+ nodes** — large, distributed node network with Byzantine Fault Tolerant consensus
+- **Byzantine Fault Tolerant consensus** across a large, distributed node network
 - **No Protocol Labs-style gateway chokepoint** — the network is not dependent on any single company's infrastructure
 
 ---
 
 ## Pillar 4: Scalability
 
-### IPFS and Filecoin — Real but Bounded Scale
+### IPFS and Filecoin — Architecturally Bounded by the Chain
 
-**Filecoin** has genuine scale: 3.0 EiB committed capacity, ~35.2 million active deals, 1,110 PiB in active paid storage (Q3 2025). The F3 Fast Finality upgrade (April 2025) reduced finality from 7.5 hours to minutes. These are real achievements.
+**IPFS** has no inherent scalability ceiling for storage — content-addressed data can be hosted by anyone. But IPFS has no persistence guarantee: nodes cache content and garbage-collect it. Availability is not a protocol property; it depends entirely on who chooses to pin data. This is not a scalability problem in the throughput sense, but a fundamental architectural gap: IPFS cannot guarantee that data remains available at scale without external coordination.
 
-However, Filecoin's architecture is a Layer 1 blockchain — it has a single-chain design that creates fundamental throughput ceilings. Scaling requires Layer 2 solutions or off-chain optimisations.
+**Filecoin** addresses persistence but introduces blockchain-derived scaling constraints:
 
-**Retrieval latency** has historically been poor (45-second average before PDP). The May 2025 PDP launch improves hot-storage retrieval but adoption is still early.
+- **Single-chain architecture** — Filecoin is a Layer 1 blockchain. All storage deals, proofs, and payments are settled on a single global chain. This creates a fundamental throughput ceiling that cannot be removed without a protocol redesign; scaling requires Layer 2 solutions or off-chain workarounds
+- **Sequential proof verification** — PoRep and PoSt proofs must be verified on-chain; this is computationally expensive and adds latency that grows with network size
+- **Storage deal latency** — the deal-making process (proposal, negotiation, sealing) is architectural, not incidental. Cold retrieval latency has historically been high because the protocol was designed for archival, not hot access. Improvements (PDP, fast retrieval markets) are layered on top, not built into the base protocol
+
+Filecoin is well-suited to its niche — verifiable, incentivised, long-term archival storage. But its architecture is not designed for mutable, private, high-throughput workloads.
 
 ### Quilibrium — Built to Host the Internet
 
@@ -211,8 +215,8 @@ Filecoin's EVM-compatible virtual machine (launched 2023) enables smart contract
 | Active paid deals | 1,110 PiB |
 | Active deal count | ~35.2M |
 | Utilization | ~36% |
-| FIL price (Feb 2026) | ~$0.89–$1.15 |
-| FIL market cap | ~$671M–$1.15B |
+| FIL price | See current market data |
+| FIL market cap | See current market data |
 | F3 finality (since Apr 2025) | Minutes (was 7.5 hours) |
 
 ---

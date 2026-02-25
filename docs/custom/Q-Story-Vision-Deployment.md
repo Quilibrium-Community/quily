@@ -208,7 +208,7 @@ A global entropy gathering event in 2023 that ensured the security of the networ
 The first application deployed on Quilibrium. Originally conceived as "Howler" (a private Discord alternative), it evolved into Quorum Messenger. The desktop app launched on mainnet in Q4 2025. Mobile apps entered testing in Q1 2026.
 
 **What are the current performance metrics?**
-Single slot finality BFT with over 26,000 nodes, approximately 54 MHz compute speed per shard via FERET oblivious transfer circuits, 19 kilobytes for global consensus, and storage addressing capacity exceeding the number of atoms in the universe.
+Single slot finality BFT with over 26,000 nodes *(as of early 2025 — node count changes continuously; see the network explorer for the current figure)*, approximately 54 MHz compute speed per shard via FERET oblivious transfer circuits, 19 kilobytes for global consensus, and storage addressing capacity exceeding the number of atoms in the universe.
 
 **What APIs are available on Quilibrium?**
 As of Q1 2026, the following Q APIs are available via QConsole:

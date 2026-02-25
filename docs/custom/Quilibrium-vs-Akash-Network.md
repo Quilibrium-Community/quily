@@ -42,15 +42,15 @@ This document compares them across four pillars: **Privacy**, **Developer Experi
 | **Privacy** | **None** — providers can read all workloads | **Cryptographic** — providers mathematically cannot see data |
 | **Developer API / Ease of building** | SDL YAML + Docker; strong tooling for non-private workloads | **S3-compatible storage (drop-in); QCL Go-subset for compute** |
 | **Decentralisation** | Cosmos SDK blockchain; VC-backed; pre-mined AKT | **Fair launch — Q Inc. holds <1% of tokens, no VCs** |
-| **Scalability** | 1,000+ GPUs, 65+ datacenters, $4.3M ARR | **Theoretical capacity: 1.8765 × 10^107 bytes; 1.5–2.5M TPS** |
+| **Scalability** | Marketplace-bounded; no native storage; single-chain deal layer | **Sharded hypergraph; no chain ceiling; designed for internet-scale** |
 | Network type | Cosmos SDK blockchain | Hypergraph (not a blockchain) |
 | Execution model | Kubernetes containers | MPC / garbled circuits / oblivious transfer |
-| GPU compute | 1,000+ GPUs live (H100, A100, H200) | In development |
+| GPU compute | Marketplace model (H100, A100, H200 available) | In development |
 | Storage | External integrations required | QStorage live (S3-compatible) |
 | Key management | None built-in | QKMS (built-in) |
 | AI inference | AkashML (live, OpenAI-compatible API) | In development |
 | License | Proprietary | AGPL |
-| AKT price (Feb 2026) | ~$0.30–$0.35 / ~$93M market cap | — |
+| AKT price | See current market data | — |
 
 ---
 
@@ -156,24 +156,23 @@ Key decentralisation properties:
 - **No VC token warrants** — structural protection against governance capture by financial investors
 - **Q Inc. holds <1% of tokens** — founding team cannot exert supply-based control
 - **AGPL license** — the strongest copyleft license; the codebase cannot be proprietarised, forked into closed software, or controlled by any single company
-- **26,000+ nodes** with BFT consensus — no hard cap on validators, unlike Akash's provider set constraints
+- **BFT consensus with no hard cap on validators**, unlike Akash's provider set constraints
 - **No chain migration risk** — Quilibrium's hypergraph is not a blockchain; there is no "deprecating the chain" scenario
 
 ---
 
 ## Pillar 4: Scalability
 
-### Akash — Real but Marketplace-Bounded Scale
+### Akash — Marketplace-Bounded by Design
 
-Akash has proven, live scale in GPU compute:
-- 1,000+ GPUs across 65+ datacenters
-- 60–70% GPU utilization rate throughout 2025
-- ~$4.3M annualised revenue
-- H100, H200, A100 available
+Akash's scalability model is fundamentally different from a protocol with native scaling properties — it is a **marketplace** that matches compute buyers with independent hardware providers. This has architectural implications:
 
-However, Akash's scalability is bounded by the marketplace model: the network can only provide as much compute as independent providers offer. Provider count has been volatile (peak 74, currently ~63). The Starcluster initiative (protocol-owned GPUs) attempts to address supply stability but introduces central ownership of hardware.
+- **Supply is externally bounded** — the network can only provide as much compute as independent providers choose to offer. There is no protocol mechanism to guarantee supply; it is entirely driven by provider economics. When provider incentives weaken, supply contracts
+- **No native storage layer** — persistent storage on Akash is tied to lease lifetime. When a deployment ends, data is lost. There is no protocol-level concept of durable, replicated, decentralised storage. Applications requiring persistence must integrate external storage networks, adding complexity and centralisation risk
+- **Compute is not private** — providers execute workloads in plaintext. There is no mechanism in the protocol to prevent a provider from reading the data or models being processed. At scale, this becomes a hard blocker for any sensitive workload
+- **Blockchain throughput ceiling** — Akash is a Cosmos SDK blockchain. Deal-making, payments, and governance all go through a single chain with the same single-chain throughput constraints as any Cosmos L1
 
-Akash also does not provide storage-as-a-network. Persistent storage on Akash is tied to lease lifetime — data is lost when a deployment ends. Large-scale applications require integrating external storage networks.
+Akash is well-designed for its intended purpose: a competitive marketplace for commodity, non-private GPU compute. That architecture scales well for that use case but has fundamental limits for private, persistent, or high-integrity workloads.
 
 ### Quilibrium — Built to Host the Internet
 
@@ -202,12 +201,12 @@ The global consensus requiring only **19 KB of data** is a striking contrast to 
 
 | Metric | Value |
 |--------|-------|
-| Active providers | ~63 |
-| GPU count | 1,000+ |
-| Annualised revenue | ~$4.3M ARR |
-| GPU utilization | ~60–70% |
-| AKT price | ~$0.30–$0.35 |
-| AKT market cap | ~$92–93M |
+| Active providers | See current network stats |
+| GPU count | See current network stats |
+| Annualised revenue | See current network stats |
+| GPU utilization | See current network stats |
+| AKT price | See current market data |
+| AKT market cap | See current market data |
 
 Notable 2025–2026 developments:
 - **Mainnet 14 (October 2025)**: JWT auth, credit card payments, WASM smart contracts, eliminated 8 years of SDK technical debt

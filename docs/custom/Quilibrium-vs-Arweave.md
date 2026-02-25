@@ -45,14 +45,14 @@ This document compares them across four pillars: **Privacy**, **Developer Experi
 | **Developer API** | Transaction-based upload; Arweave-specific SDKs required | **S3-compatible — existing AWS SDK code works unchanged** |
 | **Ease of building** | Arweave-specific SDKs; no S3 compatibility; no mutability | **Drop-in S3 replacement; familiar tooling; supports update/delete** |
 | **Decentralisation** | Pre-mine at genesis (55M AR); Protocol Labs-like team control | **Fair launch — Q Inc. holds <1% of tokens, no VCs** |
-| **Scalability** | ~285 TiB stored (Apr 2025); endowment model | **Theoretical capacity: 1.8765 × 10^107 bytes** |
+| **Scalability** | Single-chain blockweave; immutable-only; no parallelism | **Sharded hypergraph; no chain ceiling; designed for internet-scale** |
 | Data permanence | **Permanent and immutable — cannot delete** | Mutable — can be updated or deleted |
 | Storage proofs | SPoRA (miners prove access to random old data) | KZG commitments + Reed-Solomon erasure coding |
 | GDPR compatibility | Structurally incompatible with right to erasure | Compatible |
 | Consensus | SPoRA (Proof of Random Access) | VDFs + bloom clocks + MPC |
 | Compute layer | AO (actor model, mainnet Feb 2025) | Native MPC compute (in development) |
 | License | Arweave Public License (proprietary) | AGPL |
-| AR price (Feb 2026) | ~$1.85–$2.06 / ~$120M market cap | — |
+| AR price | See current market data | — |
 
 ---
 
@@ -143,20 +143,24 @@ Key decentralisation properties:
 - **No VC token warrants** — explicit policy against investor terms that compromise network neutrality
 - **Q Inc. holds <1% of tokens** — founding team has no supply advantage
 - **AGPL license** — prevents the codebase from being captured by commercial interests; anyone can fork, run, or build on the protocol
-- **26,000+ nodes** with Byzantine Fault Tolerant consensus
+- **Byzantine Fault Tolerant consensus** across a distributed node network
 - **No single gateway chokepoint** by design — the network does not depend on any company's servers remaining online
 
 ---
 
 ## Pillar 4: Scalability
 
-### Arweave — Proven but Modest at Scale
+### Arweave — Architecturally Bounded by the Blockweave
 
-Arweave has real, meaningful scale for its niche: ~285 TiB of data stored (April 2025), ~3,000 nodes across 92 countries. The endowment model provides a credible economic guarantee of permanence over long time horizons.
+Arweave's scalability ceiling is determined by its architecture, not its current usage. The blockweave is a blockchain-derived design: each block references both the previous block and a random historical block, requiring miners to store and prove access to historical data. This creates an inherent architectural constraint:
 
-However, 285 TiB is modest by cloud standards. Amazon S3 stores exabytes (1 exabyte = ~1 million TiB). Arweave's strength is permanence and censorship resistance, not raw capacity. AO compute (mainnet February 2025) adds an actor-model compute layer with ~$578M TVL, but AO's state is permanently stored on the public Arweave weave — with no privacy guarantees.
+- **Single-chain throughput ceiling** — all writes go through a single global chain; this cannot be parallelised without breaking the blockweave model
+- **Miner storage burden grows with the weave** — as total stored data grows, the cost and hardware requirements for competitive mining increase, tending toward centralisation among well-resourced operators
+- **Immutability as an architectural choice** — Arweave cannot support deletion or updates by design; the protocol has no concept of mutable state
 
-The blockweave architecture is blockchain-derived: each block references a random historical block. This imposes blockchain-style throughput constraints that are absent from Quilibrium's hypergraph design.
+AO (the compute layer) is actor-model and parallel, which improves compute scalability, but all AO state is permanently written to the public Arweave weave — so storage scalability remains chain-bounded, and no privacy model is possible at the storage layer.
+
+Arweave's architecture is purpose-built for permanent public archival. It scales well for that specific use case but is not designed to host the general-purpose internet — mutable, private, high-throughput workloads hit architectural walls.
 
 ### Quilibrium — Built to Host the Internet
 
@@ -213,12 +217,12 @@ AO is an actor-model compute layer on Arweave. All state is permanently stored o
 | Metric | Value |
 |--------|-------|
 | Total data stored | ~285 TiB (April 2025) |
-| Mining nodes | ~3,000 |
-| AR token price | ~$1.85–$2.06 |
-| AR market cap | ~$120–122M |
+| Mining nodes | See current explorer |
+| AR token price | See current market data |
+| AR market cap | See current market data |
 | AR all-time high | $90.64 (November 2021) |
 | AR circulating supply | ~65.45M (~99.2% of 66M cap) |
-| AO TVL | ~$578M |
+| AO TVL | See current market data |
 
 ---
 
