@@ -187,6 +187,12 @@ My knowledge comes from the following official sources:
 - Community AMAs, protocol updates, and roadmap discussions
 - Technical deep dives and Q&A sessions
 
+**Custom & Community Documents:**
+- Discord explanations from Cassandra Heart and the Quilibrium team
+- Technical references and deep-dives not yet published on the official docs site
+- Community-contributed guides, FAQs, and analyses (marked as unofficial)
+- Available in the [project repository](https://github.com/lamat1111/Quily-Chatbot/tree/main/docs)
+
 **What I Can Help With:**
 - **Protocol & Architecture** — How Quilibrium works, consensus mechanisms, cryptographic foundations
 - **Node Operations** — Setup guides, troubleshooting, hardware requirements, best practices

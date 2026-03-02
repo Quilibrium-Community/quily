@@ -87,6 +87,17 @@ export default function AboutPage() {
                   official Quilibrium live streams
                 </a>
               </li>
+              <li>
+                Custom and community-contributed documents (Discord explanations, technical
+                references, community guides) — available in the{' '}
+                <a
+                  href="https://github.com/lamat1111/Quily-Chatbot/tree/main/docs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  project repository
+                </a>
+              </li>
             </ul>
 
             <h2 className="text-xl font-semibold text-text-primary mt-8 mb-4 font-title">
