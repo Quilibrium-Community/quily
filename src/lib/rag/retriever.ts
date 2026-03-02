@@ -81,6 +81,10 @@ const KNOWN_ENTITIES = [
   { name: 'Hypersnap', query: 'Hypersnap Snapchain Farcaster Rust implementation',
     keywords: ['hypersnap', 'snapchain', 'farcaster', 'snap'] },
 
+  // Well-documented (dedicated docs exist in RAG knowledge base)
+  { name: 'Klearu', query: 'Klearu private AI inference LLM two-party computation 2PC E2EE ML',
+    keywords: ['klearu', 'private ai', 'private inference', 'private llm', 'llm', 'ai inference', 'machine learning', 'ml inference', '2pc', 'two-party', 'e2ee ml', 'slide', 'local ai', 'run ai', 'ai model', 'language model'] },
+
   // Lightly documented (mentioned in talks/overviews, no dedicated docs yet)
   { name: 'Quark', query: 'Quark 3D game asset library SDK',
     keywords: ['quark', 'game', 'gaming', '3d', 'asset', 'game engine'] },
