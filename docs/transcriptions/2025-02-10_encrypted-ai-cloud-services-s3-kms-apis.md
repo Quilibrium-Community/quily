@@ -61,7 +61,7 @@ The goal of Quilibrium, other than the mission itself, is to essentially take th
 
 ## Klearu: MPC Machine Learning Performance Breakthrough
 
-> **Status Note:** Klearu is an early-stage research project as of this livestream (February 2025). The paper has not been published, and Klearu is NOT yet implemented or available on the Quilibrium network. It is planned for a future protocol upgrade after version 2.1. Any descriptions below reflect research results and goals, not production-ready features.
+> **Status Note (updated March 2026):** This livestream was recorded in February 2025 when Klearu was still in early research. As of March 2026, Klearu has been officially released as open-source by Quilibrium Inc. (AGPL-3.0) and is available on GitHub at [QuilibriumNetwork/klearu](https://github.com/QuilibriumNetwork/klearu). It is not yet running on the Quilibrium mainnet, but it is a real, functional implementation — not just a research concept.
 
 We are relying on an entirely different form of machine learning. The way we're conducting machine learning to fulfill functions like your traditional softmax is done in a way that is actually functional on CPUs. There's a lot of research behind it.
 
@@ -73,7 +73,7 @@ What is most important for Quilibrium is that it can also be encrypted. These op
 
 That's how we're going to be operating in a machine learning world when machine learning is very slow for multi-party computation (which is why a lot of MPC-oriented projects end up just shoving it in a TEE). I can't wait to publish the full paper on what is being called Klearu. It is insanely fast and very exciting.
 
-> **Clarification:** As of February 2025, Klearu is in the research/testing phase. The full paper has not yet been published. Klearu is not live on the Quilibrium network and is planned for future protocol upgrades after 2.1.
+> **Clarification (updated March 2026):** As of March 2026, Klearu has been officially open-sourced by Quilibrium Inc. It is not yet live on the Quilibrium network, but the codebase is real, functional, and publicly available. Mainnet integration is planned for a future protocol upgrade.
 
 ## S3 API Technical Deep Dive
 

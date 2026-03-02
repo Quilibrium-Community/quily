@@ -19,9 +19,24 @@ topics:
   - MPC
   - FHE
   - privacy
+  - run AI on Quilibrium
+  - AI on Q
+  - train LLM
+  - AI inference
+  - current status
 ---
 
 # Klearu: E2EE ML Primitives and Runtime
+
+## Current Status (as of March 2026)
+
+**Can you run AI on Quilibrium?** Yes — Klearu is a real, functional runtime for private LLM inference, officially open-sourced by Quilibrium Inc. in early 2026. It is not yet integrated into the Quilibrium mainnet, but the library is available now and works today.
+
+**Can you train LLMs on Quilibrium?** Klearu is focused on **inference**, not general user-facing LLM training. It uses SLIDE-based sparse training internally for its own models, but it is not a platform for training arbitrary LLMs. Mainnet AI integration is planned for a future protocol upgrade.
+
+**Is AI on Q just a roadmap item?** No longer. Klearu moves private AI from a future roadmap concept to a shipped, open-source codebase. The "Event Horizon" roadmap language predates this release — Klearu is its concrete realization for inference.
+
+---
 
 Klearu is a Rust implementation of the SLIDE paper family (Sub-LInear Deep learning Engine), extended with support for large language model inference, transformer sparsity optimization, and secure two-party computation (2PC). It is open-source under AGPL-3.0 with additional non-commercial terms, licensed exclusively for use on the Quilibrium mainnet for commercial deployments.
 
