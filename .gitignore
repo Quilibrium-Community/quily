@@ -126,3 +126,17 @@ scripts/eval/.eval-server.pid
 # .agents folder - only commit docs/
 .agents/*
 !.agents/docs/
+
+# ── GSD baseline (auto-generated) ──
+.gsd/activity/
+.gsd/runtime/
+.gsd/worktrees/
+.gsd/auto.lock
+.gsd/metrics.json
+.gsd/STATE.md
+*.code-workspace
+.env.*
+!.env.example
+build/
+*.pyc
+target/
