@@ -59,6 +59,76 @@ jobs:
           git diff --staged --quiet || git commit -m "docs: sync Quilibrium documentation (automated daily)"
           git push
 
+      - name: Supabase keepalive
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          API="${SUPABASE_URL}/rest/v1"
+          AUTH=(-H "apikey: ${SUPABASE_SERVICE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}")
+
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          # 1. Read: count RAG chunks
+          curl -sf "${API}/document_chunks_chutes?select=id&limit=1" \
+            "${AUTH[@]}" -H "Prefer: count=exact" -o /dev/null
+          echo "1/10 — RAG chunk count query"
+
+          # 2. Read: fetch latest chunk metadata
+          curl -sf "${API}/document_chunks_chutes?select=id,source_file,created_at&order=created_at.desc&limit=3" \
+            "${AUTH[@]}" -o /dev/null
+          echo "2/10 — Latest chunks query"
+
+          # 3. Read: distinct doc types
+          curl -sf "${API}/document_chunks_chutes?select=doc_type&limit=10" \
+            "${AUTH[@]}" -o /dev/null
+          echo "3/10 — Doc types query"
+
+          # 4. Read: distinct source files sample
+          curl -sf "${API}/document_chunks_chutes?select=source_file&limit=5&order=source_file" \
+            "${AUTH[@]}" -o /dev/null
+          echo "4/10 — Source files query"
+
+          # 5. Write: upsert keepalive row 1 (current ping)
+          curl -sf "${API}/keepalive_pings" \
+            "${AUTH[@]}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=merge-duplicates" \
+            -d "{\"id\": 1, \"pinged_at\": \"${NOW}\", \"source\": \"github-actions\"}" \
+            -o /dev/null
+          echo "5/10 — Keepalive row 1 upserted"
+
+          # 6. Write: upsert keepalive row 2 (streak counter)
+          curl -sf "${API}/keepalive_pings" \
+            "${AUTH[@]}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=merge-duplicates" \
+            -d "{\"id\": 2, \"pinged_at\": \"${NOW}\", \"source\": \"streak\"}" \
+            -o /dev/null
+          echo "6/10 — Keepalive row 2 upserted"
+
+          # 7. Read: verify row 1
+          curl -sf "${API}/keepalive_pings?id=eq.1&select=pinged_at,source" \
+            "${AUTH[@]}" -o /dev/null
+          echo "7/10 — Row 1 read-back"
+
+          # 8. Read: verify row 2
+          curl -sf "${API}/keepalive_pings?id=eq.2&select=pinged_at,source" \
+            "${AUTH[@]}" -o /dev/null
+          echo "8/10 — Row 2 read-back"
+
+          # 9. Read: fetch all keepalive rows
+          curl -sf "${API}/keepalive_pings?select=*&order=id" \
+            "${AUTH[@]}" -o /dev/null
+          echo "9/10 — Full keepalive table read"
+
+          # 10. Read: search RAG chunks by recent date
+          curl -sf "${API}/document_chunks_chutes?select=id,title&order=created_at.desc&limit=1&offset=0" \
+            "${AUTH[@]}" -o /dev/null
+          echo "10/10 — Recent RAG entry query"
+
+          echo "Keepalive complete: 10 operations at ${NOW}"
+
       - name: Summary
         run: |
           if [ "${{ steps.check.outputs.has_changes }}" == "true" ]; then

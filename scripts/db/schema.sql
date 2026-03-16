@@ -116,6 +116,22 @@ END;
 $$;
 
 -- =============================================================================
+-- KEEPALIVE TABLE
+-- =============================================================================
+-- Tiny table used by GitHub Actions to prevent Supabase free-tier pausing.
+-- The daily workflow upserts a single row to generate read+write activity.
+
+CREATE TABLE IF NOT EXISTS keepalive_pings (
+  id INTEGER PRIMARY KEY,
+  pinged_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  source TEXT NOT NULL DEFAULT 'unknown'
+);
+
+ALTER TABLE keepalive_pings ENABLE ROW LEVEL SECURITY;
+
+-- No public read needed — only service role writes/reads this table.
+
+-- =============================================================================
 -- LEGACY TABLE (DEPRECATED)
 -- =============================================================================
 -- The document_chunks table (1536 dimensions, text-embedding-3-small) is deprecated.
