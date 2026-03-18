@@ -51,12 +51,17 @@ export function registerMentionHandler(client: Client): void {
       const history = getHistory(message.author.id, message.channelId);
       const priorityDocIds = getLastChunkIds(message.author.id, message.channelId);
 
+      const llmProvider = (process.env.BOT_LLM_PROVIDER || 'openrouter') as 'openrouter' | 'chutes';
+      const llmApiKey = llmProvider === 'chutes'
+        ? process.env.CHUTES_API_KEY
+        : process.env.OPENROUTER_API_KEY;
+
       const queryPromise = processQuery({
         query,
         conversationHistory: history,
         priorityDocIds,
-        llmProvider: 'openrouter',
-        llmApiKey: process.env.OPENROUTER_API_KEY,
+        llmProvider,
+        llmApiKey,
         embeddingProvider: 'openrouter',
         embeddingApiKey: process.env.OPENROUTER_API_KEY,
         cohereApiKey: process.env.COHERE_API_KEY,

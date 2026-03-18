@@ -24,6 +24,19 @@
 
 ---
 
+## Common Tasks Cheat Sheet
+
+| Task | Command |
+|---|---|
+| Log into VPS | `ssh quily-vps` |
+| Edit env vars | `ssh quily-vps 'nano ~/quily-chatbot/bot/.env'` |
+| Restart bot | `ssh quily-vps 'pm2 restart quily-bot'` |
+| Check status | `ssh quily-vps 'pm2 status quily-bot'` |
+| View logs | `ssh quily-vps 'pm2 logs quily-bot --lines 30'` |
+| Switch provider | Edit `.env` → change `BOT_LLM_PROVIDER` → restart bot (see [Switching LLM Provider](#switching-llm-provider)) |
+
+---
+
 ## Step 1 — Create the `quily` User
 
 > Skip if account already exists.
@@ -104,8 +117,14 @@ ssh quily-vps 'cat > /home/quily/quily-chatbot/bot/.env << EOF
 DISCORD_BOT_TOKEN=<paste>
 DISCORD_CLIENT_ID=<paste>
 
-# LLM (OpenRouter — dedicated key with monthly spending cap)
+# LLM Provider — "openrouter" or "chutes" (default: openrouter)
+BOT_LLM_PROVIDER=openrouter
+
+# OpenRouter (required if BOT_LLM_PROVIDER=openrouter)
 OPENROUTER_API_KEY=<paste>
+
+# Chutes (required if BOT_LLM_PROVIDER=chutes)
+CHUTES_API_KEY=<paste>
 
 # Supabase (RAG vector store)
 NEXT_PUBLIC_SUPABASE_URL=<paste>
@@ -191,10 +210,34 @@ pm2 restart quily-bot
 
 ---
 
+## Switching LLM Provider
+
+The bot supports two LLM providers: **OpenRouter** and **Chutes**. To switch:
+
+1. SSH into the VPS and edit the `.env`:
+   ```bash
+   ssh quily-vps 'nano /home/quily/quily-chatbot/bot/.env'
+   ```
+2. Change `BOT_LLM_PROVIDER=openrouter` to `BOT_LLM_PROVIDER=chutes` (or vice versa)
+3. Make sure the corresponding API key is set (`CHUTES_API_KEY` or `OPENROUTER_API_KEY`)
+4. Restart the bot — env changes are only read at startup:
+   ```bash
+   ssh quily-vps 'pm2 restart quily-bot'
+   ```
+
+Each provider uses its own default models and fallback chain automatically. You can override with `BOT_MODEL` and `BOT_FALLBACK_MODELS` if needed.
+
+| Provider | Default Model | Fallbacks |
+|---|---|---|
+| `openrouter` | DeepSeek V3-0324 | Qwen3-32B, Mistral Small 3.2 |
+| `chutes` | DeepSeek V3.1 (TEE) | Qwen3-32B, Mistral Small 3.2 |
+
+---
+
 ## Disaster Recovery
 
 If the VPS is completely wiped, follow Steps 1-8 sequentially. The only thing not in the repo is the `.env` file — keep those values in a password manager.
 
 ---
 
-*Created: 2026-03-18*
+*Created: 2026-03-18 | Updated: 2026-03-18*
