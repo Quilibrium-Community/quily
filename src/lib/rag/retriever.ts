@@ -441,20 +441,74 @@ export async function retrieveWithReranking(
   // For temporal queries, augment with recent content by date
   // This ensures "last/recent/latest" queries include actually recent documents
   // regardless of how the user phrases their request (works for any language)
+  //
+  // IMPORTANT: Recent chunks are held separately as "reserved" slots so the
+  // reranker cannot evict them. After reranking the remaining candidates,
+  // reserved chunks are prepended to guarantee they reach the LLM context.
+  let reservedTemporalChunks: typeof candidates = [];
+
   if (isTemporalQuery(query)) {
     const recentChunks = await fetchRecentChunks(3);
 
-    // Merge recent chunks with vector results, avoiding duplicates
+    // Remove any recent chunks that already exist in candidates (avoid duplicates)
     const existingIds = new Set(candidates.map((c: { id: number }) => c.id));
     const newChunks = recentChunks.filter(c => !existingIds.has(c.id));
 
-    // Prepend recent chunks so they're prioritized
-    candidates = [...newChunks, ...candidates];
+    // Also pull out candidates that match reserved source files so they don't
+    // compete in reranking and then appear twice
+    const reservedFiles = new Set(recentChunks.map(c => c.source_file));
+    const pulledFromCandidates = candidates.filter(c => reservedFiles.has(c.source_file));
+    candidates = candidates.filter(c => !reservedFiles.has(c.source_file));
+
+    // Use the richer version: prefer the candidate chunk (has real similarity score)
+    // over the fetchRecentChunks version, but fall back to the recent chunk
+    const reservedMap = new Map<string, typeof candidates[number]>();
+    for (const chunk of [...newChunks, ...recentChunks]) {
+      if (!reservedMap.has(chunk.source_file)) reservedMap.set(chunk.source_file, chunk);
+    }
+    for (const chunk of pulledFromCandidates) {
+      // Prefer candidate version (has real similarity) over synthetic
+      reservedMap.set(chunk.source_file, chunk);
+    }
+    reservedTemporalChunks = Array.from(reservedMap.values())
+      .sort((a, b) => (b.published_date || '').localeCompare(a.published_date || ''))
+      .slice(0, 3);
   }
 
-  if (candidates.length === 0) {
+  if (candidates.length === 0 && reservedTemporalChunks.length === 0) {
     return [];
   }
+
+  // For temporal queries, reduce finalCount for the reranking pool since
+  // reserved temporal chunks will fill the remaining slots
+  const reservedCount = reservedTemporalChunks.length;
+  const rerankFinalCount = Math.max(1, finalCount - reservedCount);
+
+  // Helper: merge reserved temporal chunks with reranked results, assigning
+  // sequential citation indices. Reserved chunks come first so the LLM sees
+  // the most-recent documents at the top of its context.
+  const mergeWithReserved = (rerankedChunks: RetrievedChunk[]): RetrievedChunk[] => {
+    const reservedAsChunks: RetrievedChunk[] = reservedTemporalChunks.map((chunk, idx) => ({
+      id: chunk.id,
+      content: chunk.content,
+      source_file: chunk.source_file,
+      heading_path: chunk.heading_path,
+      source_url: chunk.source_url,
+      published_date: chunk.published_date,
+      title: chunk.title,
+      doc_type: chunk.doc_type,
+      similarity: chunk.similarity,
+      citationIndex: idx + 1,
+    }));
+
+    // Re-number reranked chunks to follow reserved ones
+    const shifted = rerankedChunks.map((chunk, idx) => ({
+      ...chunk,
+      citationIndex: reservedCount + idx + 1,
+    }));
+
+    return [...reservedAsChunks, ...shifted];
+  };
 
   // Helper to map reranked results to chunks
   const mapRankedToChunks = (
@@ -482,7 +536,7 @@ export async function retrieveWithReranking(
   const fallbackToSimilarity = (): RetrievedChunk[] => {
     const sorted = [...candidates].sort((a, b) => b.similarity - a.similarity);
     return sorted
-      .slice(0, finalCount)
+      .slice(0, rerankFinalCount)
       .map(
         (
           chunk: {
@@ -504,10 +558,15 @@ export async function retrieveWithReranking(
       );
   };
 
+  // If no candidates left after reserving temporal chunks, just return reserved
+  if (candidates.length === 0) {
+    return mergeWithReserved([]);
+  }
+
   // Stage 2: Reranking (with graceful fallback)
-  // Only attempt reranking if we have more candidates than finalCount
-  if (candidates.length <= finalCount) {
-    return fallbackToSimilarity();
+  // Only attempt reranking if we have more candidates than needed
+  if (candidates.length <= rerankFinalCount) {
+    return mergeWithReserved(fallbackToSimilarity());
   }
 
   // Resolve Cohere API key: options > environment
@@ -521,9 +580,9 @@ export async function retrieveWithReranking(
         model: cohereProvider.reranking('rerank-v3.5'),
         query,
         documents: candidates.map((c: { content: string }) => c.content),
-        topN: finalCount,
+        topN: rerankFinalCount,
       });
-      return mapRankedToChunks(ranking);
+      return mergeWithReserved(mapRankedToChunks(ranking));
     } catch (cohereError) {
       console.warn('Cohere reranking failed, trying Cloudflare:', cohereError);
       // Fall through to Cloudflare
@@ -539,14 +598,14 @@ export async function retrieveWithReranking(
       const ranking = await rerankWithCloudflare(
         query,
         candidates.map((c: { content: string }) => c.content),
-        finalCount,
+        rerankFinalCount,
         cloudflareAccountId,
         cloudflareApiToken
       );
       if (ranking.length > 0) {
-        return mapRankedToChunks(
+        return mergeWithReserved(mapRankedToChunks(
           ranking.map((r) => ({ originalIndex: r.index, score: r.score }))
-        );
+        ));
       }
     } catch (cloudflareError) {
       console.warn('Cloudflare reranking failed, falling back to similarity:', cloudflareError);
@@ -554,5 +613,5 @@ export async function retrieveWithReranking(
   }
 
   // Fallback to similarity-based selection
-  return fallbackToSimilarity();
+  return mergeWithReserved(fallbackToSimilarity());
 }
