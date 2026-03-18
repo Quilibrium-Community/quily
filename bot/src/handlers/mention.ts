@@ -13,7 +13,20 @@ export function registerMentionHandler(client: Client): void {
     let typing = false;
     try {
       if (message.author.bot) return;
-      if (!client.user || !message.mentions.has(client.user)) return;
+      if (!client.user) return;
+
+      // Respond to @mentions OR replies to the bot's own messages
+      const isMentioned = message.mentions.has(client.user);
+      let isReplyToBot = false;
+      if (!isMentioned && message.reference) {
+        try {
+          const replied = await message.fetchReference();
+          isReplyToBot = replied.author.id === client.user.id;
+        } catch {
+          // Referenced message may be deleted or inaccessible
+        }
+      }
+      if (!isMentioned && !isReplyToBot) return;
 
       const query = message.content
         .replace(new RegExp(`<@!?${client.user.id}>`, 'g'), '')
