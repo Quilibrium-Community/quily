@@ -48,6 +48,20 @@ function isTemporalQuery(query: string): boolean {
   return TEMPORAL_KEYWORDS.some(keyword => lowerQuery.includes(keyword));
 }
 
+// Keywords that indicate the user is asking specifically about livestreams/streams
+const LIVESTREAM_KEYWORDS = [
+  'livestream', 'live stream', 'stream', 'broadcast',
+  'ama', 'town hall', 'townhall',
+];
+
+/**
+ * Check if query is specifically about livestreams/streams
+ */
+function isLivestreamQuery(query: string): boolean {
+  const lowerQuery = query.toLowerCase();
+  return LIVESTREAM_KEYWORDS.some(keyword => lowerQuery.includes(keyword));
+}
+
 // Keywords that indicate the user is asking about multiple topics / wants a broad overview
 const BROAD_QUERY_KEYWORDS = [
   'all', 'every', 'list', 'overview', 'summary', 'summarize',
@@ -132,8 +146,11 @@ function reciprocalRankFusion(
  * Fetch the most recent document chunks by publication date
  * Used to augment vector search for temporal queries
  * Returns chunks from unique source files (most recent documents)
+ *
+ * @param limit - Max unique documents to return
+ * @param docType - Optional doc_type filter (e.g. 'livestream_transcript')
  */
-async function fetchRecentChunks(limit: number = 3): Promise<{
+async function fetchRecentChunks(limit: number = 3, docType?: string): Promise<{
   id: number;
   content: string;
   source_file: string;
@@ -144,10 +161,16 @@ async function fetchRecentChunks(limit: number = 3): Promise<{
   doc_type: string | null;
   similarity: number;
 }[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from('document_chunks_chutes')
     .select('id, content, source_file, heading_path, source_url, published_date, title, doc_type')
-    .not('published_date', 'is', null)
+    .not('published_date', 'is', null);
+
+  if (docType) {
+    query = query.eq('doc_type', docType);
+  }
+
+  const { data, error } = await query
     .order('published_date', { ascending: false })
     .limit(limit * 5); // Fetch more to get unique source files
 
@@ -448,7 +471,10 @@ export async function retrieveWithReranking(
   let reservedTemporalChunks: typeof candidates = [];
 
   if (isTemporalQuery(query)) {
-    const recentChunks = await fetchRecentChunks(3);
+    // If the user is asking about livestreams specifically, only fetch recent livestreams
+    // Otherwise comparison docs, FAQs etc. from later dates would fill the reserved slots
+    const docTypeFilter = isLivestreamQuery(query) ? 'livestream_transcript' : undefined;
+    const recentChunks = await fetchRecentChunks(3, docTypeFilter);
 
     // Remove any recent chunks that already exist in candidates (avoid duplicates)
     const existingIds = new Set(candidates.map((c: { id: number }) => c.id));
