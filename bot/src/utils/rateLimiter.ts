@@ -17,7 +17,7 @@ function resetDailyIfNeeded(): void {
 
 export function checkRateLimit(userId: string): 'ok' | 'user_cooldown' | 'daily_cap' {
   resetDailyIfNeeded();
-  const dailyLimit = parseInt(process.env.DISCORD_DAILY_LIMIT || '200', 10);
+  const dailyLimit = parseInt(process.env.DISCORD_DAILY_LIMIT || '500', 10);
   if (dailyCount >= dailyLimit) return 'daily_cap';
   const now = Date.now();
   const lastRequest = userLastRequest.get(userId);
