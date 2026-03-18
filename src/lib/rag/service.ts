@@ -97,7 +97,9 @@ function getFallbackModels(): string[] {
 }
 
 export async function processQuery(options: PrepareQueryOptions): Promise<ProcessQueryResult> {
+  const t0 = Date.now();
   const prepared = await prepareQuery(options);
+  console.log(`[processQuery] prepareQuery took ${Date.now() - t0}ms`);
   const primaryModel = options.model || process.env.BOT_MODEL || 'deepseek/deepseek-chat-v3-0324';
 
   if (prepared.ragQuality !== 'high' && !isInstructionFollowingModel(primaryModel)) {
@@ -121,11 +123,13 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
 
   for (const model of modelsToTry) {
     try {
+      const t1 = Date.now();
       const result = await generateText({
         model: provider(model),
         system: prepared.systemPrompt,
         messages,
       });
+      console.log(`[processQuery] generateText (${model}) took ${Date.now() - t1}ms`);
 
       const { cleanText, questions } = parseFollowUpQuestions(result.text);
 

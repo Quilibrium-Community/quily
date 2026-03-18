@@ -6,7 +6,7 @@ import { chunkMessage } from '../utils/messageChunker';
 import { formatForDiscord } from '../formatter';
 
 const TYPING_REFRESH_MS = 9_000;
-const TIMEOUT_MS = 30_000;
+const TIMEOUT_MS = 60_000;
 
 export function registerMentionHandler(client: Client): void {
   client.on('messageCreate', async (message: Message) => {
