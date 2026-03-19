@@ -47,14 +47,32 @@ function getSourceTypeLabel(source: SourceReference): string {
   return 'Docs';
 }
 
-export function formatForDiscord(text: string, sources: SourceReference[]): string {
-  let formatted = text;
-
+/**
+ * Wrap bare URLs in <> to suppress Discord embeds.
+ * Also converts markdown links [text](url) → text — <url>.
+ */
+export function suppressDiscordEmbeds(text: string): string {
   // Convert markdown links [text](url) → text — <url>
-  formatted = formatted.replace(
+  let result = text.replace(
     /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
     '$1 — <$2>'
   );
+
+  // Wrap any remaining bare URLs in <> to suppress Discord embeds
+  // Skip URLs already inside angle brackets <url>
+  result = result.replace(
+    /(?<!<)(https?:\/\/[^\s>)\]]+)/g,
+    '<$1>'
+  );
+
+  return result;
+}
+
+export function formatForDiscord(text: string, sources: SourceReference[]): string {
+  let formatted = text;
+
+  // Suppress Discord embeds for all URLs in the response text
+  formatted = suppressDiscordEmbeds(formatted);
 
   // Convert simple markdown tables to code blocks
   formatted = convertTablesToCodeBlocks(formatted);

@@ -2,6 +2,7 @@
 import type { Message } from 'discord.js';
 import { createClient } from '@supabase/supabase-js';
 import { chunkMessage } from '../utils/messageChunker';
+import { suppressDiscordEmbeds } from '../formatter';
 
 /**
  * Handle the @Quily recap command.
@@ -56,7 +57,9 @@ export async function handleRecap(message: Message, query: string): Promise<bool
     const heading = headingMatch ? headingMatch[1] : 'Community Recap — #general';
     content = content.replace(/^#\s+.+\n+/, '');
 
-    const formatted = `**${heading}**\n\n${content}\n\n-# *Recaps are generated daily*`;
+    const formatted = suppressDiscordEmbeds(
+      `**${heading}**\n\n${content}\n\n-# *Recaps are generated daily*`
+    );
 
     const chunks = chunkMessage(formatted);
     for (let i = 0; i < chunks.length; i++) {
