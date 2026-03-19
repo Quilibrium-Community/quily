@@ -3,10 +3,17 @@ title: How to Update Quily's Knowledge
 source: Internal Documentation
 date: 2026-03-19
 type: contributor_guide
-topics: [quily, knowledge-base, contributing, documentation, community]
+topics: [quily, knowledge-base, contributing, documentation, community, wrong answer, incorrect, outdated, mistake, correction, feedback, inaccurate, error, bad answer, improve]
 ---
 
 # How to Update Quily's Knowledge
+
+If you think Quily gave you a wrong, outdated, or inaccurate answer — thank you for catching that! There are two possible reasons:
+
+1. **Outdated or missing documentation** — Quily's knowledge is only as good as the documentation it has access to, and sometimes information becomes outdated or is missing entirely.
+2. **Model hallucination** — Quily uses open-source AI models. While we use the best open-source models available, they can still sometimes hallucinate — meaning the model may misinterpret or misrepresent information from the documentation, even when the documentation itself is correct. This is a known limitation of current AI technology, and it's a tradeoff we accept in order to keep Quily open-source and independent from proprietary AI providers.
+
+The good news is that if the issue is with the documentation, anyone in the community can help fix it.
 
 Quily's knowledge comes from markdown documents stored in the [Quily Chatbot repository](https://github.com/lamat1111/Quily-Chatbot). Anyone can contribute new information or corrections.
 
