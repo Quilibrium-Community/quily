@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Story, Vision & Application Deployment Guide"
 source: official_docs_synthesis
-date: 2026-02-24
+date: 2026-03-19
 type: technical_reference
 topics:
   - Q story
@@ -49,7 +49,7 @@ Quilibrium's development has followed a deliberate progression from concept to m
 
 **Midnight / Mainnet — Q4 2025:** First stage of mainnet deployed on a single shard with automatic reward minting. Users can permissionlessly split, consolidate, query, and transfer tokens. Quorum Messenger desktop app launched as the first live application on Quilibrium.
 
-**Midnight / Mainnet — Q1 2026:** Final phase of Dusk entering full stealth mode. Transactions are fully encrypted between users. The network transitions to multi-shard operation and developers can permissionlessly deploy applications, transmit, and stream data. Launch of Quilibrium Names Service (QNS). Quorum Messenger mobile apps deployed in testing phase. First Q APIs deployed and launched via QConsole: QStorage (S3-compatible decentralized storage), QKMS (key management), QQ (SQS-compatible queues), and QPing (SNS-compatible notifications with webhook and QQ integration).
+**Midnight / Mainnet — Q1 2026 (in progress):** Final phase of Dusk targeting full stealth mode. Transactions are fully encrypted between users. The network is transitioning to multi-shard operation; some services (QStorage, Quorum Messenger) are already live on mainnet, but full sharding is not yet complete and permissionless app deployment requires sharding to finish. Launch of Quilibrium Names Service (QNS). Quorum Messenger mobile apps deployed in testing phase. First Q APIs deployed and launched via QConsole: QStorage (S3-compatible decentralized storage), QKMS (key management), QQ (SQS-compatible queues), and QPing (SNS-compatible notifications with webhook and QQ integration).
 
 ## Future Roadmap: Equinox and Event Horizon
 
@@ -221,4 +221,4 @@ As of Q1 2026, the following Q APIs are available via QConsole:
 **What is QNS?**
 QNS (Quilibrium Names Service) is a naming system launched in Q1 2026 that provides human-readable names on the Quilibrium network, similar to how DNS maps domain names to IP addresses.
 
-*Last updated: 2026-02-24T15:00:00*
+*Last updated: 2026-03-19*
