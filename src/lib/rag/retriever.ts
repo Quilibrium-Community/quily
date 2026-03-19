@@ -472,21 +472,22 @@ export async function retrieveWithReranking(
 
   if (isTemporalQuery(query)) {
     // If the user is asking about livestreams specifically, only fetch recent livestreams.
-    // For generic temporal queries ("what's the latest?"), fetch a mix: the 2 most recent
-    // docs of any type + 1 most recent livestream. Livestreams are the primary "news"
-    // content, so always including one prevents comparison docs from crowding them out.
+    // For generic temporal queries ("what's the latest?"), fetch a mix: 1 most recent doc
+    // of any type + 1 most recent livestream + 1 most recent Discord announcement.
+    // This ensures temporal queries surface news from all primary content sources.
     let recentChunks: Awaited<ReturnType<typeof fetchRecentChunks>>;
 
     if (isLivestreamQuery(query)) {
       recentChunks = await fetchRecentChunks(3, 'livestream_transcript');
     } else {
-      const [genericRecent, livestreamRecent] = await Promise.all([
-        fetchRecentChunks(2),
+      const [genericRecent, livestreamRecent, discordRecent] = await Promise.all([
+        fetchRecentChunks(1),
         fetchRecentChunks(1, 'livestream_transcript'),
+        fetchRecentChunks(1, 'discord_announcement'),
       ]);
-      // Merge, deduplicating by source_file (livestream might already be in generic results)
+      // Merge, deduplicating by source_file
       const seenFiles = new Set(genericRecent.map(c => c.source_file));
-      const extra = livestreamRecent.filter(c => !seenFiles.has(c.source_file));
+      const extra = [...livestreamRecent, ...discordRecent].filter(c => !seenFiles.has(c.source_file));
       recentChunks = [...genericRecent, ...extra];
     }
 
