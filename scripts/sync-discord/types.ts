@@ -8,6 +8,7 @@ export interface DiscordMessage {
     id: string;
     username: string;
     global_name: string | null;
+    bot?: boolean;
   };
   timestamp: string; // ISO 8601
   embeds: DiscordEmbed[];
