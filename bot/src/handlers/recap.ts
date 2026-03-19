@@ -25,10 +25,10 @@ export async function handleRecap(message: Message, query: string): Promise<bool
   try {
     if ('sendTyping' in message.channel) await message.channel.sendTyping();
 
-    // Fetch the most recent recap chunk
+    // Fetch the most recent recap chunk (content includes frontmatter fields via chunker)
     const { data, error } = await supabase
       .from('document_chunks_chutes')
-      .select('content, published_date, source_url')
+      .select('content, published_date, source_url, source_file')
       .eq('doc_type', 'discord_recap')
       .order('published_date', { ascending: false })
       .limit(1);
@@ -47,15 +47,16 @@ export async function handleRecap(message: Message, query: string): Promise<bool
     }
 
     const recap = data[0];
-    const dateLabel = recap.published_date
-      ? new Date(recap.published_date + 'T00:00:00').toLocaleDateString('en-US', {
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric',
-        })
-      : 'Unknown date';
 
-    const formatted = `**Community Recap — ${dateLabel}**\n\n${recap.content}\n\n-# *Generated daily from #general*`;
+    // The chunk content already includes the heading with channel, date, and time range
+    // e.g. "# Community Recap — #general\n\n**March 19, 2026** | 8:00 AM UTC – 11:30 PM UTC\n\n..."
+    // Strip the markdown heading (# ...) and use bold formatting for Discord instead
+    let content = recap.content;
+    const headingMatch = content.match(/^#\s+(.+)\n/);
+    const heading = headingMatch ? headingMatch[1] : 'Community Recap — #general';
+    content = content.replace(/^#\s+.+\n+/, '');
+
+    const formatted = `**${heading}**\n\n${content}\n\n-# *Recaps are generated daily*`;
 
     const chunks = chunkMessage(formatted);
     for (let i = 0; i < chunks.length; i++) {

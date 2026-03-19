@@ -110,6 +110,17 @@ async function run() {
       usedFallback = true;
     }
 
+    // Compute time window from actual messages
+    const timestamps = dayFiltered.map((f) => new Date(f.message.timestamp).getTime());
+    const earliest = new Date(Math.min(...timestamps));
+    const latest = new Date(Math.max(...timestamps));
+    const fmtTime = (d: Date) => d.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'UTC',
+    }) + ' UTC';
+
     // Format date for title
     const titleDate = new Date(date + 'T00:00:00Z').toLocaleDateString('en-US', {
       month: 'long',
@@ -126,10 +137,14 @@ async function run() {
       'type: discord_recap',
       'channel: general',
       `date: ${date}`,
+      `time_from: "${fmtTime(earliest)}"`,
+      `time_to: "${fmtTime(latest)}"`,
       `source_url: ${sourceUrl}`,
       '---',
       '',
-      `# Community Recap — ${titleDate}`,
+      `# Community Recap — #general`,
+      '',
+      `**${titleDate}** | ${fmtTime(earliest)} – ${fmtTime(latest)}`,
       '',
       recapContent,
     ].join('\n');
