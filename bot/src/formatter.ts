@@ -77,7 +77,9 @@ export function formatForDiscord(text: string, sources: SourceReference[]): stri
   // Convert simple markdown tables to code blocks
   formatted = convertTablesToCodeBlocks(formatted);
 
-  // Show only sources whose citation index actually appears in the response text
+  // Show only sources whose citation index actually appears in the response text.
+  // If the response didn't cite anything (e.g. casual/banter replies), skip the
+  // sources block entirely — showing unrelated sources under a joke looks weird.
   if (sources.length > 0) {
     const citedIndices = new Set<number>();
     for (const match of text.matchAll(/\[(\d+)\]/g)) {
@@ -88,28 +90,27 @@ export function formatForDiscord(text: string, sources: SourceReference[]): stri
       .filter((s) => citedIndices.has(s.index))
       .sort((a, b) => a.index - b.index);
 
-    // Fall back to all sources if no citation indices matched
-    const displaySources = citedSources.length > 0 ? citedSources : sources;
+    if (citedSources.length > 0) {
+      const sourceLines = citedSources.map((s) => {
+        const label = getSourceTypeLabel(s);
+        const isLivestream = s.doc_type === 'livestream_transcript';
+        const url = s.url;
+        const idx = s.index;
 
-    const sourceLines = displaySources.map((s) => {
-      const label = getSourceTypeLabel(s);
-      const isLivestream = s.doc_type === 'livestream_transcript';
-      const url = s.url;
-      const idx = s.index;
+        if (isLivestream) {
+          const date = s.published_date || '';
+          return url
+            ? `• [${idx}] **${label}${date ? ` (${date})` : ''}:** <${url}>`
+            : `• [${idx}] **${label}${date ? ` (${date})` : ''}**`;
+        }
 
-      if (isLivestream) {
-        const date = s.published_date || '';
+        const title = s.title || s.file;
         return url
-          ? `• [${idx}] **${label}${date ? ` (${date})` : ''}:** <${url}>`
-          : `• [${idx}] **${label}${date ? ` (${date})` : ''}**`;
-      }
-
-      const title = s.title || s.file;
-      return url
-        ? `• [${idx}] **${label}:** ${title} — <${url}>`
-        : `• [${idx}] **${label}:** ${title}`;
-    });
-    formatted += `\n\n**Sources:**\n${sourceLines.join('\n')}`;
+          ? `• [${idx}] **${label}:** ${title} — <${url}>`
+          : `• [${idx}] **${label}:** ${title}`;
+      });
+      formatted += `\n\n**Sources:**\n${sourceLines.join('\n')}`;
+    }
   }
 
   formatted += '\n\n-# *I\'m in beta and can make mistakes · report inaccuracies · always check official docs*';
