@@ -12,6 +12,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
+      id-token: write
 
     steps:
       - name: Check for existing PR
@@ -131,9 +132,9 @@ jobs:
             gh issue comment "${{ github.event.issue.number }}" \
               --repo "${{ github.repository }}" \
               --body "The automated pipeline attempted to modify files outside the allowed directories. A maintainer will handle this manually."
-            gh issue label add "needs-manual-review" \
+            gh issue edit "${{ github.event.issue.number }}" \
               --repo "${{ github.repository }}" \
-              "${{ github.event.issue.number }}" || true
+              --add-label "needs-manual-review" || true
             exit 1
           fi
 
