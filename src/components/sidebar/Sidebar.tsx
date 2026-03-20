@@ -173,13 +173,15 @@ export function Sidebar() {
 
           {/* Links */}
           <Tooltip content="Quilibrium Links">
-            <Link
-              href="/links"
+            <a
+              href="https://quilibrium.one/links"
+              target="_blank"
+              rel="noopener noreferrer"
               className={iconButtonClass}
               aria-label="Quilibrium Links"
             >
               <Icon name="link" size={20} />
-            </Link>
+            </a>
           </Tooltip>
 
           {/* Spacer */}
@@ -333,8 +335,10 @@ export function Sidebar() {
                 About
               </Link>
 
-              <Link
-                href="/links"
+              <a
+                href="https://quilibrium.one/links"
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={() => {
                   if (!isDesktop) closeSidebar();
                 }}
@@ -352,7 +356,7 @@ export function Sidebar() {
               >
                 <Icon name="link" size={20} className="sm:w-4.5 sm:h-4.5" />
                 Quilibrium Links
-              </Link>
+              </a>
             </>
           }
         />

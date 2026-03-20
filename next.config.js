@@ -7,6 +7,11 @@ const nextConfig = {
         destination: '/',
         permanent: false,
       },
+      {
+        source: '/links',
+        destination: 'https://quilibrium.one/links',
+        permanent: false,
+      },
     ];
   },
 };
