@@ -93,10 +93,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase origin main
           git add docs/quilibrium-official/
           git add docs/discord/ || true
           git diff --staged --quiet || git commit -m "docs: sync documentation and announcements (automated daily)"
+          git pull --rebase origin main
           git push
 
       - name: Summary
