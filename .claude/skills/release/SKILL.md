@@ -1,6 +1,6 @@
 ---
 name: release
-description: Automated semantic versioning and changelog generation
+description: Automated semantic versioning and GitHub release creation
 allowed-tools:
   - Bash
   - Read
@@ -10,19 +10,19 @@ allowed-tools:
 
 # Release Management
 
-Fully automated versioning and changelog generation for Quily Chat.
+Fully automated versioning and GitHub release creation for Quily.
 
 ## What This Skill Does
 
 When invoked, this skill **automatically**:
 1. Analyzes commits since the last version tag
 2. Determines the appropriate version bump (major/minor/patch)
-3. Generates changelog entries grouped by type
-4. Updates version.ts and CHANGELOG.md
-5. Creates git commit and tag
+3. Updates version in package.json
+4. Creates git commit and tag
+5. Pushes and creates a GitHub release with changelog notes
 6. Reports what was done
 
-**No user confirmation required** - Claude makes all decisions based on conventional commit analysis.
+**No user confirmation required** until the push step.
 
 ## Version Bump Rules
 
@@ -37,110 +37,99 @@ When invoked, this skill **automatically**:
 | `refactor:` | patch | Refactoring |
 | `test:` | patch | Tests |
 
+If `` contains "major", "minor", or "patch", use that as a bump type override.
+
 ## Automated Workflow
 
-When the user invokes `/release`, execute these steps immediately without asking for confirmation:
-
-### Step 1: Execute Release
-
-Run the release command directly:
+### Step 1: Pre-flight
 
 ```bash
-yarn release:run
+git status --short
+git tag -l "v*.*.*" --sort=-v:refname | head -5
 ```
 
-This will:
-- Analyze all commits since the last tag
-- Determine the appropriate bump type automatically
-- Update version.ts with the new version
-- Generate and update CHANGELOG.md
-- Create a release commit: `chore(release): vX.Y.Z`
-- Create a git tag: `vX.Y.Z`
+- If there are uncommitted changes → STOP. Tell the user to commit or stash first.
+- If no new commits since last tag → "Nothing to release." and stop.
 
-### Step 2: Report Results
+### Step 2: Analyze Commits
 
-After execution, report:
-- Previous version → New version
-- Number of commits included
-- Summary of changes (features, fixes, etc.)
-- The commit and tag that were created
-
-### Step 3: Ask to Push to Remote
-
-After the release is created locally, ask the user if they want to push to the remote repository.
-
-Use AskUserQuestion with:
-- Question: "Push release to remote?"
-- Options:
-  - "Yes, push now" (Recommended) - Push commit and tag to origin
-  - "No, I'll push later" - Skip pushing, user will do it manually
-
-If the user selects "Yes, push now", execute:
 ```bash
-git push && git push --tags
+git log <LATEST_TAG>..HEAD --oneline
 ```
 
-Then confirm what was pushed (branch and tag).
+Parse conventional commit format. Highest-priority bump wins: major > minor > patch.
+
+### Step 3: Bump Version
+
+Edit `package.json` directly to set the new version.
+
+**Do NOT create or update CHANGELOG.md** — we use GitHub releases instead.
+
+### Step 4: Commit & Tag
+
+```bash
+git add package.json
+git commit -m "chore(release): v<VERSION>"
+git tag -a v<VERSION> -m "v<VERSION>"
+```
+
+### Step 5: Report Results
+
+Display:
+- Previous version → New version (bump type)
+- Number of commits
+- Summary of changes
+
+### Step 6: Push & GitHub Release
+
+Ask the user with AskUserQuestion:
+- "Push release to remote and create GitHub release?"
+- Options: "Yes, push and release" (Recommended) / "No, I'll do it later"
+
+If yes:
+
+```bash
+git push origin HEAD --tags
+```
+
+Then create the GitHub release with grouped changelog notes:
+
+```bash
+gh release create "v<VERSION>" --title "v<VERSION>" --notes "<changelog>"
+```
+
+Generate release notes in this format (only include sections with changes):
+
+```markdown
+## Features
+- Description (short-hash)
+
+## Bug Fixes
+- Description (short-hash)
+
+## Documentation
+- Description (short-hash)
+
+## Maintenance
+- Description (short-hash)
+```
+
+Write descriptions from the user's perspective. Never mention Claude, AI, or Anthropic.
 
 ## Edge Cases
 
-### No commits to release
-If there are no new commits since the last tag, inform the user:
-"No new commits since the last release. Nothing to do."
-
-### Uncommitted changes warning
-The script will warn if there are uncommitted changes but will proceed anyway.
-These changes will be included in the release commit.
-
-### Initial release (no previous tag)
-If no version tag exists, all commits will be included and the release will use
-the current VERSION value (0.1.0) as the baseline for bumping.
-
-## CLI Commands Reference
-
-```bash
-yarn release:run              # Execute release (main command)
-yarn release:prepare          # Preview only (for debugging)
-yarn release:run --dry-run    # Preview without changes
-yarn release:run --force major  # Force specific bump type
-```
+- **No commits to release:** Inform user and stop.
+- **Uncommitted changes:** STOP and ask user to commit first.
+- **`gh` CLI not available:** Push succeeds, tell user to create release manually.
+- **Tag already exists:** STOP and report.
 
 ## Files Modified
 
-- `src/lib/version.ts` - Version number
-- `CHANGELOG.md` - Changelog entries
+- `package.json` — version number only
 - Git commit: `chore(release): vX.Y.Z`
 - Git tag: `vX.Y.Z`
-
-## Example Session
-
-```
-User: /release
-
-Claude: Running automated release...
-
-✅ Release v0.2.0 created successfully!
-
-📊 Summary:
-  Version: 0.1.0 → 0.2.0 (minor bump)
-  Commits: 25
-  ✨ 8 features  🐛 4 fixes  📝 3 docs  🔧 10 chores
-
-📝 Created:
-  Commit: chore(release): v0.2.0
-  Tag: v0.2.0
-
-Claude: [Asks user] Push release to remote?
-  - Yes, push now (Recommended)
-  - No, I'll push later
-
-User: Yes, push now
-
-Claude: Pushing to remote...
-✅ Pushed dev -> dev
-✅ Pushed tag v0.2.0
-```
+- GitHub release with changelog notes
 
 ---
 
-*Last updated: 2026-01-30*
+*Last updated: 2026-03-21*
