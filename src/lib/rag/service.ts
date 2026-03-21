@@ -131,6 +131,7 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
         system: prepared.systemPrompt,
         messages,
         tools: ragTools,
+        maxOutputTokens: 800,
       });
       console.log(`[processQuery] generateText (${model}) took ${Date.now() - t1}ms`);
 

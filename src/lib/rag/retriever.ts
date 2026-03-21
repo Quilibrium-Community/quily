@@ -90,11 +90,19 @@ const BROAD_QUERY_KEYWORDS = [
 ];
 
 /**
- * Check if query is broad/multi-topic, warranting more retrieved chunks
+ * Check if query is broad/multi-topic, warranting more retrieved chunks.
+ * Uses word-boundary matching to avoid false positives from substring matches
+ * (e.g., "chronologically" should not match "all").
  */
 function isBroadQuery(query: string): boolean {
   const lowerQuery = query.toLowerCase();
-  return BROAD_QUERY_KEYWORDS.some(keyword => lowerQuery.includes(keyword));
+  return BROAD_QUERY_KEYWORDS.some(keyword => {
+    // Multi-word keywords use simple includes (low false-positive risk)
+    if (keyword.includes(' ')) return lowerQuery.includes(keyword);
+    // Single-word keywords require word boundaries
+    const regex = new RegExp(`\\b${keyword}\\b`);
+    return regex.test(lowerQuery);
+  });
 }
 
 // Known Quilibrium products/entities for query decomposition.
@@ -537,6 +545,12 @@ export async function retrieveWithReranking(
       .slice(0, 3);
   }
 
+  if (isTemporal && reservedTemporalChunks.length > 0) {
+    console.log('[RAG] Reserved temporal chunks:', reservedTemporalChunks.map(c =>
+      `${c.published_date || 'no-date'} | ${c.doc_type} | ${c.source_file}`
+    ));
+  }
+
   if (candidates.length === 0 && reservedTemporalChunks.length === 0) {
     return [];
   }
@@ -601,6 +615,14 @@ export async function retrieveWithReranking(
 
     // Re-sort by adjusted score and take the top results
     boosted.sort((a, b) => b.adjustedScore - a.adjustedScore);
+
+    if (isTemporal) {
+      console.log('[RAG] Post-rerank recency boost applied:');
+      boosted.slice(0, rerankFinalCount).forEach((item, idx) => {
+        const orig = ranking.find(r => candidates[r.originalIndex].id === item.original.id);
+        console.log(`  ${idx + 1}. ${item.original.published_date || 'no-date'} | score: ${orig?.score.toFixed(3) || '?'} → ${item.adjustedScore.toFixed(3)} | ${item.original.source_file}`);
+      });
+    }
 
     return boosted.slice(0, rerankFinalCount).map((item, idx) => ({
       id: item.original.id,
