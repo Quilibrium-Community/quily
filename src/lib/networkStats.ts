@@ -174,9 +174,9 @@ export function formatDiscordStats(snapshot: NetworkSnapshot, history: NetworkSn
   msg += '```\n';
 
   msg += `Shard Health\n`;
-  msg += `  Healthy  (>=6)   ${pad(snapshot.healthy.toLocaleString('en-US'), 6)}  (${pct(snapshot.healthy, total)})\n`;
-  msg += `  Warning  (<6)    ${pad(snapshot.warning.toLocaleString('en-US'), 6)}  (${pct(snapshot.warning, total)})\n`;
-  msg += `  Halt Risk(<3)    ${pad(snapshot.haltRisk.toLocaleString('en-US'), 6)}  (${pct(snapshot.haltRisk, total)})\n`;
+  msg += `  🟢 Healthy  (>=6)   ${pad(snapshot.healthy.toLocaleString('en-US'), 6)}  (${pct(snapshot.healthy, total)})\n`;
+  msg += `  🟡 Warning  (<6)    ${pad(snapshot.warning.toLocaleString('en-US'), 6)}  (${pct(snapshot.warning, total)})\n`;
+  msg += `  🔴 Halt Risk(<3)    ${pad(snapshot.haltRisk.toLocaleString('en-US'), 6)}  (${pct(snapshot.haltRisk, total)})\n`;
   msg += '\n';
 
   msg += `Ring Distribution\n`;
