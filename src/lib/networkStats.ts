@@ -165,10 +165,10 @@ export function formatDiscordStats(snapshot: NetworkSnapshot, history: NetworkSn
   msg += `📊 **Quilibrium Network Stats — ${date}**\n`;
   msg += '```\n';
 
-  msg += `World Size       ${pad(formatBytes(snapshot.worldBytes), 14)}\n`;
-  msg += `Shards           ${pad(snapshot.totalShards.toLocaleString('en-US'), 14)}\n`;
-  msg += `Peers            ${pad(snapshot.peers.toLocaleString('en-US'), 14)}\n`;
-  msg += `Total Workers    ${pad(snapshot.totalWorkers.toLocaleString('en-US'), 14)}\n`;
+  msg += `🌐 World Size       ${pad(formatBytes(snapshot.worldBytes), 14)}\n`;
+  msg += `🧩 Shards           ${pad(snapshot.totalShards.toLocaleString('en-US'), 14)}\n`;
+  msg += `🖥 Peers            ${pad(snapshot.peers.toLocaleString('en-US'), 14)}\n`;
+  msg += `⚙ Total Workers    ${pad(snapshot.totalWorkers.toLocaleString('en-US'), 14)}\n`;
   msg += '\n';
 
   msg += `-- Shard Health ${'─'.repeat(30)}\n`;
