@@ -162,37 +162,39 @@ export function formatDiscordStats(snapshot: NetworkSnapshot, history: NetworkSn
   });
 
   let msg = '';
-  msg += `📊 **Quilibrium Network Stats — ${date}**\n`;
+  msg += `📊 **Quilibrium Network Stats — ${date}**\n\n`;
+
+  // Overview outside code block — emojis render properly here
+  msg += `🌍 World Size: **${formatBytes(snapshot.worldBytes)}**\n`;
+  msg += `🧩 Shards: **${snapshot.totalShards.toLocaleString('en-US')}**\n`;
+  msg += `👥 Peers: **${snapshot.peers.toLocaleString('en-US')}**\n`;
+  msg += `🖥️ Workers: **${snapshot.totalWorkers.toLocaleString('en-US')}**\n\n`;
+
+  // Detailed tables in code block — no emojis, pure monospace
   msg += '```\n';
 
-  msg += `🌐 World Size       ${pad(formatBytes(snapshot.worldBytes), 14)}\n`;
-  msg += `🧩 Shards           ${pad(snapshot.totalShards.toLocaleString('en-US'), 14)}\n`;
-  msg += `🖥 Peers            ${pad(snapshot.peers.toLocaleString('en-US'), 14)}\n`;
-  msg += `⚙ Total Workers    ${pad(snapshot.totalWorkers.toLocaleString('en-US'), 14)}\n`;
+  msg += `Shard Health\n`;
+  msg += `  Healthy  (>=6)   ${pad(snapshot.healthy.toLocaleString('en-US'), 6)}  (${pct(snapshot.healthy, total)})\n`;
+  msg += `  Warning  (<6)    ${pad(snapshot.warning.toLocaleString('en-US'), 6)}  (${pct(snapshot.warning, total)})\n`;
+  msg += `  Halt Risk(<3)    ${pad(snapshot.haltRisk.toLocaleString('en-US'), 6)}  (${pct(snapshot.haltRisk, total)})\n`;
   msg += '\n';
 
-  msg += `-- Shard Health ${'─'.repeat(30)}\n`;
-  msg += `🟢 Healthy  (>=6)   ${pad(snapshot.healthy.toLocaleString('en-US'), 6)}  (${pct(snapshot.healthy, total)})\n`;
-  msg += `🟡 Warning  (<6)    ${pad(snapshot.warning.toLocaleString('en-US'), 6)}  (${pct(snapshot.warning, total)})\n`;
-  msg += `🔴 Halt Risk(<3)    ${pad(snapshot.haltRisk.toLocaleString('en-US'), 6)}  (${pct(snapshot.haltRisk, total)})\n`;
+  msg += `Ring Distribution\n`;
+  msg += `  Ring 0  (1-7 workers)    ${pad((snapshot.rings['0'] || 0).toLocaleString('en-US'), 6)} shards\n`;
+  msg += `  Ring 1  (8-15 workers)   ${pad((snapshot.rings['1'] || 0).toLocaleString('en-US'), 6)} shards\n`;
+  msg += `  Ring 2  (16-23 workers)  ${pad((snapshot.rings['2'] || 0).toLocaleString('en-US'), 6)} shards\n`;
+  msg += `  Ring 3+ (24+ workers)    ${pad((snapshot.rings['3+'] || 0).toLocaleString('en-US'), 6)} shards\n`;
   msg += '\n';
 
-  msg += `-- Ring Distribution ${'─'.repeat(25)}\n`;
-  msg += `Ring 0  (1-7 workers)    ${pad((snapshot.rings['0'] || 0).toLocaleString('en-US'), 6)} shards\n`;
-  msg += `Ring 1  (8-15 workers)   ${pad((snapshot.rings['1'] || 0).toLocaleString('en-US'), 6)} shards\n`;
-  msg += `Ring 2  (16-23 workers)  ${pad((snapshot.rings['2'] || 0).toLocaleString('en-US'), 6)} shards\n`;
-  msg += `Ring 3+ (24+ workers)    ${pad((snapshot.rings['3+'] || 0).toLocaleString('en-US'), 6)} shards\n`;
-  msg += '\n';
-
-  msg += `-- Worker Activity ${'─'.repeat(27)}\n`;
-  msg += `Active     ${pad(snapshot.workersActive.toLocaleString('en-US'), 10)}\n`;
-  msg += `Joining    ${pad(snapshot.workersJoining.toLocaleString('en-US'), 10)}\n`;
-  msg += `Leaving    ${pad(snapshot.workersLeaving.toLocaleString('en-US'), 10)}\n`;
+  msg += `Worker Activity\n`;
+  msg += `  Active     ${pad(snapshot.workersActive.toLocaleString('en-US'), 10)}\n`;
+  msg += `  Joining    ${pad(snapshot.workersJoining.toLocaleString('en-US'), 10)}\n`;
+  msg += `  Leaving    ${pad(snapshot.workersLeaving.toLocaleString('en-US'), 10)}\n`;
 
   const trendRows = buildTrends(snapshot, history);
   if (trendRows) {
     msg += '\n';
-    msg += `── Trends ${'─'.repeat(36)}\n`;
+    msg += `Trends\n`;
     msg += trendRows;
   }
 
