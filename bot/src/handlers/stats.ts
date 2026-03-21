@@ -4,20 +4,11 @@
 import type { Client, Message, TextChannel } from 'discord.js';
 import { computeStats, formatDiscordStats, loadHistory, recordSnapshot } from '../services/networkStats';
 
-// Patterns that trigger the stats response (matched against the stripped query)
-const STATS_EXACT = [
+// Exact command patterns only — must be the entire query (no partial matches)
+const STATS_PATTERNS = [
   /^\s*(?:network\s+)?stats?\s*$/i,
-  /^\s*network\s*$/i,
-  /^\s*shard\s*(?:out|ing)?\s*$/i,
+  /^\s*shard\s*out\s*$/i,
   /^\s*shardout\s*$/i,
-];
-
-const STATS_FUZZY = [
-  /\b(?:how(?:'s| is| are)|what(?:'s| is| are)|show|get|check|current|live)\b.*\b(?:network\s*(?:stats?|status|health|overview)|shard\s*(?:health|coverage|status|out|ing)|(?:peer|node|worker)\s*(?:count|number|status)|world\s*size)\b/i,
-  /\b(?:shard|network)\s*(?:health|coverage|status|overview|situation)\b/i,
-  /\bhow\s+(?:many|much)\b.*\b(?:peers?|nodes?|workers?|shards?)\b/i,
-  /\b(?:peers?|nodes?|workers?)\s+(?:are\s+)?(?:online|active|running|there)\b/i,
-  /\bhow(?:'s| is)\s+(?:the\s+)?(?:sharding|shardout|network)\s+(?:going|doing|looking)\b/i,
 ];
 
 /**
@@ -25,7 +16,7 @@ const STATS_FUZZY = [
  * Returns true if handled (caller should return early).
  */
 export async function handleStats(message: Message, query: string): Promise<boolean> {
-  if (!STATS_EXACT.some((p) => p.test(query)) && !STATS_FUZZY.some((p) => p.test(query))) return false;
+  if (!STATS_PATTERNS.some((p) => p.test(query))) return false;
 
   try {
     if ('sendTyping' in message.channel) await message.channel.sendTyping();
