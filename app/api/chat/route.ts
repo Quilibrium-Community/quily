@@ -386,18 +386,35 @@ function writeStatus(
  * Matches patterns like: create_knowledge_issue json {"title": "...", "correction": "..."}
  */
 function parseToolCallFromText(text: string): { title: string; correction: string } | null {
-  // Match JSON object after create_knowledge_issue (with optional separators)
-  const match = text.match(/create_knowledge_issue[\s\S]*?(\{[\s\S]*?"title"\s*:\s*"[\s\S]*?"correction"\s*:\s*"[\s\S]*?\})/);
-  if (!match) return null;
+  // Check if the text contains a tool call pattern
+  if (!text.includes('create_knowledge_issue')) return null;
+
+  // Extract the JSON object after create_knowledge_issue
+  const jsonStart = text.indexOf('{', text.indexOf('create_knowledge_issue'));
+  if (jsonStart === -1) return null;
+
+  // Find matching closing brace
+  let braceCount = 0;
+  let jsonEnd = -1;
+  for (let i = jsonStart; i < text.length; i++) {
+    if (text[i] === '{') braceCount++;
+    if (text[i] === '}') braceCount--;
+    if (braceCount === 0) { jsonEnd = i + 1; break; }
+  }
+  if (jsonEnd === -1) return null;
+
   try {
-    const parsed = JSON.parse(match[1]);
-    if (parsed.title && parsed.correction) {
-      return { title: parsed.title, correction: parsed.correction };
+    const parsed = JSON.parse(text.slice(jsonStart, jsonEnd));
+    const title = parsed.title;
+    // Accept "correction", "body", "description", or "content" as the correction field
+    const correction = parsed.correction || parsed.body || parsed.description || parsed.content;
+    if (title && correction) {
+      return { title, correction };
     }
   } catch {
-    // Try a more lenient extraction
+    // Lenient regex fallback
     const titleMatch = text.match(/"title"\s*:\s*"([^"]+)"/);
-    const correctionMatch = text.match(/"correction"\s*:\s*"([^"]+)"/);
+    const correctionMatch = text.match(/"(?:correction|body|description|content)"\s*:\s*"([^"]+)"/);
     if (titleMatch && correctionMatch) {
       return { title: titleMatch[1], correction: correctionMatch[1] };
     }

@@ -44,15 +44,17 @@ const PARTIAL_BARE_FOLLOW_UP_REGEX = /\n\s*json\s*\n?\s*\[?[^\]]*$/;
 
 /**
  * Regex to strip raw tool call text that some models output instead of structured calls.
- * Matches the tool call and any garbage tokens before it on the same/nearby lines.
- * Example: "kontsultatua nostfunction<｜tool▁sep｜>create_knowledge_issue json {"title": "...", "correction": "..."}"
+ * Catches garbage tokens, special unicode separators, and the JSON payload.
+ * Examples:
+ *   "فتรfunction<｜tool▁sep｜>create_knowledge_issue json {"title": "..."}"
+ *   "kontsultatua nostfunction<｜tool▁sep｜>create_knowledge_issue json {"title": "..."}"
  */
-const TOOL_CALL_TEXT_REGEX = /\n[^\n]*create_knowledge_issue[\s\S]*$/;
+const TOOL_CALL_TEXT_REGEX = /[^\n]*create_knowledge_issue[\s\S]*$/;
 
 /**
  * Partial tool call during streaming — catches the beginning of a tool call being typed.
  */
-const PARTIAL_TOOL_CALL_REGEX = /\n[^\n]*create_knowledge_issue[^\n]*$/;
+const PARTIAL_TOOL_CALL_REGEX = /[^\n]*create_knowledge_issue[^\n]*$/;
 
 /**
  * Extract text content from UIMessage parts array.
