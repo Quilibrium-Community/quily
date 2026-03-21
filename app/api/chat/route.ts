@@ -381,10 +381,39 @@ function writeStatus(
 }
 
 /**
- * Parse tool call from response text when the model outputs it as text
- * instead of using the structured tool calling protocol.
- * Matches patterns like: create_knowledge_issue json {"title": "...", "correction": "..."}
+ * Deterministic correction flow detection.
+ *
+ * Instead of relying on the model to call tools (which open-source models
+ * do unreliably), we detect the correction flow from conversation history:
+ *
+ * 1. If the previous bot message asked the user for correction details
+ *    (contains "I'll open an issue" or similar), AND
+ * 2. The current user message is NOT vague ("wrong", "nope", etc.)
+ * → Auto-create the issue server-side, no model involvement needed.
  */
+
+/** Phrases the bot uses when asking for correction details */
+const CORRECTION_PROMPT_PATTERNS = [
+  "i'll open an issue",
+  "open an issue to get this fixed",
+  "i can still flag it",
+  "flag it for review",
+  "tell me and i'll",
+  "share them, and i'll",
+  "share the correct",
+  "provide the correct",
+  "know what the right answer is",
+  "know the correct answer",
+];
+
+/**
+ * Check if the bot's previous message was asking the user for correction details.
+ */
+function botAskedForCorrection(assistantMessage: string): boolean {
+  const lower = assistantMessage.toLowerCase();
+  return CORRECTION_PROMPT_PATTERNS.some((p) => lower.includes(p));
+}
+
 /**
  * Check if the user's message is a vague correction (just "wrong", "incorrect", etc.)
  * without specific details. These should NOT trigger immediate issue creation —
@@ -751,6 +780,42 @@ export async function POST(request: Request) {
         if (isDev) console.log('[Chutes] Starting stream with model:', model, 'hasToken:', !!chutesAccessToken);
         const textId = `text-${Date.now()}`;
         writer.write({ type: 'text-start', id: textId });
+
+        // Deterministic short-circuit: if this is a correction turn (bot asked for details,
+        // user provided them), skip the model entirely — it often outputs garbage when
+        // trying to call tools. Handle everything deterministically in code.
+        const prevAssistantMsg = [...llmMessages].reverse().find((m: { role: string }) => m.role === 'assistant');
+        const isCorrectionTurn = prevAssistantMsg && botAskedForCorrection(prevAssistantMsg.content) && !isVagueCorrection(rawUserQuery);
+
+        if (isCorrectionTurn) {
+          writer.write({ type: 'text-delta', id: textId, delta: "Got it, thanks for the correction!" });
+          writer.write({ type: 'text-end', id: textId });
+
+          // Find original Q&A for issue context
+          const userMsgs = llmMessages.filter((m: { role: string }) => m.role === 'user');
+          const assistantMsgs = llmMessages.filter((m: { role: string }) => m.role === 'assistant');
+          const origQuestion = userMsgs.length >= 1 ? userMsgs[0].content : rawUserQuery;
+          const origAnswer = assistantMsgs.length >= 1 ? assistantMsgs[0].content : '';
+
+          try {
+            const issueUrl = await createGitHubIssue({
+              title: `Correction: ${rawUserQuery.slice(0, 80)}`,
+              correction: rawUserQuery,
+              discordUsername: 'Web UI user',
+              originalQuestion: origQuestion,
+              quilyAnswer: origAnswer,
+            });
+            console.log(`[auto-issue] Created ${issueUrl} from web UI (deterministic)`);
+            writer.write({
+              type: 'data-correction-issue' as const,
+              data: { url: issueUrl },
+            });
+          } catch (err) {
+            console.error('[auto-issue] Failed to create GitHub issue:', err);
+          }
+        } else {
+        // Normal flow — stream from the model
+
         let receivedAnyContent = false;
         let hadError = false;
         let fullResponseText = ''; // Collect for follow-up parsing
@@ -858,25 +923,41 @@ export async function POST(request: Request) {
         }
 
         // Handle final failure (non-503 errors or after all fallbacks exhausted)
+        // But if this is a correction flow (bot asked for details, user provided them),
+        // the model may fail because it tries to call a tool. That's OK — the deterministic
+        // path will create the issue, so write a friendly acknowledgment instead of an error.
         if (!lastResult.success && !hadError) {
-          hadError = true;
-          const errorMsg = lastResult.error || 'Unknown error';
-          console.error('Chutes streaming error:', errorMsg);
+          const lastAsstMsg = [...llmMessages].reverse().find((m: { role: string }) => m.role === 'assistant');
+          const isCorrectionTurn = lastAsstMsg && botAskedForCorrection(lastAsstMsg.content) && !isVagueCorrection(rawUserQuery);
 
-          if (isCreditsError(errorMsg)) {
+          if (isCorrectionTurn) {
+            // Model failed but this is a correction turn — write acknowledgment
             writer.write({
               type: 'text-delta',
               id: textId,
-              delta: '**Your Chutes account has run out of credits.** Please add more credits at [chutes.ai](https://chutes.ai) to continue chatting.',
+              delta: "Got it, thanks for the correction!",
             });
-          } else if (!receivedAnyContent) {
-            writer.write({
-              type: 'text-delta',
-              id: textId,
-              delta: '**Unable to get a response.** This may be due to insufficient credits, an authentication issue, or the model being temporarily unavailable. Please try a different model in [Settings](/settings), check your [Chutes account](https://chutes.ai) balance, or switch to OpenRouter.',
-            });
+            // Don't mark as error — let the issue creation logic run below
           } else {
-            writer.write({ type: 'text-delta', id: textId, delta: `\n\nError: ${errorMsg}` });
+            hadError = true;
+            const errorMsg = lastResult.error || 'Unknown error';
+            console.error('Chutes streaming error:', errorMsg);
+
+            if (isCreditsError(errorMsg)) {
+              writer.write({
+                type: 'text-delta',
+                id: textId,
+                delta: '**Your Chutes account has run out of credits.** Please add more credits at [chutes.ai](https://chutes.ai) to continue chatting.',
+              });
+            } else if (!receivedAnyContent) {
+              writer.write({
+                type: 'text-delta',
+                id: textId,
+                delta: '**Unable to get a response.** This may be due to insufficient credits, an authentication issue, or the model being temporarily unavailable. Please try a different model in [Settings](/settings), check your [Chutes account](https://chutes.ai) balance, or switch to OpenRouter.',
+              });
+            } else {
+              writer.write({ type: 'text-delta', id: textId, delta: `\n\nError: ${errorMsg}` });
+            }
           }
         }
 
@@ -909,24 +990,48 @@ export async function POST(request: Request) {
             });
           }
 
-          // Handle correction tool calls — create GitHub issue
-          // Try structured tool calls first, fall back to parsing text output
-          // Skip if user's message is too vague — let the bot ask for details first
+          // Handle correction issue creation — two approaches:
+          // 1. Model-based: model called the tool (structured or as text)
+          // 2. Deterministic: bot previously asked for correction details, user provided them
+          // Both skip if user message is vague ("wrong", "nope", etc.)
+          const lastAssistantMsg = [...llmMessages].reverse().find((m) => m.role === 'assistant');
+          const lastUserMsg = [...llmMessages].reverse().find((m) => m.role === 'user');
+
+          // Try model-based tool call first
           const issueCall = capturedToolCalls.find((tc) => tc.toolName === 'create_knowledge_issue');
-          const issueArgs = issueCall?.args?.title && issueCall?.args?.correction
+          let issueArgs = issueCall?.args?.title && issueCall?.args?.correction
             ? { title: issueCall.args.title, correction: issueCall.args.correction }
             : parseToolCallFromText(fullResponseText);
 
+          // Deterministic fallback: if bot asked for correction and user provided details
+          // Track the original question and wrong answer for the issue body
+          let issueOriginalQuestion = '';
+          let issueQuilyAnswer = '';
+
+          if (!issueArgs && lastAssistantMsg && botAskedForCorrection(lastAssistantMsg.content)) {
+            if (!isVagueCorrection(rawUserQuery)) {
+              // Walk back conversation to find original Q&A (before the correction flow)
+              const userMsgs = llmMessages.filter((m: { role: string }) => m.role === 'user');
+              const assistantMsgs = llmMessages.filter((m: { role: string }) => m.role === 'assistant');
+              // Original question is the first user message
+              issueOriginalQuestion = userMsgs.length >= 1 ? userMsgs[0].content : rawUserQuery;
+              // Original wrong answer is the first assistant message (before "tell me more")
+              issueQuilyAnswer = assistantMsgs.length >= 1 ? assistantMsgs[0].content : '';
+              issueArgs = {
+                title: `Correction: ${rawUserQuery.slice(0, 80)}`,
+                correction: rawUserQuery,
+              };
+            }
+          }
+
           if (issueArgs && !isVagueCorrection(rawUserQuery)) {
             try {
-              const lastAssistantMsg = [...llmMessages].reverse().find((m) => m.role === 'assistant');
-              const lastUserMsg = [...llmMessages].reverse().find((m) => m.role === 'user');
               const issueUrl = await createGitHubIssue({
                 title: issueArgs.title,
                 correction: issueArgs.correction,
                 discordUsername: 'Web UI user',
-                originalQuestion: lastUserMsg?.content || userQuery,
-                quilyAnswer: lastAssistantMsg?.content || '',
+                originalQuestion: issueOriginalQuestion || lastUserMsg?.content || userQuery,
+                quilyAnswer: issueQuilyAnswer || lastAssistantMsg?.content || '',
               });
               console.log(`[auto-issue] Created ${issueUrl} from web UI`);
               writer.write({
@@ -938,6 +1043,7 @@ export async function POST(request: Request) {
             }
           }
         }
+        } // end normal (non-correction) flow
       } else {
         // OpenRouter and other providers: use standard toUIMessageStream()
         const result = streamText({
@@ -986,26 +1092,42 @@ export async function POST(request: Request) {
               console.warn('[FollowUp] Failed to get full text for parsing:', e);
             }
 
-            // Handle correction tool calls — create GitHub issue
-            // Try structured tool calls first, fall back to parsing text output
+            // Handle correction issue creation (same dual approach as Chutes path)
             try {
+              const lastAssistantMsg = [...llmMessages].reverse().find((m) => m.role === 'assistant');
+              const lastUserMsg = [...llmMessages].reverse().find((m) => m.role === 'user');
+
               const toolCalls = await result.toolCalls;
               const issueCall = toolCalls?.find((tc) => tc.toolName === 'create_knowledge_issue');
               const issueInput = issueCall && 'input' in issueCall ? issueCall.input as { title?: string; correction?: string } : null;
               const fullText = await result.text;
-              const issueArgs = issueInput?.title && issueInput?.correction
+              let issueArgs = issueInput?.title && issueInput?.correction
                 ? { title: issueInput.title, correction: issueInput.correction }
                 : parseToolCallFromText(fullText);
 
+              // Deterministic fallback
+              let issueOriginalQuestion = '';
+              let issueQuilyAnswer = '';
+              if (!issueArgs && lastAssistantMsg && botAskedForCorrection(lastAssistantMsg.content)) {
+                if (!isVagueCorrection(rawUserQuery)) {
+                  const userMsgs = llmMessages.filter((m: { role: string }) => m.role === 'user');
+                  const assistantMsgs = llmMessages.filter((m: { role: string }) => m.role === 'assistant');
+                  issueOriginalQuestion = userMsgs.length >= 1 ? userMsgs[0].content : rawUserQuery;
+                  issueQuilyAnswer = assistantMsgs.length >= 1 ? assistantMsgs[0].content : '';
+                  issueArgs = {
+                    title: `Correction: ${rawUserQuery.slice(0, 80)}`,
+                    correction: rawUserQuery,
+                  };
+                }
+              }
+
               if (issueArgs && !isVagueCorrection(rawUserQuery)) {
-                const lastAssistantMsg = [...llmMessages].reverse().find((m) => m.role === 'assistant');
-                const lastUserMsg = [...llmMessages].reverse().find((m) => m.role === 'user');
                 const issueUrl = await createGitHubIssue({
                   title: issueArgs.title,
                   correction: issueArgs.correction,
                   discordUsername: 'Web UI user',
-                  originalQuestion: lastUserMsg?.content || userQuery,
-                  quilyAnswer: lastAssistantMsg?.content || '',
+                  originalQuestion: issueOriginalQuestion || lastUserMsg?.content || userQuery,
+                  quilyAnswer: issueQuilyAnswer || lastAssistantMsg?.content || '',
                 });
                 console.log(`[auto-issue] Created ${issueUrl} from web UI`);
                 writer.write({
