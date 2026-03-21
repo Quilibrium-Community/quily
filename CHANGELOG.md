@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-03-21
+
+Quily is now stable. This release marks the project as production-ready after 14 beta releases covering the web chat UI, Discord bot, RAG pipeline, auto-correction system, and model discovery tooling.
+
 ## [0.14.0] - 2026-03-21
 
 ### Features
