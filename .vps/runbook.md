@@ -142,6 +142,10 @@ CLOUDFLARE_API_TOKEN=<paste>
 # BOT_FALLBACK_MODELS=qwen/qwen3-32b,mistralai/mistral-small-3.2-24b-instruct
 # DISCORD_DAILY_LIMIT=200
 # MAX_MESSAGE_LENGTH=2000
+
+# Daily network stats (optional)
+# DISCORD_STATS_CHANNEL_ID=<channel-id>   # Channel for daily stats post
+# DISCORD_STATS_HOUR=12                    # UTC hour to post (default: 12)
 EOF
 chmod 600 /home/quily/quily-chatbot/bot/.env'
 ```
@@ -240,4 +244,18 @@ If the VPS is completely wiped, follow Steps 1-8 sequentially. The only thing no
 
 ---
 
-*Created: 2026-03-18 | Updated: 2026-03-18*
+## Daily Network Stats
+
+The bot can post daily Quilibrium network stats (world size, peers, shard health, worker activity, trends) to a designated channel. To enable:
+
+1. Set `DISCORD_STATS_CHANNEL_ID` in `.env` to the target channel ID
+2. Optionally set `DISCORD_STATS_HOUR` (default: `12` = noon UTC)
+3. Restart the bot: `ssh quily-vps 'pm2 restart quily-bot'`
+
+Users can also trigger stats on demand by mentioning `@Quily stats` or `@Quily network stats`.
+
+The bot stores daily snapshots in `stats-history.json` (next to `dist/`) to compute day-over-day trends. This file is auto-managed (max 30 days). It is not committed to git.
+
+---
+
+*Created: 2026-03-18 | Updated: 2026-03-21*

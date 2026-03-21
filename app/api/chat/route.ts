@@ -6,6 +6,7 @@ import {
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { createChutes } from '@chutes-ai/ai-sdk-provider';
 import { prepareQuery } from '@/src/lib/rag/service';
+import { computeStats, formatWebStats } from '@/src/lib/networkStats';
 import { ragTools } from '@/src/lib/rag/tools';
 import { createGitHubIssue } from '@/bot/src/utils/githubIssues';
 import type { RetrievedChunk, SourceReference } from '@/src/lib/rag/types';
@@ -182,6 +183,31 @@ My knowledge comes from the following official sources:
 function getCommandResponse(message: string): string | null {
   const trimmed = message.trim().toLowerCase();
   return COMMAND_RESPONSES[trimmed] || null;
+}
+
+/** Patterns that trigger live network stats (bypass RAG).
+ *  Two tiers:
+ *  - Exact: short commands like "stats", "/stats", "network stats"
+ *  - Fuzzy: natural language about current network state, shards, peers, workers
+ */
+const STATS_EXACT = [
+  /^\s*(?:network\s+)?stats?\s*$/i,
+  /^\s*\/stats?\s*$/i,
+  /^\s*network\s*$/i,
+  /^\s*shard\s*(?:out|ing)?\s*$/i,
+  /^\s*shardout\s*$/i,
+];
+
+const STATS_FUZZY = [
+  /\b(?:how(?:'s| is| are)|what(?:'s| is| are)|show|get|check|current|live)\b.*\b(?:network\s*(?:stats?|status|health|overview)|shard\s*(?:health|coverage|status|out|ing)|(?:peer|node|worker)\s*(?:count|number|status)|world\s*size)\b/i,
+  /\b(?:shard|network)\s*(?:health|coverage|status|overview|situation)\b/i,
+  /\bhow\s+(?:many|much)\b.*\b(?:peers?|nodes?|workers?|shards?)\b/i,
+  /\b(?:peers?|nodes?|workers?)\s+(?:are\s+)?(?:online|active|running|there)\b/i,
+  /\bhow(?:'s| is)\s+(?:the\s+)?(?:sharding|shardout|network)\s+(?:going|doing|looking)\b/i,
+];
+
+function isStatsQuery(message: string): boolean {
+  return STATS_EXACT.some((p) => p.test(message)) || STATS_FUZZY.some((p) => p.test(message));
 }
 
 /**
@@ -589,8 +615,41 @@ export async function POST(request: Request) {
     // Check if this is a command (use raw query for exact command matching)
     const commandResponse = getCommandResponse(rawUserQuery);
 
+    // Check if this is a direct stats query (keyword shortcut)
+    const statsRequested = isStatsQuery(rawUserQuery);
+
     // Normalize query for RAG retrieval (handles "Q" → "Quilibrium", misspellings, etc.)
     const userQuery = normalizeQuery(rawUserQuery);
+
+    // Stats shortcut: fetch live stats and stream them back, skip RAG entirely
+    if (statsRequested) {
+      const stream = createUIMessageStream({
+        execute: async ({ writer }) => {
+          const textId = 'stats-response';
+          writer.write({ type: 'text-start', id: textId });
+          try {
+            const snapshot = await computeStats();
+            const formatted = formatWebStats(snapshot);
+            writer.write({ type: 'text-delta', id: textId, delta: formatted });
+          } catch (error) {
+            console.error('Stats fetch error:', error);
+            writer.write({
+              type: 'text-delta',
+              id: textId,
+              delta: "I couldn't fetch network stats right now. The explorer API may be temporarily unavailable. Try again in a moment.",
+            });
+          }
+          writer.write({ type: 'text-end', id: textId });
+        },
+      });
+
+      const response = createUIMessageStreamResponse({ stream });
+      if (shouldSetVerifiedCookie) {
+        response.headers.append('Set-Cookie', buildTurnstileSessionCookie());
+      }
+      return response;
+    }
+
     if (commandResponse) {
       // Return command response as a streamed message (for consistency with normal responses)
       const stream = createUIMessageStream({
