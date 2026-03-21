@@ -385,6 +385,17 @@ function writeStatus(
  * instead of using the structured tool calling protocol.
  * Matches patterns like: create_knowledge_issue json {"title": "...", "correction": "..."}
  */
+/**
+ * Check if the user's message is a vague correction (just "wrong", "incorrect", etc.)
+ * without specific details. These should NOT trigger immediate issue creation —
+ * the bot should ask for details first.
+ */
+const VAGUE_CORRECTION_PATTERNS = /^\s*(wrong|incorrect|not right|not correct|nope|no|that'?s wrong|that'?s not right|that'?s incorrect|bad answer|you'?re wrong|false|inaccurate)\s*[.!?]?\s*$/i;
+
+function isVagueCorrection(userMessage: string): boolean {
+  return VAGUE_CORRECTION_PATTERNS.test(userMessage.trim());
+}
+
 function parseToolCallFromText(text: string): { title: string; correction: string } | null {
   // Check if the text contains a tool call pattern
   if (!text.includes('create_knowledge_issue')) return null;
@@ -900,12 +911,13 @@ export async function POST(request: Request) {
 
           // Handle correction tool calls — create GitHub issue
           // Try structured tool calls first, fall back to parsing text output
+          // Skip if user's message is too vague — let the bot ask for details first
           const issueCall = capturedToolCalls.find((tc) => tc.toolName === 'create_knowledge_issue');
           const issueArgs = issueCall?.args?.title && issueCall?.args?.correction
             ? { title: issueCall.args.title, correction: issueCall.args.correction }
             : parseToolCallFromText(fullResponseText);
 
-          if (issueArgs) {
+          if (issueArgs && !isVagueCorrection(rawUserQuery)) {
             try {
               const lastAssistantMsg = [...llmMessages].reverse().find((m) => m.role === 'assistant');
               const lastUserMsg = [...llmMessages].reverse().find((m) => m.role === 'user');
@@ -985,7 +997,7 @@ export async function POST(request: Request) {
                 ? { title: issueInput.title, correction: issueInput.correction }
                 : parseToolCallFromText(fullText);
 
-              if (issueArgs) {
+              if (issueArgs && !isVagueCorrection(rawUserQuery)) {
                 const lastAssistantMsg = [...llmMessages].reverse().find((m) => m.role === 'assistant');
                 const lastUserMsg = [...llmMessages].reverse().find((m) => m.role === 'user');
                 const issueUrl = await createGitHubIssue({
