@@ -100,6 +100,9 @@ export function ChatContainer({
   // Follow-up questions state (keyed by message ID, but we only need the latest)
   const [followUpQuestions, setFollowUpQuestions] = useState<string[]>([]);
 
+  // Correction issue URL (when user reports a correction and an issue is auto-created)
+  const [correctionIssueUrl, setCorrectionIssueUrl] = useState<string | null>(null);
+
   // Turnstile token comes from parent (page.tsx) so it persists across chat switches.
   // Use a ref so the transport closure always reads the latest value.
   const turnstileTokenRef = useRef<string | null>(turnstileToken);
@@ -217,6 +220,13 @@ export function ChatContainer({
           setFollowUpQuestions(questions as string[]);
         }
       }
+      // Check if this is a correction issue notification
+      if (dataPart.type === 'data-correction-issue') {
+        const issueData = dataPart.data as { url?: string };
+        if (issueData?.url) {
+          setCorrectionIssueUrl(issueData.url);
+        }
+      }
     },
     [handleStatusUpdate]
   );
@@ -294,9 +304,10 @@ export function ChatContainer({
     (text: string) => {
       if (!hasAccess) return;
 
-      // Clear thinking steps and follow-up questions for new message
+      // Clear thinking steps, follow-up questions, and correction URL for new message
       setThinkingSteps([]);
       setFollowUpQuestions([]);
+      setCorrectionIssueUrl(null);
 
       sendMessage({
         text,
@@ -438,6 +449,7 @@ export function ChatContainer({
         onQuickAction={handleSubmit}
         thinkingSteps={thinkingSteps}
         followUpQuestions={followUpQuestions}
+        correctionIssueUrl={correctionIssueUrl}
         inputProps={isEmpty ? inputProps : undefined}
       />
 

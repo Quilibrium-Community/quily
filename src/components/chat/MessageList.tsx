@@ -23,6 +23,8 @@ interface MessageListProps {
   onQuickAction?: (command: string) => void;
   thinkingSteps?: ThinkingStep[];
   followUpQuestions?: string[];
+  /** URL of auto-created GitHub issue from a correction */
+  correctionIssueUrl?: string | null;
   /** Input props for embedding in empty state */
   inputProps?: {
     onSubmit: (text: string) => void;
@@ -55,7 +57,7 @@ const QUICK_ACTIONS = [
  * - Empty state for new conversations
  * - Throttled scroll updates during streaming to reduce layout thrashing
  */
-export function MessageList({ messages, status, error, rateLimitError, onQuickAction, thinkingSteps = [], followUpQuestions = [], inputProps }: MessageListProps) {
+export function MessageList({ messages, status, error, rateLimitError, onQuickAction, thinkingSteps = [], followUpQuestions = [], correctionIssueUrl, inputProps }: MessageListProps) {
   const {
     scrollRef,
     anchorRef,
@@ -190,6 +192,7 @@ export function MessageList({ messages, status, error, rateLimitError, onQuickAc
           const isCurrentlyStreaming = isStreaming && isLastAssistant;
           // Only show follow-ups on the last assistant message when not streaming
           const showFollowUps = isLastAssistant && !isStreaming && followUpQuestions.length > 0;
+          const showCorrectionIssue = isLastAssistant && !isStreaming && !!correctionIssueUrl;
 
           return (
             <MessageBubble
@@ -198,6 +201,7 @@ export function MessageList({ messages, status, error, rateLimitError, onQuickAc
               isStreaming={isCurrentlyStreaming}
               followUpQuestions={showFollowUps ? followUpQuestions : undefined}
               onFollowUpSelect={showFollowUps ? onQuickAction : undefined}
+              correctionIssueUrl={showCorrectionIssue ? correctionIssueUrl : undefined}
             />
           );
         })}

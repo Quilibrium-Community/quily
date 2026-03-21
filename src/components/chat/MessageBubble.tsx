@@ -13,6 +13,8 @@ interface MessageBubbleProps {
   isStreaming?: boolean;
   followUpQuestions?: string[];
   onFollowUpSelect?: (question: string) => void;
+  /** URL of auto-created GitHub issue from a correction */
+  correctionIssueUrl?: string;
 }
 
 /**
@@ -79,6 +81,7 @@ export const MessageBubble = memo(function MessageBubble({
   isStreaming = false,
   followUpQuestions,
   onFollowUpSelect,
+  correctionIssueUrl,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
 
@@ -110,6 +113,21 @@ export const MessageBubble = memo(function MessageBubble({
       {!isStreaming && sources.length > 0 && (
         <div className="mt-4">
           <SourcesCitation sources={sources} />
+        </div>
+      )}
+
+      {/* Correction issue notification */}
+      {!isStreaming && correctionIssueUrl && (
+        <div className="mt-4 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20 text-sm text-text-secondary">
+          <a
+            href={correctionIssueUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="link-unstyled font-medium"
+          >
+            GitHub issue created
+          </a>
+          {' — thanks for helping me get smarter.'}
         </div>
       )}
 

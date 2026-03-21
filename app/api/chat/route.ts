@@ -6,6 +6,8 @@ import {
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { createChutes } from '@chutes-ai/ai-sdk-provider';
 import { prepareQuery } from '@/src/lib/rag/service';
+import { ragTools } from '@/src/lib/rag/tools';
+import { createGitHubIssue } from '@/bot/src/utils/githubIssues';
 import type { RetrievedChunk, SourceReference } from '@/src/lib/rag/types';
 import { parseFollowUpQuestions } from '@/src/lib/rag/followUpParser';
 import { normalizeQuery } from '@/src/lib/rag/queryNormalizer';
@@ -701,6 +703,9 @@ export async function POST(request: Request) {
         let fullResponseText = ''; // Collect for follow-up parsing
         const currentModelUrl = model;
 
+        // Capture tool calls from the successful stream attempt
+        let capturedToolCalls: Array<{ toolName: string; args: Record<string, string> }> = [];
+
         // Helper to attempt streaming from a model
         const tryStreamModel = async (modelUrl: string): Promise<{ success: boolean; error?: string }> => {
           let capturedError: string | undefined;
@@ -711,6 +716,7 @@ export async function POST(request: Request) {
               model: modelProvider(modelUrl) as Parameters<typeof streamText>[0]['model'],
               system: systemPrompt,
               messages: llmMessages,
+              tools: ragTools,
               onError: (error) => {
                 // Capture error from onError callback (may not throw)
                 const errObj = error.error;
@@ -734,6 +740,16 @@ export async function POST(request: Request) {
                   writer.write({ type: 'text-delta', id: textId, delta: processedChunk });
                 }
               }
+            }
+
+            // Capture tool calls after text stream is consumed
+            try {
+              const tc = await streamResult.toolCalls;
+              if (tc && tc.length > 0) {
+                capturedToolCalls = tc.map((t) => ({ toolName: t.toolName, args: ('input' in t ? t.input : {}) as Record<string, string> }));
+              }
+            } catch {
+              // Tool calls may not be available
             }
 
             // If we got no content but captured an error, return the error
@@ -839,6 +855,30 @@ export async function POST(request: Request) {
               data: questions,
             });
           }
+
+          // Handle correction tool calls — create GitHub issue
+          const issueCall = capturedToolCalls.find((tc) => tc.toolName === 'create_knowledge_issue');
+          if (issueCall?.args?.title && issueCall?.args?.correction) {
+            try {
+              // Build context from conversation history
+              const lastAssistantMsg = [...llmMessages].reverse().find((m) => m.role === 'assistant');
+              const lastUserMsg = [...llmMessages].reverse().find((m) => m.role === 'user');
+              const issueUrl = await createGitHubIssue({
+                title: issueCall.args.title,
+                correction: issueCall.args.correction,
+                discordUsername: 'Web UI user',
+                originalQuestion: lastUserMsg?.content || userQuery,
+                quilyAnswer: lastAssistantMsg?.content || '',
+              });
+              console.log(`[auto-issue] Created ${issueUrl} from web UI`);
+              writer.write({
+                type: 'data-correction-issue' as const,
+                data: { url: issueUrl },
+              });
+            } catch (err) {
+              console.error('[auto-issue] Failed to create GitHub issue from web UI:', err);
+            }
+          }
         }
       } else {
         // OpenRouter and other providers: use standard toUIMessageStream()
@@ -846,6 +886,7 @@ export async function POST(request: Request) {
           model: modelProvider(model) as Parameters<typeof streamText>[0]['model'],
           system: systemPrompt,
           messages: llmMessages,
+          tools: ragTools,
           onError: (error) => {
             console.error('LLM streaming error:', error);
           },
@@ -885,6 +926,31 @@ export async function POST(request: Request) {
               }
             } catch (e) {
               console.warn('[FollowUp] Failed to get full text for parsing:', e);
+            }
+
+            // Handle correction tool calls — create GitHub issue
+            try {
+              const toolCalls = await result.toolCalls;
+              const issueCall = toolCalls?.find((tc) => tc.toolName === 'create_knowledge_issue');
+              const issueInput = issueCall && 'input' in issueCall ? issueCall.input as { title?: string; correction?: string } : null;
+              if (issueInput?.title && issueInput?.correction) {
+                const lastAssistantMsg = [...llmMessages].reverse().find((m) => m.role === 'assistant');
+                const lastUserMsg = [...llmMessages].reverse().find((m) => m.role === 'user');
+                const issueUrl = await createGitHubIssue({
+                  title: issueInput.title,
+                  correction: issueInput.correction,
+                  discordUsername: 'Web UI user',
+                  originalQuestion: lastUserMsg?.content || userQuery,
+                  quilyAnswer: lastAssistantMsg?.content || '',
+                });
+                console.log(`[auto-issue] Created ${issueUrl} from web UI`);
+                writer.write({
+                  type: 'data-correction-issue' as const,
+                  data: { url: issueUrl },
+                });
+              }
+            } catch (err) {
+              console.error('[auto-issue] Failed to handle tool calls from web UI:', err);
             }
           },
         }));
