@@ -587,6 +587,9 @@ No. The qclient embeds a light client that can construct network interactions wi
 **Q: What happens if I lose my keys?**
 If you lose your keyset files (`config.yml` and `keys.yml`) and have no backup, the tokens and data associated with that keyset are irrecoverable. There is no recovery mechanism. Always maintain secure, encrypted backups.
 
+**Q: Will my peer ID change if I restore old config.yml and keys.yml files?**
+No — your peer ID is derived from the `peerPrivKey` field in `config.yml`. Restoring your original `config.yml` restores your original peer ID. If you see a different peer ID after restoring, verify that: (1) you replaced the correct config directory (check `~/.quilibrium/configs/` for newer installations or `.config/` for legacy setups), (2) you restarted the node after replacing files, and (3) the restored `config.yml` contains your original `peerPrivKey` value.
+
 **Q: Can I move my keyset to a different server?**
 Yes. Copy the keyset directory (or the `config.yml` and `keys.yml` files) to the new server, then use `qclient node config import` to bring them into qclient's managed structure.
 
@@ -611,4 +614,4 @@ After merging, the network calculates your combined seniority from the merged ke
 **Q: What custody model should I use?**
 For most individual node operators, standard warm custody (direct key usage) is sufficient. Cold custody is recommended for high-value accounts or institutional operations. MPC custody is for organizations requiring distributed signing authority across multiple parties.
 
-*Last updated: 2026-02-24T12:00:00*
+*Last updated: 2026-03-21*

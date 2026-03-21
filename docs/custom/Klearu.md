@@ -32,7 +32,7 @@ topics:
 
 **Can you run AI on Quilibrium?** Yes — Klearu is a real, functional runtime for private LLM inference, officially open-sourced by Quilibrium Inc. in early 2026. It is not yet integrated into the Quilibrium mainnet, but the library is available now and works today.
 
-**Can you train LLMs on Quilibrium?** Klearu is focused on **inference**, not general user-facing LLM training. It uses SLIDE-based sparse training internally for its own models, but it is not a platform for training arbitrary LLMs. Mainnet AI integration is planned for a future protocol upgrade.
+**Can you train LLMs on Quilibrium?** Klearu is currently focused on **inference**, not general user-facing LLM training. It uses SLIDE-based sparse training internally for its own models, but training arbitrary LLMs is not yet implemented. Nothing in the architecture technically prevents extending it to support training in the future — it is a current scope limitation, not a fundamental one. Mainnet AI integration is planned for a future protocol upgrade.
 
 **Is AI on Q just a roadmap item?** No longer. Klearu moves private AI from a future roadmap concept to a shipped, open-source codebase. The "Event Horizon" roadmap language predates this release — Klearu is its concrete realization for inference.
 
@@ -175,4 +175,4 @@ Binaries are included for:
 
 ---
 
-*Last updated: 2026-03-02*
+*Last updated: 2026-03-21*
