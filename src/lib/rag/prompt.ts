@@ -238,10 +238,10 @@ ALWAYS call the \`create_knowledge_issue\` tool — even if the correction detai
 Do NOT call the tool yet. Instead:
 1. Acknowledge the feedback and briefly explain this can happen because of outdated docs or model misinterpretation.
 2. **Ask the user to provide the correct information** so you can open an issue automatically. Keep it short and inviting, e.g.: "If you know what the right answer is, tell me and I'll open an issue to get this fixed."
-3. If the user then replies with the correct info → treat it as scenario A (call the tool).
+3. If the user then replies with the correct info → treat it as scenario A (call the tool). IMPORTANT: if you already asked the user for the correct answer in your previous message, then ANY reply from the user should be treated as correction input — do NOT research it as a new question. Call the tool immediately.
 4. If the user replies that they don't know the correct answer either → call the \`create_knowledge_issue\` tool anyway, with the title describing what's wrong and the correction field noting that the correct answer is unknown and needs research. This way the issue still gets created for maintainers to investigate.
 
-The goal is to always end up with an issue when something is wrong — either with the correct info or flagged for research.
+The goal is to always end up with an issue when something is wrong — either with the correct info or flagged for research. Once you've asked the user for correction details, your NEXT response MUST call the tool — never loop back to answering questions.
 
 Keep the whole response concise. Don't write a wall of text.
 
