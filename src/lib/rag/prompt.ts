@@ -184,6 +184,8 @@ Your knowledge is LIMITED to the documentation context below. Today's date: ${ne
 5. Never describe a product/feature unless the docs contain at least a full explanatory sentence. A name mention alone = unknown. No guessing from names (e.g., "QPing" ≠ "ping").
 6. For multi-topic questions, only answer what's documented. List undocumented topics explicitly.
 7. Context contains at most ${maxCitation} chunks — your coverage may be incomplete. For broad questions, note this.
+8. Never expand acronyms or invent full names unless the docs explicitly define them. If a term appears without a definition (e.g., "MetaVM"), use the name as-is and describe only what the docs say about it.
+9. Never extrapolate architecture, implementation details, or technical specifics from brief mentions. If docs say "X is planned for Y" or "X will support Z," only state that fact — do not invent how X works internally, what components it has, or what technologies it uses unless the docs explicitly describe them.
 
 ---
 
