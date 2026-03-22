@@ -1,4 +1,5 @@
 import type { SourceReference } from '../../src/lib/rag/types';
+import { getCitedIndices } from '../../src/lib/rag/utils';
 
 /**
  * Get a short label for the source type based on doc_type and URL.
@@ -81,10 +82,7 @@ export function formatForDiscord(text: string, sources: SourceReference[]): stri
   // If the response didn't cite anything (e.g. casual/banter replies), skip the
   // sources block entirely — showing unrelated sources under a joke looks weird.
   if (sources.length > 0) {
-    const citedIndices = new Set<number>();
-    for (const match of text.matchAll(/\[(\d+)\]/g)) {
-      citedIndices.add(Number(match[1]));
-    }
+    const citedIndices = getCitedIndices(text);
 
     const citedSources = sources
       .filter((s) => citedIndices.has(s.index))
@@ -109,7 +107,7 @@ export function formatForDiscord(text: string, sources: SourceReference[]): stri
           ? `• [${idx}] **${label}:** ${title} — <${url}>`
           : `• [${idx}] **${label}:** ${title}`;
       });
-      formatted += `\n\n**Sources:**\n${sourceLines.join('\n')}`;
+      formatted += `\n\n-# **Sources:**\n${sourceLines.map((l) => `-# ${l}`).join('\n')}`;
     }
   }
 
