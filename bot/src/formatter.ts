@@ -119,7 +119,7 @@ export function formatForDiscord(
           ? `• [${idx}] **${label}:** ${title} — <${url}>`
           : `• [${idx}] **${label}:** ${title}`;
       });
-      formatted += `\n\n-# **Sources:**\n${sourceLines.map((l) => `-# ${l}`).join('\n')}`;
+      formatted += `\n\n**Sources:**\n${sourceLines.join('\n')}`;
     }
   }
 
