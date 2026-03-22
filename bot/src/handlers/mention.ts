@@ -5,6 +5,7 @@ import { checkIssueRateLimit, recordIssueCreation } from '../utils/issueRateLimi
 import { createGitHubIssue } from '../utils/githubIssues';
 import { getHistory, getLastChunkIds, addExchange } from '../utils/memory';
 import { chunkMessage } from '../utils/messageChunker';
+import { extractAttachments } from '../utils/attachments';
 import { formatForDiscord } from '../formatter';
 import { handleRecap } from './recap';
 import { handleStats } from './stats';
@@ -73,6 +74,14 @@ export function registerMentionHandler(client: Client): void {
         } catch {
           // Referenced message may be deleted or inaccessible
         }
+      }
+
+      if (!query && message.attachments.size === 0) return;
+
+      // Extract text from supported file attachments (.txt, .md, code files, etc.)
+      const fileContent = await extractAttachments(message.attachments);
+      if (fileContent) {
+        query = fileContent + (query || 'Describe the contents of the attached file(s).');
       }
 
       if (!query) return;
