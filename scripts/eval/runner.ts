@@ -55,6 +55,7 @@ async function sendChatRequest(
           messages,
           provider: config.provider,
           model: config.model || undefined,
+          apiKey: config.providerApiKey || undefined,
         }),
       },
       config.timeout

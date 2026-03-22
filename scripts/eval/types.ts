@@ -206,6 +206,8 @@ export interface RunnerConfig {
   baseUrl: string;
   provider: string;
   model: string;
+  /** API key passed in the request body (required for OpenRouter provider) */
+  providerApiKey: string;
   openrouterApiKey: string;
   judgeModel: string;
   concurrency: number;

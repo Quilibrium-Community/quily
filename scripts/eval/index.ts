@@ -156,6 +156,7 @@ program
   .option('-u, --url <url>', 'Base URL of the chat server', process.env.EVAL_BASE_URL || 'http://localhost:4000')
   .option('-p, --provider <provider>', 'Chat provider', 'chutes')
   .option('-m, --model <model>', 'Model to test (uses server default if omitted)')
+  .option('--api-key <key>', 'Provider API key (required for OpenRouter; defaults to OPENROUTER_API_KEY env var)')
   .option(
     '--judge-model <model>',
     'Judge model for evaluation (via OpenRouter)',
@@ -304,6 +305,7 @@ program
         baseUrl: options.url,
         provider: options.provider,
         model: options.model || '',
+        providerApiKey: options.apiKey || (options.provider === 'openrouter' ? openrouterApiKey || '' : ''),
         openrouterApiKey: openrouterApiKey || '',
         judgeModel: options.judgeModel,
         concurrency: parseInt(options.concurrency),
