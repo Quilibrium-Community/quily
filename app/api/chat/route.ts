@@ -1114,6 +1114,12 @@ export async function POST(request: Request) {
             return error instanceof Error ? error.message : 'An error occurred while streaming the response.';
           },
           onFinish: async () => {
+            // Send RAG quality for confidence indicator
+            writer.write({
+              type: 'data-rag-quality' as const,
+              data: { quality: ragQuality },
+            });
+
             for (const source of sources) {
               // Encode metadata into title for client display
               // Format: "Title|doc_type|published_date" (pipe-separated for parsing)
