@@ -786,8 +786,9 @@ export async function POST(request: Request) {
             });
 
             ({ systemPrompt, retrievedChunks: chunks, ragQuality, sources: formattedSources } = prepared);
+            const maxSim = chunks.length > 0 ? Math.max(...chunks.map(c => c.similarity)).toFixed(3) : '0';
             console.log(
-              `RAG retrieval: ${chunks.length} chunks, quality=${ragQuality}, avgSimilarity=${prepared.avgSimilarity.toFixed(3)}, model=${model}, provider=${provider}`
+              `RAG retrieval: ${chunks.length} chunks, uiQuality=${ragQuality}, maxSimilarity=${maxSim}, avgSimilarity=${prepared.avgSimilarity.toFixed(3)}, model=${model}, provider=${provider}`
             );
           }
 

@@ -19,8 +19,11 @@ export interface ContextBlockResult {
 }
 
 /**
- * Threshold for "high relevance" - chunks above this are likely directly relevant
- * text-embedding-3-small typically produces 0.3-0.6 for related content
+ * Threshold for "high relevance" — controls both LLM system prompt behavior
+ * and user-facing confidence callout. Below this, the LLM is told to be cautious
+ * and the UI shows a warning.
+ * BGE-M3 embeddings produce 0.59–0.74 for most queries, so 0.45 only fires
+ * on genuinely weak matches.
  */
 const HIGH_RELEVANCE_THRESHOLD = 0.45;
 
@@ -46,7 +49,7 @@ export function buildContextBlock(chunks: RetrievedChunk[]): ContextBlockResult 
   const avgSimilarity = chunks.reduce((sum, c) => sum + c.similarity, 0) / chunks.length;
   const maxSimilarity = Math.max(...chunks.map(c => c.similarity));
 
-  // Determine quality based on best match and average
+  // Determine quality based on best match
   const quality: RelevanceQuality =
     maxSimilarity >= HIGH_RELEVANCE_THRESHOLD ? 'high' : 'low';
 
@@ -191,11 +194,13 @@ Your knowledge is LIMITED to the documentation context below. Today's date: ${ne
 
 ## Error & Correction Handling
 
-When a user indicates your answer is wrong (explicitly or implicitly):
+**IMPORTANT:** NEVER proactively create issues, flag documentation gaps, or call \`create_knowledge_issue\` on your own initiative. If a topic isn't covered in the docs, simply say so and point to docs.quilibrium.com — do NOT announce you'll "flag it" or output tool call JSON in your response text.
+
+The \`create_knowledge_issue\` tool is ONLY for when a **user** indicates your answer is wrong:
 
 1. **Re-examine sources** — check if you quoted faithfully or added interpretation. Drop any claim not directly stated in chunks.
 2. **Correct if possible** — use only what docs literally say, cite strictly.
-3. **Issue creation:**
+3. **Issue creation (user-initiated only):**
    - **User gave specific correction** → call \`create_knowledge_issue\` with title + details. Don't mention the issue in your response.
    - **User asked to open an issue** → always call the tool, even with brief details.
    - **User said "wrong" without details** → ask for correct info. If they provide it, call the tool. If they don't know either, call the tool anyway flagging it for research. After asking once, the next reply MUST trigger the tool — never loop back to answering.

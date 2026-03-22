@@ -138,6 +138,14 @@ PROPRIETARY_PREFIXES = [
 ]
 
 
+def is_reasoning_model(model_id_or_name: str) -> bool:
+    """Check if a model is a reasoning/thinking model (too slow for chatbot use)."""
+    s = model_id_or_name.lower()
+    # Reasoning model indicators: R1, QwQ, "thinking" variants, o1/o3-style
+    reasoning_patterns = ["-r1", "/r1", "qwq", "thinking", "-o1", "-o3"]
+    return any(p in s for p in reasoning_patterns)
+
+
 def is_open_source(model_id: str) -> bool:
     """Heuristic: check if a model ID belongs to a known open-source org."""
     mid = model_id.lower()
@@ -869,8 +877,21 @@ def run_benchmarks(candidates: list[dict], max_models: int = 5) -> dict:
         print("  Set it to enable quality testing: export OPENROUTER_API_KEY=sk-or-...")
         return {}
 
+    # Filter out reasoning/thinking models — too slow for chatbot use
+    chat_candidates = []
+    skipped = []
+    for c in candidates:
+        if is_reasoning_model(c["id"]) or is_reasoning_model(c.get("name", "")):
+            skipped.append(c)
+        else:
+            chat_candidates.append(c)
+    if skipped:
+        print(f"  Skipping {len(skipped)} reasoning model(s) (too slow for chatbot):")
+        for s in skipped:
+            print(f"    - {s.get('name', s['id'])}")
+
     # Pick top candidates by capability (largest models first) up to max_models
-    ranked = sorted(candidates, key=lambda c: (
+    ranked = sorted(chat_candidates, key=lambda c: (
         -extract_model_size(c["name"]),
         -c.get("chutes_invocations", 0),
         -c.get("context_length", 0),

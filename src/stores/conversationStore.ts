@@ -32,6 +32,8 @@ export interface Message {
   role: 'user' | 'assistant';
   content: string;
   sources?: MessageSource[];
+  /** RAG retrieval quality for confidence indicator (only on assistant messages) */
+  ragQuality?: 'high' | 'low' | 'none';
 }
 
 /**

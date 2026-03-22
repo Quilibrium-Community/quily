@@ -126,6 +126,10 @@
   --color-callout-success-bg: #f0fdf4;   /* green-50 */
   --color-callout-success-border: #86efac; /* green-300 */
   --color-callout-success-text: #166534; /* green-800 */
+
+  --color-callout-warning-bg: #fffbeb;   /* amber-50 */
+  --color-callout-warning-border: #fcd34d; /* amber-300 */
+  --color-callout-warning-text: #92400e; /* amber-800 */
 }
 
 /* Dark theme - same semantic tokens, different values */
@@ -241,6 +245,10 @@
   --color-callout-success-bg: rgba(22, 101, 52, 0.15);
   --color-callout-success-border: rgba(74, 222, 128, 0.3);
   --color-callout-success-text: #86efac; /* green-300 */
+
+  --color-callout-warning-bg: rgba(120, 53, 15, 0.10);
+  --color-callout-warning-border: rgba(252, 211, 77, 0.20);
+  --color-callout-warning-text: #d4a83a; /* muted amber */
 }
 
 /* Register semantic colors with Tailwind */
@@ -324,6 +332,9 @@
   --color-callout-success-bg: var(--color-callout-success-bg);
   --color-callout-success-border: var(--color-callout-success-border);
   --color-callout-success-text: var(--color-callout-success-text);
+  --color-callout-warning-bg: var(--color-callout-warning-bg);
+  --color-callout-warning-border: var(--color-callout-warning-border);
+  --color-callout-warning-text: var(--color-callout-warning-text);
 
   /* Legacy aliases for backwards compatibility */
   --color-text-primary: var(--color-text-brand);
@@ -421,6 +432,23 @@ a.link-muted:hover {
 }
 
 .callout-success a:hover {
+  opacity: 0.8;
+}
+
+.callout-warning {
+  background-color: var(--color-callout-warning-bg);
+  border: 1px solid var(--color-callout-warning-border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  color: var(--color-callout-warning-text);
+}
+
+.callout-warning a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.callout-warning a:hover {
   opacity: 0.8;
 }
 

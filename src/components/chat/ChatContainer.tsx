@@ -281,6 +281,12 @@ export function ChatContainer({
       };
     });
 
+    // Restore ragQuality from the last assistant message
+    const lastAssistant = [...conversation.messages].reverse().find((m) => m.role === 'assistant');
+    if (lastAssistant?.ragQuality) {
+      setRagQuality(lastAssistant.ragQuality);
+    }
+
     // Use setTimeout to ensure useChat has fully initialized
     setTimeout(() => {
       setMessages(uiMessages);
@@ -391,6 +397,16 @@ export function ChatContainer({
         };
       });
 
+      // Attach ragQuality to the last assistant message so it persists across sessions
+      if (ragQuality) {
+        for (let i = storeMessages.length - 1; i >= 0; i--) {
+          if (storeMessages[i].role === 'assistant') {
+            storeMessages[i].ragQuality = ragQuality;
+            break;
+          }
+        }
+      }
+
       updateMessages(conversationId, storeMessages);
     };
 
@@ -408,7 +424,7 @@ export function ChatContainer({
       }
       doUpdate();
     }
-  }, [conversationId, messages, updateMessages, isStreaming]);
+  }, [conversationId, messages, updateMessages, isStreaming, ragQuality]);
 
   // Show skeleton while Chutes session is loading to prevent flash of ProviderSetup
   if (providerId === 'chutes' && chutesLoading) {

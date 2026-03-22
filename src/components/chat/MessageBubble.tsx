@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useMemo } from 'react';
-import { hasCitations } from '@/src/lib/rag/utils';
+import { parseFollowUpQuestions } from '@/src/lib/rag/followUpParser';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { SourcesCitation } from './SourcesCitation';
 import { FollowUpQuestions } from './FollowUpQuestions';
@@ -21,29 +21,15 @@ interface MessageBubbleProps {
 }
 
 /**
- * Regex to match JSON code fence with follow-up questions at end of response.
- * Strips this from display since it's only for parsing follow-ups.
+ * Streaming-only regexes: strip partial follow-up blocks as they're being typed.
+ * For completed messages, parseFollowUpQuestions() handles stripping with Zod validation.
  */
-const FOLLOW_UP_CODE_FENCE_REGEX = /```json\s*\n?\s*\[[\s\S]*?\]\s*\n?```\s*$/;
 
-/**
- * Regex to match bare JSON follow-up questions (no code fence).
- * Matches: json\n["q1", "q2"] or just a bare JSON array at end of response.
- * Mirrors BARE_JSON_REGEX in followUpParser.ts.
- */
-const BARE_FOLLOW_UP_REGEX = /\n\s*json\s*\n?\s*\["[\s\S]*?"\s*\]\s*$/;
-
-/**
- * Regex to match partial/in-progress JSON code fence during streaming.
- * Catches: ```json, ```json\n[, ```json\n["..., etc.
- */
+/** Partial ```json code fence during streaming */
 const PARTIAL_FOLLOW_UP_REGEX = /```json\s*\n?\s*\[?[\s\S]*$/;
 
-/**
- * Regex to match partial bare JSON follow-up during streaming.
- * Catches: json\n[, json ["..., etc.
- */
-const PARTIAL_BARE_FOLLOW_UP_REGEX = /\n\s*json\s*\n?\s*\[?[^\]]*$/;
+/** Partial bare JSON follow-up during streaming (json prefix optional) */
+const PARTIAL_BARE_FOLLOW_UP_REGEX = /\n\s*(?:json\s*\n?\s*)?\["[^\]]*$/;
 
 /**
  * Regex to strip raw tool call text that some models output instead of structured calls.
@@ -63,6 +49,11 @@ const PARTIAL_TOOL_CALL_REGEX = /[^\n]*create_knowledge_issue[^\n]*$/;
  * Extract text content from UIMessage parts array.
  * UIMessage in AI SDK v6 uses parts[] instead of content string.
  * Also strips follow-up JSON block if present (complete or partial during streaming).
+ *
+ * For completed messages, delegates to parseFollowUpQuestions() which uses Zod
+ * validation — only strips content that is actually a valid follow-up array.
+ * This is safe regardless of whether followUpQuestions prop is populated
+ * (e.g., when restoring chat history from sidebar).
  */
 function getTextContent(message: UIMessage, isStreaming: boolean = false): string {
   if (!message.parts) return '';
@@ -73,14 +64,6 @@ function getTextContent(message: UIMessage, isStreaming: boolean = false): strin
 
   const fullText = textParts.join('');
 
-  // DEBUG: log text content to diagnose follow-up stripping
-  if (fullText.includes('json') && fullText.includes('[')) {
-    console.log('[MessageBubble] fullText ends with:', JSON.stringify(fullText.slice(-300)));
-    console.log('[MessageBubble] isStreaming:', isStreaming);
-    console.log('[MessageBubble] BARE match:', /\n\s*json\s*\n?\s*\["[\s\S]*?"\s*\]\s*$/.test(fullText));
-    console.log('[MessageBubble] FENCE match:', /```json\s*\n?\s*\[[\s\S]*?\]\s*\n?```\s*$/.test(fullText));
-  }
-
   // Strip follow-up JSON block and raw tool call text from display
   // During streaming, also strip partial blocks that are being typed
   if (isStreaming) {
@@ -90,11 +73,12 @@ function getTextContent(message: UIMessage, isStreaming: boolean = false): strin
       .replace(PARTIAL_TOOL_CALL_REGEX, '')
       .trimEnd();
   }
-  return fullText
-    .replace(FOLLOW_UP_CODE_FENCE_REGEX, '')
-    .replace(BARE_FOLLOW_UP_REGEX, '')
-    .replace(TOOL_CALL_TEXT_REGEX, '')
-    .trimEnd();
+
+  // For completed messages, use the parser to safely strip follow-ups.
+  // parseFollowUpQuestions validates with Zod before stripping, so
+  // legitimate JSON output won't be removed.
+  const { cleanText } = parseFollowUpQuestions(fullText);
+  return cleanText.replace(TOOL_CALL_TEXT_REGEX, '').trimEnd();
 }
 
 /**
@@ -133,16 +117,13 @@ export const MessageBubble = memo(function MessageBubble({
   const isUser = message.role === 'user';
 
   // Memoize text extraction to avoid recalculating on every render
-  // Pass isStreaming to handle partial JSON blocks during streaming
   const textContent = useMemo(() => getTextContent(message, isStreaming), [message.parts, isStreaming]);
   const sources = useMemo(() => getSources(message), [message.parts]);
 
   // Determine if confidence warning should show:
-  // Only when response has citations AND quality is low/none
-  const showConfidenceWarning = useMemo(() => {
-    if (!ragQuality || ragQuality === 'high') return false;
-    return hasCitations(textContent);
-  }, [ragQuality, textContent]);
+  // Only for 'low' quality (chunks retrieved but weak match).
+  // 'none' = no retrieval (casual chat) → no warning. 'high' = good match → no warning.
+  const showConfidenceWarning = ragQuality === 'low';
 
   if (isUser) {
     return (
@@ -163,13 +144,11 @@ export const MessageBubble = memo(function MessageBubble({
     <div className="mb-6 text-text-primary">
       <MarkdownRenderer content={textContent} isStreaming={isStreaming} />
 
-      {/* Confidence warning - only for low/none quality with citations */}
+      {/* Confidence warning - only for low quality (chunks retrieved but weak match) */}
       {!isStreaming && showConfidenceWarning && (
-        <div className="mt-4 px-3 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-sm text-text-secondary">
-          <span className="mr-1">⚠️</span>
-          {ragQuality === 'none'
-            ? "I couldn't find strong documentation for this — take this with a grain of salt."
-            : 'This answer may not be fully supported by our docs — double-check the sources below.'}
+        <div className="callout-warning mt-4 text-base sm:text-sm flex items-start gap-2">
+          <Icon name="alert-triangle" size={16} className="shrink-0 mt-0.5" />
+          <span>This answer may not be fully supported by official documentation — take it with a grain of salt.</span>
         </div>
       )}
 

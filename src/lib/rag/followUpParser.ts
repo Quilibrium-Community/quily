@@ -31,6 +31,16 @@ const JSON_CODE_FENCE_REGEX = /```json\s*\n?\s*(\[[\s\S]*?\])\s*\n?```\s*$/;
 const BARE_JSON_REGEX = /\n\s*(?:json\s*\n\s*)?(\["\s*[\s\S]*?"\s*\])\s*$/;
 
 /**
+ * Catch "Follow-Up:" / "Follow Up:" markdown sections the LLM sometimes produces
+ * instead of a JSON code fence. Matches the header and everything after it.
+ * Examples:
+ *   Follow-Up:\n• ["Q1", "Q2"]
+ *   **Follow-Up:**\n- Q1\n- Q2
+ *   Follow Up:\n1. Q1\n2. Q2
+ */
+const FOLLOWUP_SECTION_REGEX = /\n*\s*\*{0,2}Follow[- ]?Up:?\*{0,2}\s*\n[\s\S]*$/i;
+
+/**
  * Parse follow-up questions from LLM response.
  *
  * Extracts JSON array from markdown code fence at end of response,
@@ -55,6 +65,12 @@ export function parseFollowUpQuestions(text: string): FollowUpParseResult {
   const match = text.match(JSON_CODE_FENCE_REGEX) || text.match(BARE_JSON_REGEX);
 
   if (!match) {
+    // Last resort: strip "Follow-Up:" markdown sections entirely.
+    // These don't contain parseable JSON, so we just remove the block.
+    const sectionMatch = text.match(FOLLOWUP_SECTION_REGEX);
+    if (sectionMatch) {
+      return { cleanText: text.replace(sectionMatch[0], '').trimEnd(), questions: null };
+    }
     return { cleanText: text, questions: null };
   }
 

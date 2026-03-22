@@ -18,6 +18,9 @@ This is the main index for all documentation, bug reports, and task management.
 - [System Prompt & Anti-Hallucination Strategy](docs/system-prompt-anti-hallucination.md)
 - [Update News Skill — Obsolescence Management](docs/update-news-skill.md)
 
+### Features
+- [RAG Confidence Indicator](docs/features/rag-confidence-indicator.md)
+
 ## 🐛 Bug Reports
 
 ### Solved Issues
@@ -29,14 +32,12 @@ This is the main index for all documentation, bug reports, and task management.
 
 ### Pending Tasks
 
-- [Auto-Correction GitHub Issues — Implementation Plan](tasks/2026-03-19-auto-correction-issues-plan.md)
-- [Auto-Correction GitHub Issues — Design Spec](tasks/2026-03-19-auto-correction-issues.md)
-- [Daily General Channel Recap — Implementation Plan](tasks/2026-03-19-daily-general-recap-plan.md)
-- [Daily General Channel Recap](tasks/2026-03-19-daily-general-recap.md)
-- [Repo Transfer: lamat1111 → Quilibrium-Community](tasks/2026-03-20-repo-transfer-to-org.md)
+- [RAG Confidence Indicator — Implementation Plan](tasks/2026-03-22-rag-confidence-indicator-plan.md)
+- [RAG Confidence Indicator](tasks/2026-03-22-rag-confidence-indicator.md)
 - [Add Self-Review / Fact Check Button to Bot Replies](tasks/self-review-fact-check-button.md)
 - [Add Web Fetching Capability to Chatbot](tasks/web-fetching-capability.md)
 - [Discord Announcements Scraper with Automated RAG Ingestion](tasks/discord-announcements-scraper.md)
+- [Discord Follow-Up Questions Dropdown](tasks/discord-followup-dropdown.md)
 - [Implement AI-Powered Chat Renaming Feature](tasks/ai-chat-renaming-feature.md)
 - [Implement Data Export/Import Feature](tasks/data-export-import-feature.md)
 - [Implement File Upload & Chat Attachments](tasks/file-upload-chat-attachments.md)
@@ -52,9 +53,14 @@ This is the main index for all documentation, bug reports, and task management.
 - [Discord Bot Integration — Implementation Plan](tasks/.done/2026-03-17-discord-bot-plan.md)
 - [Discord Announcements Scraper Implementation Plan](tasks/.done/2026-03-18-discord-announcements-scraper.md)
 - [Add discord_announcement to RAG temporal query logic](tasks/.done/2026-03-18-retriever-discord-announcement-support.md)
+- [Auto-Correction GitHub Issues — Implementation Plan](tasks/.done/2026-03-19-auto-correction-issues-plan.md)
+- [Auto-Correction GitHub Issues — Design Spec](tasks/.done/2026-03-19-auto-correction-issues.md)
+- [Daily General Channel Recap — Implementation Plan](tasks/.done/2026-03-19-daily-general-recap-plan.md)
+- [Daily General Channel Recap](tasks/.done/2026-03-19-daily-general-recap.md)
 - [Issue-to-Knowledge Pipeline Implementation Plan](tasks/.done/2026-03-19-issue-to-knowledge-pipeline-plan.md)
 - [Automated Issue-to-Knowledge Pipeline](tasks/.done/2026-03-19-issue-to-knowledge-pipeline.md)
 - [Process Issues Skill](tasks/.done/2026-03-19-process-issues-skill.md)
+- [Repo Transfer: lamat1111 → Quilibrium-Community](tasks/.done/2026-03-20-repo-transfer-to-org.md)
 - [Add Conversational Context to RAG Retrieval](tasks/.done/rag-conversational-context-memory.md)
 - [Add External Chutes API Key Option](tasks/.done/external-chutes-api-key-option.md)
 - [Convert Settings Modal to Standalone Settings Page](tasks/.done/convert-settings-modal-to-page.md)
@@ -84,6 +90,7 @@ This is the main index for all documentation, bug reports, and task management.
 - [Documentation Gap Analysis for RAG Quality](reports/2026-02-24_doc-gap-analysis.md)
 - [Discord Bot Integration Research — Quily Chatbot](reports/2026-03-16_discord-bot-integration-research.md)
 - [Model Scout — LLM Benchmark Results](reports/2026-03-21-model-scout-benchmark.md)
+- [Model Benchmark — Full Eval Suite Results](reports/2026-03-22-model-benchmark.md)
 
 ### Archived
 - [LLM Provider Pricing Research](reports/archived/2026-01-30_llm-provider-pricing-research.md)
@@ -100,4 +107,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-03-21 19:51:28
+**Last Updated**: 2026-03-22 17:19:47

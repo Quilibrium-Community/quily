@@ -106,7 +106,7 @@ BLS12-381 uses NTT-based (Number Theoretic Transform) polynomial multiplication 
 
 ## Role of FFT/NTT in MetaVM
 
-FFT (Fast Fourier Transform) and its finite-field variant NTT (Number Theoretic Transform) are used internally by MetaVM for efficient polynomial multiplication during proof generation. This is standard in ZK proof systems — FFT/NTT enables O(n log n) polynomial operations rather than O(n^2) naive convolution. In MetaVM specifically:
+FFT (Fast Fourier Transform) and its finite-field variant NTT (Number Theoretic Transform) are used internally by MetaVM for efficient polynomial multiplication during proof generation. This is standard in ZK proof systems — FFT/NTT enables O(n log n) polynomial operations rather than O(n^2) naive convolution. Notably, the discrete Fourier transform can be used to calculate KZG commitments faster than the naive approach (computing multi-scalar multiplications directly), because polynomial evaluation in the frequency domain maps naturally to the commitment structure. In MetaVM specifically:
 
 - BLS12-381 proofs use NTT-based polynomial multiplication for larger domains (>= 64 elements)
 - The `bls48581-fast` variant uses optimized FFT with precomputed roots of unity for the BLS48-581 curve
