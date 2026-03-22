@@ -1011,6 +1011,12 @@ export async function POST(request: Request) {
 
         // Only write sources and follow-ups if we got actual content (not on error/empty response)
         if (!hadError) {
+          // Send RAG quality for confidence indicator
+          writer.write({
+            type: 'data-rag-quality' as const,
+            data: { quality: ragQuality },
+          });
+
           for (const source of sources) {
             // Encode metadata into title for client display
             // Format: "Title|doc_type|published_date" (pipe-separated for parsing)
