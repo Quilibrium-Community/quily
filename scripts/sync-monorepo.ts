@@ -20,9 +20,6 @@ const RELEASE_NOTES_PATH = 'RELEASE-NOTES';
 const OUT_PATH = resolve(__dirname, '../docs/custom/auto/Monorepo-Release-Notes.md');
 const DEFAULT_MODEL = 'deepseek/deepseek-chat-v3-0324';
 
-// Version PR title pattern: "v2.1.0.XX" or "v2.1.0.XX-pN"
-const VERSION_PR_PATTERN = /^v\d+\.\d+\.\d+\.\d+/;
-
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface VersionNotes {

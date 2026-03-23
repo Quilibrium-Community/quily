@@ -55,6 +55,12 @@ jobs:
       - name: Generate network health snapshot
         run: yarn stats:snapshot
 
+      - name: Sync monorepo release notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: yarn sync-monorepo
+
       - name: Check for documentation changes
         id: check
         env:
@@ -83,13 +89,20 @@ jobs:
             STATS_CHANGED="false"
           fi
 
-          if [ "$DOCS_CHANGED" = "true" ] || [ "$DISCORD_CHANGED" = "true" ] || [ "$STATS_CHANGED" = "true" ]; then
+          # Check for monorepo release notes changes
+          if [ -n "$(git status --porcelain docs/custom/auto/Monorepo-Release-Notes.md 2>/dev/null)" ]; then
+            MONOREPO_CHANGED="true"
+          else
+            MONOREPO_CHANGED="false"
+          fi
+
+          if [ "$DOCS_CHANGED" = "true" ] || [ "$DISCORD_CHANGED" = "true" ] || [ "$STATS_CHANGED" = "true" ] || [ "$MONOREPO_CHANGED" = "true" ]; then
             echo "has_changes=true" >> $GITHUB_OUTPUT
           else
             echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
 
-          echo "Docs changed: $DOCS_CHANGED, Discord changed: $DISCORD_CHANGED, Stats changed: $STATS_CHANGED"
+          echo "Docs changed: $DOCS_CHANGED, Discord changed: $DISCORD_CHANGED, Stats changed: $STATS_CHANGED, Monorepo changed: $MONOREPO_CHANGED"
 
       - name: Sync upstream docs
         if: steps.check.outputs.has_changes == 'true'
@@ -113,6 +126,7 @@ jobs:
           git add docs/quilibrium-official/
           git add docs/discord/ || true
           git add docs/custom/auto/Network-Health-Snapshot.md || true
+          git add docs/custom/auto/Monorepo-Release-Notes.md || true
           git diff --staged --quiet || git commit -m "docs: sync documentation and announcements (automated daily)"
           git pull --rebase origin main
           git push

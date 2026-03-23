@@ -4,19 +4,19 @@ This is the main index for all documentation, bug reports, and task management.
 
 ## 📖 Documentation
 
-- [Automated Documentation Sync Pipeline](docs/automated-docs-sync-pipeline.md)
-- [Automated Versioning and Release System](docs/versioning-release-system.md)
-- [Cloudflare Turnstile Bot Protection](docs/cloudflare-turnstile-bot-protection.md)
-- [Cloudflare Workers AI Reranker](docs/cloudflare-workers-ai-reranker.md)
-- [Daily General Channel Recap](docs/daily-general-recap.md)
-- [Discord Bot Architecture](docs/discord-bot-architecture.md)
-- [Knowledge Update Pipeline — Processing GitHub Issues into Docs](docs/knowledge-update-pipeline.md)
-- [Model-Specific Instruction Handling](docs/model-specific-instruction-handling.md)
-- [QA Evaluation Harness](docs/qa-evaluation-harness.md)
-- [RAG Knowledge Base Workflow](docs/rag-knowledge-base-workflow.md)
-- [RAG Query Decomposition](docs/rag-query-decomposition.md)
-- [System Prompt & Anti-Hallucination Strategy](docs/system-prompt-anti-hallucination.md)
-- [Update News Skill — Obsolescence Management](docs/update-news-skill.md)
+- [Automated Documentation Sync Pipeline](docs/automated-docs-sync-pipeline.md) — Daily GitHub Actions pipeline that syncs official docs, scrapes Discord announcements, and generates general channel recaps into the RAG knowledge base
+- [Automated Versioning and Release System](docs/versioning-release-system.md) — Semantic versioning with conventional commit analysis, changelog generation, git tagging, and /release skill integration
+- [Cloudflare Turnstile Bot Protection](docs/cloudflare-turnstile-bot-protection.md) — Invisible bot verification using Cloudflare Turnstile with session cookies, fail-open design, and client/server integration
+- [Cloudflare Workers AI Reranker](docs/cloudflare-workers-ai-reranker.md) — Free semantic reranking via Cloudflare's BGE-reranker-base model, used as fallback when Cohere is unavailable
+- [Daily General Channel Recap](docs/daily-general-recap.md) — Automated daily summaries of Discord #general discussion via LLM, with noise filtering and @Quily recap command
+- [Discord Bot Architecture](docs/discord-bot-architecture.md) — Discord bot design: @mention handler, shared RAG service, rate limiting, conversation memory, and VPS deployment via pm2
+- [Knowledge Update Pipeline — Processing GitHub Issues into Docs](docs/knowledge-update-pipeline.md) — Auto-correction flow (Discord & web chat), deterministic issue creation, and the /process-issues skill for applying changes to docs
+- [Model-Specific Instruction Handling](docs/model-specific-instruction-handling.md) — How frontier models (Claude/GPT/Gemini) vs open-source models are handled differently on low-relevance RAG results to prevent hallucination
+- [QA Evaluation Harness](docs/qa-evaluation-harness.md) — CLI testing suite with 34 test cases across 10 categories, using deterministic checks and LLM-as-judge to evaluate chatbot response quality
+- [RAG Knowledge Base Workflow](docs/rag-knowledge-base-workflow.md) — End-to-end RAG pipeline: document ingestion, BGE-M3 embeddings, Supabase pgvector storage, two-stage retrieval with reranking, and runtime query flow
+- [RAG Query Decomposition](docs/rag-query-decomposition.md) — Multi-entity query splitting into per-product sub-queries with Reciprocal Rank Fusion for broad or multi-topic retrieval
+- [System Prompt & Anti-Hallucination Strategy](docs/system-prompt-anti-hallucination.md) — Four-layer defense against hallucination: retrieval thresholds, system prompt rules 1-12, personality override, and knowledge scope guards
+- [Update News Skill — Obsolescence Management](docs/update-news-skill.md) — The /update-news skill that finds and annotates outdated information in community docs, Discord scrapes, and transcripts
 
 ### Features
 - [RAG Confidence Indicator](docs/features/rag-confidence-indicator.md)
@@ -32,16 +32,18 @@ This is the main index for all documentation, bug reports, and task management.
 
 ### Pending Tasks
 
-- [RAG Confidence Indicator — Implementation Plan](tasks/2026-03-22-rag-confidence-indicator-plan.md)
-- [RAG Confidence Indicator](tasks/2026-03-22-rag-confidence-indicator.md)
+- [Monorepo Integration for Release Context](tasks/2026-03-23-monorepo-integration.md)
 - [Add Self-Review / Fact Check Button to Bot Replies](tasks/self-review-fact-check-button.md)
 - [Add Web Fetching Capability to Chatbot](tasks/web-fetching-capability.md)
+- [Cross-Reference Verification Against Source Docs](tasks/cross-reference-verification.md)
 - [Discord Announcements Scraper with Automated RAG Ingestion](tasks/discord-announcements-scraper.md)
 - [Discord Follow-Up Questions Dropdown](tasks/discord-followup-dropdown.md)
+- [Harden /process-issues Skill](tasks/automated-process-issues-cron.md)
 - [Implement AI-Powered Chat Renaming Feature](tasks/ai-chat-renaming-feature.md)
 - [Implement Data Export/Import Feature](tasks/data-export-import-feature.md)
 - [Implement File Upload & Chat Attachments](tasks/file-upload-chat-attachments.md)
 - [Implement Image Support in RAG Responses](tasks/rag-image-support.md)
+- [Query-Failure Logging → Automatic Doc Gap Detection](tasks/query-failure-logging.md)
 - [User Profile Avatar Upload](tasks/user-profile-avatar.md)
 
 ### .Archived
@@ -61,6 +63,9 @@ This is the main index for all documentation, bug reports, and task management.
 - [Automated Issue-to-Knowledge Pipeline](tasks/.done/2026-03-19-issue-to-knowledge-pipeline.md)
 - [Process Issues Skill](tasks/.done/2026-03-19-process-issues-skill.md)
 - [Repo Transfer: lamat1111 → Quilibrium-Community](tasks/.done/2026-03-20-repo-transfer-to-org.md)
+- [RAG Confidence Indicator — Implementation Plan](tasks/.done/2026-03-22-rag-confidence-indicator-plan.md)
+- [RAG Confidence Indicator](tasks/.done/2026-03-22-rag-confidence-indicator.md)
+- [Real-time Network Health Data Storage](tasks/.done/2026-03-23-network-health-data-storage.md)
 - [Add Conversational Context to RAG Retrieval](tasks/.done/rag-conversational-context-memory.md)
 - [Add External Chutes API Key Option](tasks/.done/external-chutes-api-key-option.md)
 - [Convert Settings Modal to Standalone Settings Page](tasks/.done/convert-settings-modal-to-page.md)
@@ -107,4 +112,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-03-22 17:19:47
+**Last Updated**: 2026-03-23 17:08:28
