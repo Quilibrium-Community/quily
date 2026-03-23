@@ -37,7 +37,7 @@ This skill creates or edits files in **allowed folders only**:
 
 ## Trusted Users
 
-Claims from these users are accepted without web verification:
+Claims from these users are accepted without web verification (but conflict detection still applies — see step 3):
 - `lamat1111` (repo owner)
 - `CassOnMars` (Quilibrium founder)
 - `winged-pegasus` (core team)
@@ -57,6 +57,19 @@ gh issue list --state open --json number,title,body,author,labels,comments --lim
 ```
 
 If no open issues, report "No open issues found" and stop.
+</step>
+
+<step name="detect-duplicates">
+**Detect duplicate issues:**
+
+Before triaging, scan all issue titles and bodies for overlapping topics. Two issues are duplicates if they describe the same correction or the same topic area.
+
+For each duplicate group:
+- Identify the **most detailed** issue (longest body, has sources, has specific claims)
+- Mark the others as duplicates in the triage table
+- During finalize, close duplicates with: "This appears to be addressed by #N. Closing as duplicate."
+
+Present duplicates in the triage table so the user can override if needed.
 </step>
 
 <step name="triage">
@@ -84,13 +97,14 @@ Read every issue's title and body. Classify each as:
 
   For each of these, check if an existing task in `.agents/tasks/` already covers it. If so, comment linking to it and close. If not, create a new task or ask the user.
 
+- **DUPLICATE** — already covered by a more detailed issue (detected in previous step). Note which issue supersedes it.
+
 - **SKIP** — ONLY for issues that cannot be acted on at all:
   - Gibberish or spam
-  - Duplicates of already-processed issues
   - Issues with zero actionable content even after reading comments
 
 For each RELEVANT issue, note:
-- Whether the author is a trusted user (skip verification)
+- Whether the author is a trusted user (lightweight verification only)
 - Whether sources are provided (affects verification need)
 - Brief summary of what the update is about
 
@@ -105,16 +119,22 @@ Present the triage table to the user:
 Found N open issues. Triage results:
 
 RELEVANT (have corrections/new info):
-  #9  — Hypersnap validator update (by CassOnMars, trusted — skip verify)
+  #9  — Hypersnap validator update (by CassOnMars, trusted — lightweight verify)
   #15 — QNS pricing changed (by random-user, no source — needs verification)
 
 INVESTIGATE (bot accuracy flagged, needs checking):
   #18 — User says staking answer was wrong (no correction given — will audit bot reply)
   #21 — "This is incorrect" on tokenomics question (will check docs)
 
+DUPLICATES:
+  #25 — Same topic as #15 (less detail) — will close as duplicate
+
+ACTIONABLE (non-knowledge):
+  #12 — Fix CSS alignment on mobile (bug report → task)
+  #14 — Add dark mode toggle (feature request → task)
+
 SKIPPED:
-  #12 — Fix CSS alignment on mobile (bug report)
-  #14 — Add dark mode toggle (feature request)
+  #30 — Empty issue body, no comments
 
 Approve this triage? (y/adjust)
 ```
@@ -141,38 +161,40 @@ Read the issue body and comments. The bot's reply is usually quoted in the issue
 - What the bot answered
 - What the user objected to (if anything specific)
 
-#### 2. Audit the bot's answer against the docs
-Search the knowledge base to verify the bot's reply:
-- Use Grep to search `docs/` for the topic/keywords from the bot's answer
-- Check if the bot's claims match what's in the docs
-- Check if the docs themselves might be outdated or incomplete on this topic
-- Use WebSearch if the docs don't cover the topic well enough to verify
+#### 2. Audit the bot's answer — structured decision matrix
 
-#### 3. Determine the resolution — EVERY issue must result in an action
+Follow this structured process instead of ad-hoc investigation:
 
-Based on your audit, determine which scenario applies and take the corresponding action. **Do NOT close any issue without a concrete resolution.**
+**Step A — Extract the bot's specific claim(s).** Identify the concrete factual statements (e.g., "minimum stake is 50,000 QUIL").
 
-**Scenario A: Bot hallucinated or fabricated details (docs don't cover the topic)**
-The bot confidently answered with details not found in any docs. This means we have a **documentation gap** that causes hallucination.
+**Step B — Search docs for each claim:**
+```
+Grep docs/ for key terms from the claim
+```
 
-- **Required action**: Create or update a doc in `docs/community/` or `docs/custom/` that covers the topic with whatever accurate information IS available (from official docs, transcripts, Discord announcements, web search).
-- If only minimal info exists (e.g., a feature is mentioned in a roadmap but not documented), create a short doc stating what IS known and explicitly noting what is NOT yet documented. This gives the bot grounded facts to work with instead of hallucinating.
+**Step C — Determine scenario based on results:**
+
+| Docs found? | Docs agree with bot? | Web search result | → Scenario |
+|-------------|---------------------|-------------------|------------|
+| Yes | Yes (docs support bot) | — | **C** — Bot was right |
+| Yes | No (docs contradict bot) | — | **B** — Bot misread docs, investigate why |
+| No | — | Web supports user's objection | **A** — Doc gap, create doc |
+| No | — | Web supports bot | **C** — Bot was right, consider adding doc |
+| No | — | Inconclusive | **D** — Ask submitter for details |
+
+**Scenario A: Doc gap causing hallucination**
+- **Required action**: Create or update a doc in `docs/community/` or `docs/custom/` with accurate information from official docs, transcripts, Discord announcements, or web search.
+- If only minimal info exists, create a short doc stating what IS known and explicitly noting what is NOT yet documented.
 - Present the proposed doc to the user for approval before creating it.
 
-**Scenario B: Bot answer was wrong and docs need updating**
-The bot's answer was based on outdated or incorrect docs.
-
+**Scenario B: Bot answer was wrong, docs need updating**
 - **Required action**: Edit the relevant doc(s) to correct the information.
 - Follow the same Apply/Commit workflow as RELEVANT issues below.
 
 **Scenario C: Bot answer was correct**
-The bot's answer matches the docs and no contradicting info was found.
-
 - **Required action**: Close with a comment explaining the bot's answer was verified correct against the documentation.
 
-**Scenario D: Cannot determine correctness (insufficient info)**
-Neither the docs nor web search can confirm or deny the claim.
-
+**Scenario D: Cannot determine correctness**
 - **Required action**: Comment on the issue asking the submitter for more details/sources. Do NOT close — leave open for follow-up.
 
 Present findings to the user with the scenario and proposed action:
@@ -188,7 +210,7 @@ Proposed: Update docs/community/staking-guide.md with new 10,000 QUIL minimum.
 Approve? (y/n/edit)
 ```
 
-#### 4. Apply the resolution
+#### 3. Apply the resolution
 For Scenarios A and B, follow the same Apply/Commit workflow as RELEVANT issues below.
 For Scenario C, prepare the closing comment (applied in finalize step).
 For Scenario D, prepare the follow-up comment (applied in finalize step).
@@ -203,7 +225,7 @@ For each RELEVANT issue the user approved:
 Read the issue title, body, and all comments to understand the full context.
 
 ### 2. Verify claims (if needed)
-- **Trusted users** (`lamat1111`, `CassOnMars`, `winged-pegasus`): skip verification entirely
+- **Trusted users** (`lamat1111`, `CassOnMars`, `winged-pegasus`): skip web verification, but still run conflict detection (step 3)
 - **Non-trusted users with credible source links**: trust without additional verification
 - **Non-trusted users, claims seem surprising or lack sources**: use WebSearch to verify
   - Search for the specific claim
@@ -217,13 +239,45 @@ Read the issue title, body, and all comments to understand the full context.
     Action? (apply anyway / skip / ask submitter)
     ```
 
-### 3. Determine action
+### 3. Conflict detection (REQUIRED — applies to ALL issues, including trusted users)
+
+Before applying any change, check if the proposed correction contradicts existing docs:
+
+```
+Grep docs/ for the key claims being corrected (e.g., the old value being replaced)
+```
+
+If contradicting statements are found in other docs:
+```
+⚠️ Conflict detected:
+  - docs/community/staking-guide.md line 42: "minimum stake is 50,000 QUIL"
+  - docs/custom/Node-Running-Guide.md line 18: "you need at least 50,000 QUIL"
+  - Issue #15 says: "minimum is now 10,000 QUIL"
+
+This correction would need to update 2 docs. Both will be updated if you approve.
+Approve? (y/n/skip)
+```
+
+**Even for trusted users**: If a trusted user's correction contradicts 2+ existing docs, flag it. Trust the user more, but surface the conflict so the human can decide.
+
+### 4. Scope check
+
+Before proceeding, check the scope of the proposed change:
+
+- **4+ files affected**: Warn the user: "This issue would touch N files. Proceeding — just flagging the scope."
+- **>50% of a doc rewritten**: Warn the user: "This would rewrite most of `<filename>`. Proceeding — just flagging."
+- **Frontmatter `type` or `topics` changed**: Warn the user: "This changes metadata that affects RAG retrieval. Proceeding — just flagging."
+
+These are warnings, not blockers. The user can always proceed.
+
+### 5. Determine action
 - If issue references an existing file in `docs/community/` or `docs/custom/` → edit that file
 - If new info with no matching existing doc → create new file in `docs/community/`
 - If issue asks to change protected folders → skip, and add to a list for commenting later
 - If issue contains multiple distinct topics → handle in a single commit
+- If conflict detection found other docs with contradicting info → update ALL affected docs, not just the one the issue mentions
 
-### 4. Propose approach
+### 6. Propose approach
 Present the proposed change to the user:
 
 ```
@@ -232,12 +286,15 @@ Issue #9: Hypersnap validator update (by CassOnMars)
 Proposed: Update docs/custom/Hypersnap.md — add paragraph in Background
 section about Neynar reversing course and Quilibrium soft forking.
 
+Conflicts: None
+Scope: 1 file, minor edit
+
 Approve? (y/n/edit)
 ```
 
 Use AskUserQuestion. If the user says "edit", ask what they'd change.
 
-### 5. Apply the change
+### 7. Apply the change
 If approved, make the change using Edit or Write tools.
 
 **For new files**, use this frontmatter:
@@ -253,7 +310,7 @@ topics: [<relevant, topic, tags>]
 
 **For existing files**, update the `date` field in the frontmatter.
 
-### 6. Commit
+### 8. Commit
 ```bash
 git add <changed-files>
 git commit -m "docs: <summary> (closes #<number>)"
@@ -261,7 +318,7 @@ git commit -m "docs: <summary> (closes #<number>)"
 
 **Do NOT comment on or close the issue yet** — wait until push succeeds in the finalize step.
 
-Track the commit SHA and issue number for the finalize step.
+Track the commit SHA, issue number, files changed, and confidence level for the summary.
 </step>
 
 <step name="handle-protected">
@@ -295,6 +352,13 @@ gh issue comment <number> --body "Applied in commit \`<sha>\`. This will be refl
 gh issue close <number>
 ```
 
+For each duplicate issue, comment and close:
+
+```bash
+gh issue comment <number> --body "This appears to be addressed by #<superseding-issue>. Closing as duplicate."
+gh issue close <number>
+```
+
 ### 3. Reingest
 ```bash
 yarn ingest:run
@@ -308,17 +372,33 @@ If any of the changes superseded or contradicted existing documentation, suggest
 "Some of these changes may have made existing docs outdated. Want me to run /update-news to check?"
 
 ### 5. Print summary
+
+Print a detailed summary with rollback instructions:
+
 ```
 Done. Processed N issues:
-  #9  — Updated docs/custom/Hypersnap.md (commit abc1234)
-  #15 — Created docs/community/QNS-Pricing.md (commit def5678)
+
+  ✅ #9  — Updated docs/custom/Hypersnap.md (commit abc1234)
+           Confidence: HIGH | Conflicts: none | Scope: 1 file
+           Rollback: git revert abc1234
+
+  ✅ #15 — Created docs/community/QNS-Pricing.md (commit def5678)
+           Confidence: HIGH | Conflicts: updated 2 other docs | Scope: 3 files
+           Rollback: git revert def5678
 
 Investigated I issues:
-  #18 — Bot answer verified incorrect, docs updated (commit ghi9012)
-  #21 — Bot answer verified correct, closed as resolved
+  ✅ #18 — Scenario B: docs outdated, updated staking-guide.md (commit ghi9012)
+           Confidence: MEDIUM (web source only) | Rollback: git revert ghi9012
+  ✅ #21 — Scenario C: bot answer verified correct, closed
 
-Skipped M issues:
-  #12 — Bug report (not knowledge-related)
+Duplicates closed: D
+  #25 — Duplicate of #15
+
+Actionable (non-knowledge): A
+  #12 — Created .agents/tasks/css-mobile-fix.md
+
+Skipped: S
+  #30 — Empty issue
 
 Protected folder requests (commented and closed): K
   #20 — Asked to edit official docs
