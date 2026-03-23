@@ -41,7 +41,8 @@
     "eval:report": "tsx scripts/eval/index.ts report",
     "eval:judge": "tsx scripts/eval/index.ts judge",
     "eval:collect": "tsx scripts/eval/index.ts run --collect",
-    "eval:broad": "tsx scripts/eval/index.ts run --suite scripts/eval/test-suite.yaml"
+    "eval:broad": "tsx scripts/eval/index.ts run --suite scripts/eval/test-suite.yaml",
+    "stats:snapshot": "tsx scripts/stats-snapshot.ts"
   },
   "keywords": [],
   "author": "",

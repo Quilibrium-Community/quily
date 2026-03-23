@@ -52,6 +52,9 @@ jobs:
             echo "Recap secrets not configured, skipping"
           fi
 
+      - name: Generate network health snapshot
+        run: yarn stats:snapshot
+
       - name: Check for documentation changes
         id: check
         env:
@@ -73,13 +76,20 @@ jobs:
             DISCORD_CHANGED="false"
           fi
 
-          if [ "$DOCS_CHANGED" = "true" ] || [ "$DISCORD_CHANGED" = "true" ]; then
+          # Check for stats snapshot changes
+          if [ -n "$(git status --porcelain docs/community/Network-Health-Snapshot.md 2>/dev/null)" ]; then
+            STATS_CHANGED="true"
+          else
+            STATS_CHANGED="false"
+          fi
+
+          if [ "$DOCS_CHANGED" = "true" ] || [ "$DISCORD_CHANGED" = "true" ] || [ "$STATS_CHANGED" = "true" ]; then
             echo "has_changes=true" >> $GITHUB_OUTPUT
           else
             echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
 
-          echo "Docs changed: $DOCS_CHANGED, Discord changed: $DISCORD_CHANGED"
+          echo "Docs changed: $DOCS_CHANGED, Discord changed: $DISCORD_CHANGED, Stats changed: $STATS_CHANGED"
 
       - name: Sync upstream docs
         if: steps.check.outputs.has_changes == 'true'
@@ -102,6 +112,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/quilibrium-official/
           git add docs/discord/ || true
+          git add docs/community/Network-Health-Snapshot.md || true
           git diff --staged --quiet || git commit -m "docs: sync documentation and announcements (automated daily)"
           git pull --rebase origin main
           git push
