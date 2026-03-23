@@ -3,7 +3,7 @@
 import 'dotenv/config';
 import ora from 'ora';
 import chalk from 'chalk';
-import { writeFile, mkdir } from 'fs/promises';
+import { writeFile, mkdir, access } from 'fs/promises';
 import { join } from 'path';
 import { fetchChannel, fetchMessages } from './discord-api.js';
 import { filterMessages } from './recap-filter.js';
@@ -150,6 +150,17 @@ async function run() {
     ].join('\n');
 
     const filePath = join(DEST_PATH, `${date}.md`);
+
+    // Don't overwrite an existing recap — the first run of the day produces
+    // the authoritative version; later runs would only see leftover messages.
+    try {
+      await access(filePath);
+      spinner.info(`Recap for ${date} already exists — skipping`);
+      continue;
+    } catch {
+      // File doesn't exist, write it
+    }
+
     await writeFile(filePath, markdown, 'utf-8');
     spinner.succeed(`Recap for ${date} written${usedFallback ? ' (fallback mode)' : ''}`);
   }
