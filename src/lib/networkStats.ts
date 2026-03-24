@@ -270,7 +270,7 @@ function buildTrends(current: NetworkSnapshot, history: NetworkSnapshot[]): stri
   if (sevenDays) cols.push({ label: 'vs 7d ago', snap: sevenDays });
 
   const colW = 12;
-  let header = pad('', 18);
+  let header = pad('', 12);
   for (const c of cols) header += pad(c.label, colW);
   header += '\n';
 
