@@ -90,12 +90,32 @@ function getSourceLabel(
  * Displays a clickable "N sources" text that toggles
  * an expanded list of source links.
  */
+/**
+ * Group sources by URL to deduplicate entries from the same document.
+ * Returns groups with merged 1-based indices and the first source's metadata.
+ */
+function groupSourcesByUrl(sources: Source[]): { indices: number[]; source: Source }[] {
+  const grouped = new Map<string, { indices: number[]; source: Source }>();
+  sources.forEach((source, index) => {
+    const key = source.url || source.sourceId;
+    const existing = grouped.get(key);
+    if (existing) {
+      existing.indices.push(index + 1);
+    } else {
+      grouped.set(key, { indices: [index + 1], source });
+    }
+  });
+  return Array.from(grouped.values());
+}
+
 export function SourcesCitation({ sources }: SourcesCitationProps) {
   const [expanded, setExpanded] = useState(false);
 
   if (sources.length === 0) {
     return null;
   }
+
+  const groupedSources = groupSourcesByUrl(sources);
 
   return (
     <div className="text-base sm:text-sm">
@@ -104,7 +124,7 @@ export function SourcesCitation({ sources }: SourcesCitationProps) {
         onClick={() => setExpanded(!expanded)}
         className="text-accent hover:text-accent-hover font-medium flex items-center gap-2 sm:gap-1 cursor-pointer py-2 sm:py-0 min-h-11 sm:min-h-0"
       >
-        <span>{sources.length} source{sources.length !== 1 ? 's' : ''}</span>
+        <span>{groupedSources.length} source{groupedSources.length !== 1 ? 's' : ''}</span>
         <svg
           className="w-5 h-5 sm:w-4 sm:h-4 transition-transform"
           style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
@@ -123,10 +143,11 @@ export function SourcesCitation({ sources }: SourcesCitationProps) {
 
       {expanded && (
         <ul className="mt-1 space-y-0 pl-1">
-          {sources.map((source, index) => {
+          {groupedSources.map(({ indices, source }) => {
             const parsed = parseSourceTitle(source.title);
             const sourceLabel = getSourceLabel(source.url, parsed.docType, parsed.publishedDate);
             const hasLink = source.url && source.url.length > 0;
+            const idxStr = indices.join(',');
 
             // For livestreams, display as "Livestream" link
             const displayTitle = parsed.docType === 'livestream_transcript'
@@ -134,7 +155,7 @@ export function SourcesCitation({ sources }: SourcesCitationProps) {
               : parsed.title;
 
             return (
-              <li key={source.sourceId || index}>
+              <li key={source.sourceId}>
                 {hasLink ? (
                   <a
                     href={source.url!}
@@ -143,7 +164,7 @@ export function SourcesCitation({ sources }: SourcesCitationProps) {
                     className="link-unstyled text-accent hover:text-accent-hover flex items-center gap-2 sm:gap-1 py-2.5 sm:py-1 min-h-11 sm:min-h-0"
                   >
                     <span className="text-gray-400 dark:text-gray-500 shrink-0">
-                      [{index + 1}]
+                      [{idxStr}]
                     </span>
                     <span className="truncate max-w-md">
                       {displayTitle}
@@ -170,7 +191,7 @@ export function SourcesCitation({ sources }: SourcesCitationProps) {
                 ) : (
                   <span className="text-gray-500 dark:text-gray-400 flex items-center gap-2 sm:gap-1 py-2.5 sm:py-1 min-h-11 sm:min-h-0">
                     <span className="text-gray-400 dark:text-gray-500 shrink-0">
-                      [{index + 1}]
+                      [{idxStr}]
                     </span>
                     <span className="truncate max-w-md">
                       {displayTitle}

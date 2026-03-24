@@ -101,23 +101,35 @@ export function formatForDiscord(
         formatted += '\n\n-# ⚠️ I couldn\'t find docs for this — take it with a grain of salt';
       }
 
-      const sourceLines = citedSources.map((s) => {
+      // Group sources by URL (or file path) to deduplicate
+      const grouped = new Map<string, { indices: number[]; source: typeof citedSources[0] }>();
+      for (const s of citedSources) {
+        const key = s.url || s.file;
+        const existing = grouped.get(key);
+        if (existing) {
+          existing.indices.push(s.index);
+        } else {
+          grouped.set(key, { indices: [s.index], source: s });
+        }
+      }
+
+      const sourceLines = Array.from(grouped.values()).map(({ indices, source: s }) => {
         const label = getSourceTypeLabel(s);
         const isLivestream = s.doc_type === 'livestream_transcript';
         const url = s.url;
-        const idx = s.index;
+        const idxStr = indices.join(',');
 
         if (isLivestream) {
           const date = s.published_date || '';
           return url
-            ? `• [${idx}] **${label}${date ? ` (${date})` : ''}:** <${url}>`
-            : `• [${idx}] **${label}${date ? ` (${date})` : ''}**`;
+            ? `• [${idxStr}] **${label}${date ? ` (${date})` : ''}:** <${url}>`
+            : `• [${idxStr}] **${label}${date ? ` (${date})` : ''}**`;
         }
 
         const title = s.title || s.file;
         return url
-          ? `• [${idx}] **${label}:** ${title} — <${url}>`
-          : `• [${idx}] **${label}:** ${title}`;
+          ? `• [${idxStr}] **${label}:** ${title} — <${url}>`
+          : `• [${idxStr}] **${label}:** ${title}`;
       });
       formatted += `\n\n-# **Sources:**\n${sourceLines.map((l) => `-# ${l}`).join('\n')}`;
     }
