@@ -16,6 +16,8 @@ topics:
 
 ## Version 2.1.0.18 Update Status
 
+> **Historical context (February 2026):** This section discussed .18 as a pending release. It has since shipped and multiple newer versions have followed. For the current node version status, see the Monorepo Release Notes.
+
 For the past two weeks, significant effort has been put into resolving issues around the release of 2.1.0.18. There's one outstanding blocker related to synchronization in a subtle way—specifically getting the trees to align properly.
 
 The native hypergraph store of the network has underlying trees that provide a CRDT-style primitive for the vertices and hyper edges of the hypergraph. Issues have been found around the synchronization of this data, specifically in how information is surfaced from the syncing side (the client requesting data) and the server side providing it.
@@ -185,12 +187,16 @@ For the Q Storage client, the game ownership manager:
 
 ## Launch Timeline (February 2026)
 
+> **Historical context (February 2026):** These items have since shipped. For current version and product status, see the Monorepo Release Notes and dev-updates Discord channel.
+
 - **Q Console with all services**: Launching within 24 hours (after billing tests complete)
 - **QNS update**: 24-48 hours
 - **Quorum Mobile update**: Shortly after QNS
 - **Version 2.1.0.18 for node runners**: Imminent, pending synchronization issue resolution
 
 ## Seniority Score Display Fix
+
+> **Historical context (February 2026):** This issue has been resolved. For current node version status, see the Monorepo Release Notes.
 
 For those not seeing a seniority score on their nodes: this will be resolved with the 2.1.0.18 update rollout. The final migration step will fix the seniority display issue.
 

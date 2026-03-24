@@ -26,13 +26,13 @@ Scan all open GitHub issues, identify knowledge-update candidates, triage them, 
 
 ## Scope
 
-This skill creates or edits files in **allowed folders only**:
+This skill can create or edit files in these folders:
 - `docs/custom/` — community-contributed content and detailed technical references
+- `docs/transcriptions/` — curated livestream transcripts (add temporal annotations, fix outdated claims)
+- `docs/discord/` — Discord announcement scrapes (add temporal annotations if needed)
 
 **NEVER modify** files in:
-- `docs/quilibrium-official/` — automated mirror of docs.quilibrium.com
-- `docs/discord/` — automated Discord announcement scrapes
-- `docs/transcriptions/` — curated livestream transcripts
+- `docs/quilibrium-official/` — automated mirror of docs.quilibrium.com (submit changes upstream instead)
 
 ## Trusted Users
 
@@ -182,7 +182,7 @@ Grep docs/ for key terms from the claim
 | No | — | Inconclusive | **D** — Ask submitter for details |
 
 **Scenario A: Doc gap causing hallucination**
-- **Required action**: Create or update a doc in `docs/custom/` with accurate information from official docs, transcripts, Discord announcements, or web search.
+- **Required action**: Create or update a doc in `docs/custom/` with accurate information. Also check if outdated claims in `docs/transcriptions/` or `docs/discord/` are the source of confusion — if so, add temporal annotations there too.
 - If only minimal info exists, create a short doc stating what IS known and explicitly noting what is NOT yet documented.
 - Present the proposed doc to the user for approval before creating it.
 
@@ -270,9 +270,10 @@ Before proceeding, check the scope of the proposed change:
 These are warnings, not blockers. The user can always proceed.
 
 ### 5. Determine action
-- If issue references an existing file in `docs/custom/` → edit that file
+- If issue references an existing file in an editable folder (`docs/custom/`, `docs/transcriptions/`, `docs/discord/`) → edit that file
 - If new info with no matching existing doc → create new file in `docs/custom/`
-- If issue asks to change protected folders → skip, and add to a list for commenting later
+- If a transcript or Discord doc contains outdated claims causing bot confusion → add temporal annotations (e.g., `> **Historical context (as of Feb 2026):**`) or update outdated forward-looking statements
+- If issue asks to change `docs/quilibrium-official/` → skip, and add to a list for commenting later
 - If issue contains multiple distinct topics → handle in a single commit
 - If conflict detection found other docs with contradicting info → update ALL affected docs, not just the one the issue mentions
 
@@ -323,10 +324,10 @@ Track the commit SHA, issue number, files changed, and confidence level for the 
 <step name="handle-protected">
 **Handle protected folder requests:**
 
-For any issues that asked to change protected folders, comment on each:
+For any issues that asked to change files in `docs/quilibrium-official/`, comment on each:
 
 ```bash
-gh issue comment <number> --body "These docs are automated mirrors or curated content and can't be edited through this process. For official docs changes, submit to https://github.com/QuilibriumNetwork/docs. Discord announcements and transcriptions are managed separately."
+gh issue comment <number> --body "The official docs folder is an automated mirror of docs.quilibrium.com and can't be edited here. For official docs changes, submit to https://github.com/QuilibriumNetwork/docs."
 ```
 
 Close these issues.

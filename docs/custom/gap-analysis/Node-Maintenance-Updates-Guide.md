@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Maintenance — Updates, Monitoring, Configuration & Troubleshooting"
 source: official_docs_synthesis
-date: 2026-02-24
+date: 2026-03-24
 type: technical_reference
 topics:
   - node maintenance
@@ -137,7 +137,7 @@ When you prefer full control over the update process:
 systemctl stop quilibrium-node
 ```
 
-2. Download the new binary and signature files (replace `<new-version>` with the actual version, e.g., `2.1.0.18`):
+2. Download the new binary and signature files (replace `<new-version>` with the actual version — check the Monorepo Release Notes for the latest):
 
 ```bash
 cd /opt/quilibrium/node
