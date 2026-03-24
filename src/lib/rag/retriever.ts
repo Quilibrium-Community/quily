@@ -199,6 +199,7 @@ async function fetchRecentChunks(limit: number = 3, docType?: string): Promise<{
 
   const { data, error } = await query
     .order('published_date', { ascending: false })
+    .order('id', { ascending: true }) // Tiebreaker: first chunk of a doc wins (contains header + newest content)
     .limit(limit * 5); // Fetch more to get unique source files
 
   if (error || !data) {
