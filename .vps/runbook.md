@@ -148,7 +148,8 @@ CLOUDFLARE_API_TOKEN=<paste>
 # DISCORD_STATS_HOUR=12                    # UTC hour to post (default: 12)
 
 # Daily recap (optional)
-# DISCORD_RECAP_CHANNEL_ID=<channel-id>   # Channel for daily recap post
+# DISCORD_RECAP_CHANNEL_ID=1487122952532131881   # Channel for daily recap post
+# DISCORD_DIGEST_CHANNEL_IDS=1212446222367985726,1212447064861184060,1421639566841876510,1218937664208633957,1331077834084454410,1241046130704519238,1225460230628839586,1456158029627129961
 # DISCORD_RECAP_HOUR=14                    # UTC hour to post (default: 14)
 EOF
 chmod 600 /home/quily/quily-chatbot/bot/.env'
@@ -264,13 +265,14 @@ The bot stores daily snapshots in `stats-history.json` (next to `dist/`) to comp
 
 ## Daily Recap
 
-The bot posts a daily community recap (LLM-summarized highlights from #general) to a designated channel. To enable:
+The bot posts a daily community digest (LLM-summarized highlights from multiple channels) to the #daily-digest channel. To enable:
 
-1. Set `DISCORD_RECAP_CHANNEL_ID` in `.env` to the target channel ID
-2. Optionally set `DISCORD_RECAP_HOUR` (default: `14` = 2 PM UTC)
-3. Restart the bot: `ssh quily-vps 'pm2 restart quily-bot'`
+1. Set `DISCORD_RECAP_CHANNEL_ID` in `.env` to `1487122952532131881` (or update to your digest channel ID)
+2. Set `DISCORD_DIGEST_CHANNEL_IDS` in `.env` to a comma-separated list of source channel IDs to summarize
+3. Optionally set `DISCORD_RECAP_HOUR` (default: `14` = 2 PM UTC)
+4. Restart the bot: `ssh quily-vps 'pm2 restart quily-bot'`
 
-The recap covers the last 24 hours of messages, filtered for noise and summarized via OpenRouter (DeepSeek). Cost: ~$0.005/day.
+The recap covers the last 24 hours of messages from all configured source channels, filtered for noise and summarized via OpenRouter (DeepSeek). Per-channel markdown files are written to `docs/discord/recap-{name}/` for archival. These files are automatically cleaned up by the existing 28-day rolling window in `cleanup.ts`. Cost: ~$0.01-0.02/day depending on message volume.
 
 Users can also trigger a recap on demand by mentioning `@Quily recap`.
 
@@ -278,4 +280,4 @@ Note: The GitHub Actions workflow also generates a recap at 06:00 UTC (committed
 
 ---
 
-*Created: 2026-03-18 | Updated: 2026-03-24*
+*Created: 2026-03-18 | Updated: 2026-03-28*
