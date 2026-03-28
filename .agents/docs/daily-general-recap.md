@@ -5,15 +5,18 @@ description: "Automated daily summaries of Discord #general discussion via LLM, 
 status: done
 ai_generated: true
 created: 2026-03-19
-updated: 2026-03-19
+updated: 2026-03-28
 related_docs:
   - "automated-docs-sync-pipeline.md"
   - "discord-bot-architecture.md"
+  - "2026-03-24-daily-recap-posting.md"
 related_tasks:
   - "2026-03-19-daily-general-recap.md"
 ---
 
 # Daily General Channel Recap
+
+> **Superseded:** This document describes the original single-channel recap system. The bot now uses a multi-channel daily digest — see [Daily Recap Posting](2026-03-24-daily-recap-posting.md) for current documentation.
 
 > **AI-Generated**: May contain errors. Verify before use.
 
