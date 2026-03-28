@@ -26,12 +26,14 @@ export interface FilteredMessage {
   embeds: { title?: string; description?: string }[];
 }
 
-export interface RecapResult {
+/** Sentinel returned by LLM when channel content is not worth recapping */
+export const SKIP_EMPTY = 'SKIP_EMPTY';
+
+export interface ChannelRecapResult {
+  channelId: string;
+  channelName: string;
   content: string;
   date: string;
-  timeFrom: string;
-  timeTo: string;
-  titleDate: string;
   messageCount: number;
 }
 
@@ -80,7 +82,11 @@ export function filterRecapMessages(messages: Message[]): FilteredMessage[] {
 const DEFAULT_RECAP_MODEL = 'deepseek/deepseek-chat-v3-0324';
 const MAX_INPUT_CHARS = 60_000;
 
-const RECAP_SYSTEM_PROMPT = `You are a community recap writer for the Quilibrium Discord server. You produce concise daily recaps of the general channel.
+const SKIP_EMPTY_RULE = `
+
+IMPORTANT: If the remaining messages are only casual banter, jokes, GIFs, memes, or off-topic chitchat with no substance, respond with exactly "SKIP_EMPTY" and nothing else. Only produce a recap if the discussion includes at least one of: project updates, crypto/blockchain topics, privacy, decentralization, technical/technology discussion, troubleshooting, community decisions, governance, ecosystem developments, or other topics relevant to the Quilibrium community.`;
+
+const GENERAL_SYSTEM_PROMPT = `You are a community recap writer for the Quilibrium Discord server. You produce concise daily recaps of community discussion.
 
 Rules:
 - Group discussion by topic/theme using markdown headings (## Topic Name)
@@ -91,7 +97,28 @@ Rules:
 - Keep output concise: 200-500 words
 - Use markdown formatting
 - If no substantive discussion happened, write a short note saying it was a quiet day
-- Do NOT invent or fabricate any information — only summarize what is in the messages`;
+- Do NOT invent or fabricate any information — only summarize what is in the messages` + SKIP_EMPTY_RULE;
+
+const ANNOUNCEMENT_SYSTEM_PROMPT = `You are a digest writer for the Quilibrium Discord server. Summarize the key announcements and updates posted in this channel.
+
+Rules:
+- List each announcement as a bullet point with context
+- Messages tagged [LEAD DEV] are from Cassie, the lead developer — attribute important updates to her
+- Include links shared with a brief description of what they reference
+- Keep it concise: 100-300 words
+- Use markdown formatting
+- Do NOT invent or fabricate any information — only summarize what is in the messages` + SKIP_EMPTY_RULE;
+
+/** Channels that use the general discussion prompt (by name pattern) */
+const GENERAL_CHANNEL_PATTERNS = ['general'];
+
+function getSystemPrompt(channelName: string): string {
+  const normalized = channelName.toLowerCase().replace(/[^a-z0-9-]/g, '');
+  if (GENERAL_CHANNEL_PATTERNS.some((p) => normalized.includes(p))) {
+    return GENERAL_SYSTEM_PROMPT;
+  }
+  return ANNOUNCEMENT_SYSTEM_PROMPT;
+}
 
 function formatMessagesForLLM(filtered: FilteredMessage[]): string {
   const cassieMessages = filtered.filter((f) => f.isCassie);
@@ -137,6 +164,7 @@ function formatMessagesForLLM(filtered: FilteredMessage[]): string {
 export async function summarizeForRecap(
   filtered: FilteredMessage[],
   date: string,
+  channelName: string,
 ): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error('OPENROUTER_API_KEY is required for recap summarization');
@@ -145,8 +173,10 @@ export async function summarizeForRecap(
   const messagesText = formatMessagesForLLM(filtered);
 
   if (!messagesText.trim()) {
-    return 'No substantive discussion in the general channel today.';
+    return SKIP_EMPTY;
   }
+
+  const systemPrompt = getSystemPrompt(channelName);
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -157,10 +187,10 @@ export async function summarizeForRecap(
     body: JSON.stringify({
       model,
       messages: [
-        { role: 'system', content: RECAP_SYSTEM_PROMPT },
+        { role: 'system', content: systemPrompt },
         {
           role: 'user',
-          content: `Here are the messages from the Quilibrium Discord #general channel on ${date}. Write a concise recap:\n\n${messagesText}`,
+          content: `Here are the messages from the Quilibrium Discord #${channelName} channel on ${date}. Write a concise recap:\n\n${messagesText}`,
         },
       ],
       max_tokens: 1500,
@@ -177,14 +207,21 @@ export async function summarizeForRecap(
     choices: { message: { content: string } }[];
   };
 
-  return data.choices[0]?.message?.content?.trim() || 'No recap generated.';
+  const content = data.choices[0]?.message?.content?.trim() || SKIP_EMPTY;
+  return content;
 }
 
 // ---------------------------------------------------------------------------
 // Orchestrator
 // ---------------------------------------------------------------------------
 
-export async function generateRecap(channel: TextChannel): Promise<RecapResult | null> {
+/**
+ * Generate a recap for a single Discord channel.
+ * Returns null if no substantive messages or LLM returns SKIP_EMPTY.
+ */
+export async function generateChannelRecap(
+  channel: TextChannel,
+): Promise<ChannelRecapResult | null> {
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
   const allMessages: Message[] = [];
 
@@ -214,33 +251,15 @@ export async function generateRecap(channel: TextChannel): Promise<RecapResult |
   if (filtered.length === 0) return null;
 
   const todayStr = new Date().toISOString().slice(0, 10);
-  const content = await summarizeForRecap(filtered, todayStr);
+  const content = await summarizeForRecap(filtered, todayStr, channel.name);
 
-  const timestamps = filtered.map((f) => f.timestamp.getTime());
-  const earliest = new Date(Math.min(...timestamps));
-  const latest = new Date(Math.max(...timestamps));
-
-  const fmtTime = (d: Date) =>
-    d.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-      timeZone: 'UTC',
-    }) + ' UTC';
-
-  const titleDate = new Date(todayStr + 'T00:00:00Z').toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
+  if (content === SKIP_EMPTY) return null;
 
   return {
+    channelId: channel.id,
+    channelName: channel.name,
     content,
     date: todayStr,
-    timeFrom: fmtTime(earliest),
-    timeTo: fmtTime(latest),
-    titleDate,
     messageCount: filtered.length,
   };
 }
