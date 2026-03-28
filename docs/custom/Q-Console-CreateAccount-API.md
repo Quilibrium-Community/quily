@@ -16,6 +16,7 @@ Q Console accounts can be created programmatically via the QNZM API. All QNZM ac
 
 **All QNZM actions** use the same endpoint format:
 
+- **Base URL:** `https://qnzm.quilibrium.com/`
 - **Method:** `POST /`
 - **Content-Type:** Form parameters
 - **Response format:** XML (unless otherwise noted)
