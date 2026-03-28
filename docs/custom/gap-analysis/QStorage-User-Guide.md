@@ -193,6 +193,8 @@ Public bucket URLs follow the pattern: `bucketname.qstorage.quilibrium.com`
 
 For website hosting, set your DNS CNAME to point to this bucket domain name. QNS integration also allows `your-name.q` domains to resolve to your QStorage-hosted website.
 
+> **Known issue (as of March 2026):** Domains using Cloudflare DNS will encounter a "CNAME Cross-User Banned" error (Error 1014) when trying to CNAME to QStorage. This is a Cloudflare limitation, not a QStorage bug. Workarounds include using a non-Cloudflare DNS provider or disabling Cloudflare's proxy (grey cloud) for the CNAME record. The Quilibrium team is working on a fix involving manual domain binding with SSL cert upload.
+
 ### Using Bucket Tags
 
 Tags are key-value pairs for categorizing buckets. Each bucket supports up to 50 tags. Tag keys can be up to 128 characters and values up to 256 characters. Keys prefixed with `qstorage:` or `q-storage:` are reserved for system use.
@@ -494,6 +496,8 @@ QStorage supports static website hosting with CDN-level performance through tier
 2. Upload your static site files (drag-and-drop supported)
 3. Set your DNS CNAME to `bucketname.qstorage.quilibrium.com`
 4. Optionally integrate with QNS for `.q` domain resolution
+
+> **Note:** If your domain uses Cloudflare DNS, you will hit a "CNAME Cross-User Banned" error. See the Cloudflare DNS limitation note above for workarounds.
 
 Response times target tens of milliseconds through layered caching. Only static websites are supported; back-end services require separate hosting.
 
