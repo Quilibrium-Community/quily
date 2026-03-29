@@ -23,7 +23,7 @@ const HELP_TEXT = `Hi! I'm Quily, the Quilibrium knowledge assistant.
 
 **Links:**
 • Web app: <https://quily.quilibrium.one/>
-• Report issues: <https://github.com/Quilibrium-Community/quily/issues>`;
+• Contribute: <https://github.com/Quilibrium-Community/quily>`;
 
 /**
  * Check if a mention query is asking for help.
