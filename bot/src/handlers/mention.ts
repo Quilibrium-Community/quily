@@ -7,7 +7,7 @@ import { getHistory, getLastChunkIds, addExchange } from '../utils/memory';
 import { chunkMessage } from '../utils/messageChunker';
 import { extractAttachments } from '../utils/attachments';
 import { formatForDiscord } from '../formatter';
-import { handleRecap } from './recap';
+import { handleHelp } from './help';
 import { handleStats } from './stats';
 
 const TYPING_REFRESH_MS = 9_000;
@@ -86,9 +86,9 @@ export function registerMentionHandler(client: Client): void {
 
       if (!query) return;
 
-      // Bypass: handle @Quily recap without RAG
-      const handled = await handleRecap(message, query);
-      if (handled) return;
+      // Bypass: handle @Quily help without RAG
+      const helpHandled = await handleHelp(message, query);
+      if (helpHandled) return;
 
       // Bypass: handle @Quily stats / network stats without RAG
       const statsHandled = await handleStats(message, query);
