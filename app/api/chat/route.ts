@@ -921,7 +921,8 @@ export async function POST(request: Request) {
             if (!localReceivedContent && capturedError) {
               return { success: false, error: capturedError };
             }
-            return { success: localReceivedContent };
+            // Model may produce only a tool call with no text — that's still a success
+            return { success: localReceivedContent || capturedToolCalls.length > 0 };
           } catch (err) {
             const errorMsg = err instanceof Error ? err.message : 'Streaming failed';
             return { success: false, error: capturedError || errorMsg };
@@ -1005,6 +1006,24 @@ export async function POST(request: Request) {
             } else {
               writer.write({ type: 'text-delta', id: textId, delta: `\n\nError: ${errorMsg}` });
             }
+          }
+        }
+
+        // If model produced a tool call (structured or text-based) but no visible text,
+        // inject a fallback acknowledgment so the user doesn't see an empty bubble.
+        // This mirrors what the Discord handler does with its "Thanks for the correction!" fallback.
+        const hasToolCall = !hadError && (
+          capturedToolCalls.some((tc) => tc.toolName === 'create_knowledge_issue') ||
+          fullResponseText.includes('create_knowledge_issue')
+        );
+        if (hasToolCall) {
+          const visibleText = fullResponseText.replace(/[^\n]*create_knowledge_issue[\s\S]*$/, '').trim();
+          if (!visibleText) {
+            writer.write({
+              type: 'text-delta',
+              id: textId,
+              delta: "Thanks for letting me know! Let me look into that and file it for review.",
+            });
           }
         }
 
