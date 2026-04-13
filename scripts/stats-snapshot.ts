@@ -76,12 +76,13 @@ A shard is considered "healthy" when it has 6 or more active provers. Shards wit
 
 ## Ring Distribution
 
-| Ring | Workers per Shard | Shards |
+| Ring | Provers per Shard | Shards |
 |---|---|---|
 | Ring 0 | 1–7 | ${(snap.rings['0'] || 0).toLocaleString('en-US')} |
 | Ring 1 | 8–15 | ${(snap.rings['1'] || 0).toLocaleString('en-US')} |
 | Ring 2 | 16–23 | ${(snap.rings['2'] || 0).toLocaleString('en-US')} |
 | Ring 3+ | 24+ | ${(snap.rings['3+'] || 0).toLocaleString('en-US')} |
+| Unassigned | 0 | ${(snap.unassigned || 0).toLocaleString('en-US')} |
 
 ## Worker Activity
 

@@ -33,6 +33,7 @@ export interface NetworkSnapshot {
   workersLeaving: number;
   workersRejected: number;
   rings: Record<string, number>; // "0" → count, "1" → count, "3+" → count
+  unassigned: number; // shards with 0 active provers
 }
 
 // ── API Fetching ───────────────────────────────────────────────────────
@@ -67,6 +68,7 @@ export async function computeStats(): Promise<NetworkSnapshot> {
   let workersLeaving = 0;
   let workersRejected = 0;
   const rings: Record<string, number> = { '0': 0, '1': 0, '2': 0, '3+': 0 };
+  let unassigned = 0;
 
   for (const s of shards) {
     const size = parseInt(s.size_bytes || '0', 10);
@@ -88,12 +90,16 @@ export async function computeStats(): Promise<NetworkSnapshot> {
     workersLeaving += counts.leaving || 0;
     workersRejected += counts.rejected || 0;
 
-    // Ring distribution (ring = floor(active_workers / 8))
-    const ring = Math.floor(active / 8);
-    if (ring === 0) rings['0']++;
-    else if (ring === 1) rings['1']++;
-    else if (ring === 2) rings['2']++;
-    else rings['3+']++;
+    // Ring distribution — based on counts.active (prover count), not active_workers (total workers)
+    if (activeProvers === 0) {
+      unassigned++;
+    } else {
+      const ring = Math.floor(activeProvers / 8);
+      if (ring === 0) rings['0']++;
+      else if (ring === 1) rings['1']++;
+      else if (ring === 2) rings['2']++;
+      else rings['3+']++;
+    }
   }
 
   const today = new Date().toISOString().slice(0, 10);
@@ -112,6 +118,7 @@ export async function computeStats(): Promise<NetworkSnapshot> {
     workersLeaving,
     workersRejected,
     rings,
+    unassigned,
   };
 }
 
@@ -202,10 +209,11 @@ export function formatDiscordStats(snapshot: NetworkSnapshot, history: NetworkSn
 
   // Ring Distribution (single column for readability)
   msg += `\n⭕ **Ring Distribution**\n`;
-  msg += `Ring 0 (1–7 workers): ${(snapshot.rings['0'] || 0).toLocaleString('en-US')} shards\n`;
-  msg += `Ring 1 (8–15 workers): ${(snapshot.rings['1'] || 0).toLocaleString('en-US')} shards\n`;
-  msg += `Ring 2 (16–23 workers): ${(snapshot.rings['2'] || 0).toLocaleString('en-US')} shards\n`;
-  msg += `Ring 3+ (24+ workers): ${(snapshot.rings['3+'] || 0).toLocaleString('en-US')} shards\n`;
+  msg += `Ring 0 (1–7 provers): ${(snapshot.rings['0'] || 0).toLocaleString('en-US')} shards\n`;
+  msg += `Ring 1 (8–15 provers): ${(snapshot.rings['1'] || 0).toLocaleString('en-US')} shards\n`;
+  msg += `Ring 2 (16–23 provers): ${(snapshot.rings['2'] || 0).toLocaleString('en-US')} shards\n`;
+  msg += `Ring 3+ (24+ provers): ${(snapshot.rings['3+'] || 0).toLocaleString('en-US')} shards\n`;
+  msg += `Unassigned (0 provers): ${(snapshot.unassigned || 0).toLocaleString('en-US')} shards\n`;
 
   return msg;
 }
@@ -240,12 +248,13 @@ export function formatWebStats(snapshot: NetworkSnapshot): string {
   msg += '\n';
 
   msg += '### Ring Distribution\n\n';
-  msg += '| Ring | Workers/Shard | Shards |\n';
+  msg += '| Ring | Provers/Shard | Shards |\n';
   msg += '|---|---|---|\n';
   msg += `| Ring 0 | 1–7 | ${(snapshot.rings['0'] || 0).toLocaleString('en-US')} |\n`;
   msg += `| Ring 1 | 8–15 | ${(snapshot.rings['1'] || 0).toLocaleString('en-US')} |\n`;
   msg += `| Ring 2 | 16–23 | ${(snapshot.rings['2'] || 0).toLocaleString('en-US')} |\n`;
   msg += `| Ring 3+ | 24+ | ${(snapshot.rings['3+'] || 0).toLocaleString('en-US')} |\n`;
+  msg += `| Unassigned | 0 | ${(snapshot.unassigned || 0).toLocaleString('en-US')} |\n`;
   msg += '\n';
 
   msg += '### Worker Activity\n\n';
