@@ -51,6 +51,8 @@ This is the main index for all documentation, bug reports, and task management.
 - [Implement Image Support in RAG Responses](tasks/rag-image-support.md)
 - [Query-Failure Logging → Automatic Doc Gap Detection](tasks/query-failure-logging.md)
 - [User Profile Avatar Upload](tasks/user-profile-avatar.md)
+- [Improve Humor and Sarcasm Handling in Bot Responses](tasks/2026-04-13-improve-humor-sarcasm-handling.md)
+- [Feature Request: Citation-Free Response Mode (--nosources)](tasks/2026-04-13-nosources-flag-feature.md)
 
 ### .Archived
 - [Implement Jina Reranker as Free Alternative to Cohere](tasks/.archived/implement-jina-reranker.md)
@@ -118,4 +120,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-03-24 16:17:32
+**Last Updated**: 2026-04-13 12:00:00
