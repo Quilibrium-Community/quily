@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Icon } from '@/src/components/ui/Icon';
 import { useLocalStorage } from '@/src/hooks/useLocalStorage';
-import { getRecommendedModels, DEFAULT_MODEL_ID, ModelMetadata } from '@/src/lib/openrouter';
+import { getRecommendedModels, DEFAULT_MODEL_ID, FREE_MODE_DEFAULT_MODEL_ID, ModelMetadata } from '@/src/lib/openrouter';
 import { getProvider, getActiveProviders, getDefaultProvider } from '@/src/lib/providers';
 import { useChutesSession } from '@/src/hooks/useChutesSession';
 import { useChutesModels } from '@/src/hooks/useChutesModels';
@@ -311,27 +311,19 @@ export default function SettingsPage() {
                     </p>
                   </div>
                   <div className="text-base sm:text-sm text-text-secondary space-y-2">
-                    <p className="font-medium text-text-primary">Models</p>
-                    <ul className="space-y-1 text-base sm:text-sm text-gray-600 dark:text-gray-400">
-                      <li className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
-                        <span><strong>DeepSeek V3.1</strong> — default model</span>
-                        <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">TEE</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0" />
-                        <span><strong>Kimi K2.5</strong> — 1st fallback</span>
-                        <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">TEE</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0" />
-                        <span><strong>Qwen 2.5 72B</strong> — 2nd fallback</span>
-                      </li>
-                    </ul>
-                    <p className="text-sm sm:text-xs text-gray-500 dark:text-gray-400">
-                      <strong>TEE</strong> (Trusted Execution Environment) models run inside secure hardware enclaves — your conversations are encrypted and private, even from the infrastructure provider.
-                      Fallback models activate automatically if the default is temporarily unavailable.
-                    </p>
+                    <p className="font-medium text-text-primary">Model</p>
+                    {(() => {
+                      const allModels = getRecommendedModels();
+                      const defaultModel = allModels.find(m => m.id === FREE_MODE_DEFAULT_MODEL_ID) ?? allModels[0];
+                      return (
+                        <ul className="space-y-1 text-base sm:text-sm text-gray-600 dark:text-gray-400">
+                          <li className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
+                            <span><strong>{defaultModel.name}</strong> — default model</span>
+                          </li>
+                        </ul>
+                      );
+                    })()}
                   </div>
                 </div>
               ) : (

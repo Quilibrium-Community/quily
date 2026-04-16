@@ -11,6 +11,14 @@
 /** Default model ID - DeepSeek V3 for best open-source quality */
 export const DEFAULT_MODEL_ID = process.env.NEXT_PUBLIC_DEFAULT_MODEL_ID || 'deepseek/deepseek-v3.2';
 
+/**
+ * The model used in free mode. Driven by NEXT_PUBLIC_FREE_MODE_DEFAULT_MODEL
+ * (build-time) so the settings page always reflects what the server uses.
+ * Matches FREE_MODE_DEFAULT_MODEL on the server side.
+ */
+export const FREE_MODE_DEFAULT_MODEL_ID =
+  process.env.NEXT_PUBLIC_FREE_MODE_DEFAULT_MODEL || 'deepseek/deepseek-v3.2';
+
 export interface ModelMetadata {
   id: string;
   name: string;
