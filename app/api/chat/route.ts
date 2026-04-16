@@ -28,6 +28,13 @@ import { verifyTurnstileToken } from '@/src/lib/turnstile';
 /** Development mode flag for verbose logging */
 const isDev = process.env.NODE_ENV === 'development';
 
+// Startup diagnostics — always logged so Vercel logs show the config state
+console.log('[Chat route] Config:', {
+  freeMode: process.env.NEXT_PUBLIC_FREE_MODE,
+  hasOpenRouterKey: Boolean(process.env.OPENROUTER_API_KEY),
+  nodeEnv: process.env.NODE_ENV,
+});
+
 /** Default model for free mode when no model is specified by client. */
 function getDefaultFreeModel(): string {
   if (process.env.NEXT_PUBLIC_FREE_MODE !== 'true') return '';
@@ -672,6 +679,15 @@ export async function POST(request: Request) {
     const openrouterKey = isFreeMode && provider === 'openrouter'
       ? (process.env.OPENROUTER_API_KEY || null)
       : (typeof apiKey === 'string' && apiKey.trim().length > 0 ? apiKey : null);
+
+    // Guard: in free mode the server key must be present
+    if (isFreeMode && provider === 'openrouter' && !openrouterKey) {
+      console.error('[Free mode] OPENROUTER_API_KEY is not set on the server');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error', message: 'Free mode is enabled but the server API key is not configured. Please contact the administrator.' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
     const useChutesEmbeddings = provider === 'chutes';
 
     // Handle Chutes authentication (must happen before streaming)
