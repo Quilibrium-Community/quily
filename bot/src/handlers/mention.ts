@@ -280,7 +280,10 @@ export function registerMentionHandler(client: Client): void {
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     if (error.message === 'TIMEOUT') {
-      return "That took too long. Try a simpler question?";
+      return "That one timed out. Usually a retry fixes it, or try rephrasing if it keeps failing.";
+    }
+    if (/no.*providers.*available|no allowed providers/i.test(error.message)) {
+      return "The AI service is temporarily unavailable. Try again in a minute.";
     }
   }
 

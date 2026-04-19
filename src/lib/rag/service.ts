@@ -71,6 +71,12 @@ export async function prepareQuery(options: PrepareQueryOptions): Promise<Prepar
 const OPENROUTER_DEFAULT_MODEL = 'deepseek/deepseek-v3.2';
 const CHUTES_DEFAULT_MODEL = 'chutes-deepseek-ai-deepseek-v3-2-tee';
 
+// OpenRouter provider pinning for the primary model: avoid slow/expensive
+// providers by preferring fast fp8/fp4 backends. allow_fallbacks=false makes
+// the request fail fast when pinned providers are unavailable, so the caller's
+// timeout handler triggers quickly instead of stalling on a slow fallback.
+const OPENROUTER_PRIMARY_PROVIDER_ORDER = ['SiliconFlow', 'DeepInfra'];
+
 const DEFAULT_FALLBACK_MODELS: Record<string, string[]> = {
   openrouter: [
     'qwen/qwen3-32b',
@@ -121,11 +127,19 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
   for (const model of modelsToTry) {
     try {
       const modelId = llmProvider === 'chutes' ? getChuteUrl(model) : model;
+      const isPrimaryOpenRouter = llmProvider !== 'chutes' && model === primaryModel;
       // Both providers return AI SDK-compatible models; Chutes types include
       // Promise<LanguageModelV2> which confuses the union — cast is safe.
       const aiModel = llmProvider === 'chutes'
         ? createChutes({ apiKey: options.llmApiKey })(modelId) as Parameters<typeof generateText>[0]['model']
-        : createOpenRouter({ apiKey: options.llmApiKey })(modelId);
+        : isPrimaryOpenRouter
+          ? createOpenRouter({ apiKey: options.llmApiKey })(modelId, {
+              provider: {
+                order: OPENROUTER_PRIMARY_PROVIDER_ORDER,
+                allow_fallbacks: false,
+              },
+            })
+          : createOpenRouter({ apiKey: options.llmApiKey })(modelId);
       const t1 = Date.now();
       const result = await generateText({
         model: aiModel,
