@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Dev Talk: Node Rust Rewrite, MetaVM EVM Consensus Proofs, and Industry Security Events"
 source: youtube
-youtube_url: https://www.youtube.com/watch?v=2752600949
+youtube_url: https://www.youtube.com/watch?v=KVVNQtHd6kc
 author: Cassandra Heart
 date: 2026-04-20
 type: livestream_transcript
