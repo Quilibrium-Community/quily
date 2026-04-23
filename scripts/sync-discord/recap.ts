@@ -3,7 +3,7 @@
 import 'dotenv/config';
 import ora from 'ora';
 import chalk from 'chalk';
-import { writeFile, mkdir, access } from 'fs/promises';
+import { writeFile, mkdir, access, readdir, unlink } from 'fs/promises';
 import { join } from 'path';
 import { fetchChannel, fetchMessages } from './discord-api.js';
 import { filterMessages } from './recap-filter.js';
@@ -12,6 +12,31 @@ import { loadManifest, saveManifest, createEmptyManifest } from './manifest.js';
 
 const DEST_PATH = './docs/discord/general-recap';
 const MAX_FIRST_RUN_MESSAGES = 1000;
+const RECAP_RETENTION_DAYS = 14;
+
+async function cleanOldRecaps(): Promise<string[]> {
+  const cutoffDate = new Date();
+  cutoffDate.setUTCDate(cutoffDate.getUTCDate() - RECAP_RETENTION_DAYS);
+  const cutoffStr = cutoffDate.toISOString().split('T')[0];
+
+  const deleted: string[] = [];
+
+  try {
+    const files = await readdir(DEST_PATH);
+    for (const file of files) {
+      const match = file.match(/^(\d{4}-\d{2}-\d{2})\.md$/);
+      if (match && match[1] < cutoffStr) {
+        const filePath = join(DEST_PATH, file);
+        await unlink(filePath);
+        deleted.push(filePath);
+      }
+    }
+  } catch {
+    // Directory doesn't exist yet
+  }
+
+  return deleted;
+}
 
 async function run() {
   const spinner = ora();
@@ -163,6 +188,15 @@ async function run() {
 
     await writeFile(filePath, markdown, 'utf-8');
     spinner.succeed(`Recap for ${date} written${usedFallback ? ' (fallback mode)' : ''}`);
+  }
+
+  // Clean old recaps (older than 14 days)
+  spinner.start('Cleaning recaps older than 14 days...');
+  const deleted = await cleanOldRecaps();
+  if (deleted.length > 0) {
+    spinner.succeed(`Deleted ${deleted.length} old recap(s)`);
+  } else {
+    spinner.succeed('No old recaps to clean');
   }
 
   // Update manifest
