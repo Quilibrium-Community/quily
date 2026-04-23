@@ -143,7 +143,7 @@ Klearu is licensed under **AGPL-3.0 with additional terms**:
 
 ---
 
-## Crate Architecture (10-Crate Workspace)
+## Crate Architecture (13-Crate Workspace)
 
 | Crate | Purpose |
 |-------|---------|
