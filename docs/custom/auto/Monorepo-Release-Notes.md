@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-04-24
+date: 2026-04-25
 type: release_notes
 topics:
   - release notes
@@ -16,64 +16,62 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** April 24, 2026
+**Last updated:** April 25, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
 ## v2.1.0.22 (version .22) *(auto-generated)*
-- improved prover commands and added worker ID visibility
+- improved prover commands with worker id visibility
 - relaxed peerstore clearing interval
-- tuned component-level logging
-- enhanced prover management TUI with manual tracking and worker ID joins
-- optimized TUI rendering and interaction
-- fixed prover eviction and leaving status bugs
+- added manual management tracking and worker id specification in prover TUI
+- optimized TUI interface and display
+- fixed prover eviction bug
+- improved shard allocation logging for join/leave confirmations
+- added default archive peer list
+- fixed prover leaving status in event distributor
 - renamed pending state to joining for clarity
-- fixed merge spend marker and ring position sorting issues
-- adjusted TUI render width for markers
-- improved timereel behavior to accept new heads immediately
-- added timeouts and LRU cache for global frame fetching
-- fixed reward calculations and logical shard count in worker TUI
-- implemented auto-sized filters and fixed dynamic filter width
-- optimized logging for shard join/leave operations
+- fixed merge spend marker issue
+- resolved TUI sorting and ring position display issues
+- fixed timereel behavior to accept new head immediately
+- added timeout and LRU cache for global frame fetching
+- adjusted estimation behavior for accurate ring position calculation
+- fixed worker TUI reward calculation and logical shard count
+- implemented auto-sized filters
+- optimized shard join/leave logging
+- fixed dynamic filter width
 - improved blossomsub behavior and estimation calculations
 - added migrations to resolve eviction issues
 - refactored global consensus engine into discrete components
-- adjusted RPC/worker ring display in TUI
+- adjusted RPC/worker ring display
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
-- resolve sync race condition with prover registry pruning
-- reconcile old and new config paths
-- fix formatting and precision on prover reward data
-- fix peering issue solution
-- fix app shard lookups on mainnet
+- reconciled old and new config paths
+- fixed prover reward data formatting and precision
+- improved peering stability
+- fixed app shard lookups on mainnet
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
-- fixed high CPU overhead in initial worker behaviors and ongoing sync
+- fixed high CPU overhead in initial worker behaviors and sync
 - added debug environment variable support
 - fixed pebbleDB constructor config parameter
-- optimized docker builds with better caching
-- added extra node info data and command line metrics query
-- implemented automatic leave proposals for overcrowded shards
+- improved docker build caching
+- added node info metrics and CLI query support
+- implemented automatic shard leave proposals for overcrowding
 - added hub-and-spoke global message broadcast system
-- improved CLI output formatting for join frames
+- tweaked CLI output for join frames
 
 ## v2.1.0.19 (version .19) *(auto-generated)*
-- fixed sync message size limits and signature failures
-- resolved race conditions in collector/hotstuff and prover registry pruning
-- removed compatibility with old 2.0.0 blossomsub
-- fixed abandoned prover joins and stale worker proposals
-- added sanity checks for join submissions
-- fixed rare SIGFPE and orphan expired joins blocking worker allocation
-- improved peer discovery with reconnect fallback and base peer count adjustment
-- fixed expired prover join frames, port ranges, and stuck proposers
-- resolved shutdown issues including panic, hanging reloads, and coverage checks
-- improved worker management with registry refreshes and shutdown handling
-- fixed blossomsub subscription tracking and nil panic on subscribe
+- fixed sync message size limits and signature handling
+- resolved prover registry issues including abandoned joins and stale workers
+- improved shutdown handling for workers and coverage checks
+- fixed peer discovery and connection fallback logic
+- addressed blossomsub subscription panics and pubsub lifecycle
 - switched from dnsaddr to dns4 for blossomsub
-- added quic-v1 support
-- fixed hypergraph freeze after respawn and missing bitmask unsubscriptions
-- improved worker allocation with deterministic peer IDs to prevent sybil flags
+- added deterministic keys to prevent false sybil attack detection
+- fixed hypergraph freezing after respawn
+- enhanced error logging for signatures and merge operations
+- resolved rare crashes (SIGFPE) and edge cases in worker allocation
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
@@ -126,14 +124,14 @@ This document tracks changes in each Quilibrium node release.
 - Resolved infinitessimal rings divide-by-zero error
 
 ## v2.1.0.11 (version .11) *(auto-generated)*
-- fixed peer discovery race condition in blossomsub
-- improved peer scoring for blossomsub message propagation
-- optimized hypergraph sync performance during high network load
-- added validation for DKLs23 fork parameters
-- resolved deadlock in prover registry during node shutdown
-- fixed memory leak in channel manager during peer disconnects
-- improved error handling for invalid peer connections
-- reduced CPU usage during idle periods by optimizing background tasks
+- fixed blossomsub peer discovery regression
+- improved peer scoring metrics
+- optimized hypergraph sync performance
+- reduced memory usage in pebble storage layer
+- added validation for invalid bloom filter edge cases
+- fixed rare deadlock in channel manager
+- improved error handling during peer disconnects
+- optimized batch processing for large state transitions
 
 ---
 
