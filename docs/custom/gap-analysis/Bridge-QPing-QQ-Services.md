@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Services — Bridge (QUIL/wQUIL), QPing Notifications & QQ Message Queue"
 source: official_docs_synthesis
-date: 2026-02-11
+date: 2026-05-01
 type: technical_reference
 topics:
   - Bridge
@@ -53,6 +53,30 @@ The bridge monitors the Ethereum blockchain for mint and burn events. An MPC-bas
 The bridge uses **alt-fee basis app shards** -- a special shard type that is not consensus-bearing but does impart a commitment at the global level. Quilibrium runs an Ethereum execution node, generates output execution state in KZG polynomial commitment format, and pulls that state into an alt-fee basis app shard. This costs only 74 bytes rolled into consensus as part of 19 kilobytes of global proof state.
 
 With this imported state, the bridge can prove anything about Ethereum's network state, enabling bidirectional bridging. Finality follows Ethereum's probabilistic model: after two epochs (~12.8 minutes), transactions are considered truly finalized. Many accept 6-7 block confirmations for lower-value transfers.
+
+### How the Bridge Works: ZKP Stack vs Traditional Cross-Chain
+
+Traditional cross-chain bridges (including those built on LayerZero) rely on **oracle networks** to attest that an event occurred on the source chain. These oracles are trusted parties that sign a message saying "yes, this deposit happened." The trust model is: if enough oracles agree, the bridge believes them.
+
+Quilibrium's bridge uses a fundamentally different approach: **full cryptographic verification via MetaVM**.
+
+| Aspect | Traditional Oracles (LayerZero style) | Quilibrium Bridge (MetaVM + MegaRPC) |
+|--------|--------------------------------------|--------------------------------------|
+| **Trust model** | Trusted oracle operators | Zero-trust cryptographic proof |
+| **How verification works** | Oracle multi-signature attestation | MetaVM proves Ethereum execution, consensus, and finality |
+| **What is proved** | "Oracles say this happened" | "Ethereum's state transition is mathematically correct" |
+| **Privacy** | Oracle sees the full bridge request | MegaRPC uses ORAM — operator cannot see what is queried |
+| **Decentralization** | Permissioned oracle set | Permissionless verification |
+| **Consensus cost** | Oracle fees | ~74 bytes rolled into global consensus state |
+
+**The proof stack in detail:**
+
+1. **Execution proof** — MetaVM proves correct EVM execution of the deposit/burn transaction
+2. **Data validity** — SLOAD/SSTORE + MPT proofs verify account balances and storage
+3. **Consensus proof** — Validator set and attestation signatures prove the block was agreed upon
+4. **Finality proof** — ≥2/3 attestations for a finalized checkpoint prevent re-orgs
+
+This means Quilibrium does not trust *anyone* about Ethereum's state. It verifies it mathematically, at a cost of ~74 bytes per imported state update.
 
 ### Privacy Advantage of Bridging to Q
 

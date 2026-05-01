@@ -1,7 +1,7 @@
 ---
 title: "MetaVM — Zero-Knowledge Proof System for VM Execution"
 source: MetaVM GitHub repo (QuilibriumNetwork/metavm) + transcripts + dev updates
-date: 2026-03-22
+date: 2026-05-01
 type: technical_reference
 topics:
   - MetaVM
@@ -101,6 +101,49 @@ For long executions (like booting Linux), MetaVM splits execution into fixed-siz
 | BLS12-381 | Ethereum KZG ceremony | 48 bytes | 32 bytes | 4096 |
 
 BLS12-381 uses NTT-based (Number Theoretic Transform) polynomial multiplication for domains >= 64. BLS48-581 falls back to naive convolution but has a `bls48581-fast` variant with optimized FFT (Fast Fourier Transform) using precomputed roots of unity.
+
+---
+
+## Cross-Chain Verification with MetaVM
+
+MetaVM enables Quilibrium to verify the state of external chains (Ethereum, Solana, and others) cryptographically, rather than relying on trusted oracle networks like LayerZero. This is the foundation of Quilibrium's cross-chain architecture.
+
+### How It Works for Ethereum
+
+When proving Ethereum state for cross-chain operations (such as the QUIL/wQUIL bridge), MetaVM verifies four layers:
+
+| Layer | What MetaVM Proves | Why It Matters |
+|-------|-------------------|----------------|
+| **Execution proof** | Correct execution of Ethereum transactions via EVM constraints | Prevents invalid state transitions |
+| **Data validity** | SLOAD/SSTORE operations + Merkle Patricia Trie (MPT) proofs | Ensures account balances and storage are real |
+| **Consensus** | Ethereum validator set and attestation signatures | Confirms the block was agreed upon by the network |
+| **Finality** | ≥2/3 attestations for a finalized checkpoint | Prevents re-org attacks |
+
+This is a **full ZKP proof model** — every claim about Ethereum's state is cryptographically verified inside Quilibrium's proof system, not assumed true because an oracle said so.
+
+### Comparison: Quilibrium vs LayerZero
+
+| Aspect | LayerZero / Traditional Oracles | Quilibrium (MetaVM) |
+|--------|--------------------------------|---------------------|
+| **Trust model** | Relies on oracle network honesty | Cryptographic proof, no trusted parties |
+| **Verification** | Off-chain oracle signatures | On-chain ZKP verification |
+| **Privacy** | Oracle sees what you query | ORAM-based queries (via MegaRPC) hide intent |
+| **Decentralization** | Oracle operators are permissioned | Anyone can verify the proof |
+| **Cost** | Oracle fees + protocol fees | ~74 bytes of consensus state per import |
+
+### The Bridge as an Application
+
+The QUIL/wQUIL bridge is the first concrete application of this cross-chain proof stack. It imports Ethereum execution state into an alt-fee basis app shard, enabling bidirectional bridging with cryptographic guarantees rather than custodial trust.
+
+### Cryptographic Foundations
+
+The cross-chain proof stack builds on:
+- **BLS12-381 / BLS48-581 curves** — for KZG polynomial commitments
+- **KZG commitment scheme** — with parameters from both the Ethereum KZG ceremony and Quilibrium's own ceremony
+- **Fiat-Shamir transform** — for non-interactive proof generation
+- **Polynomial composition** — for composing execution, consensus, and finality into a single proof
+- **VM constraints** — EVM execution trace constraints prove every opcode was executed correctly
+- **Recursive IVC / tree folding** — long Ethereum block histories are chunked and folded into a single verifiable proof
 
 ---
 

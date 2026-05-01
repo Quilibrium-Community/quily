@@ -2,7 +2,7 @@
 title: "MegaRPC: Privacy-Preserving RPC Service"
 source: livestream + discord
 author: Cassandra Heart
-date: 2026-03-30
+date: 2026-05-01
 type: technical_reference
 topics:
   - MegaRPC
@@ -102,6 +102,15 @@ Wallet teams have been approached about adopting MegaRPC. Some are not intereste
 MegaRPC is one of Quilibrium's managed services exposed through Q Console. It builds on the ORAM research first mentioned in the version 2.1.1 roadmap (November 2025), where it was described as an "encrypted query evaluator using ORAM-based lookup" to achieve full analytic privacy, beyond the K-anonymity provided by onion routing alone.
 
 When combined with Quorum's onion-routed browsing of .Q names that resolve to Q Storage content, MegaRPC completes the privacy picture: no clearnet exposure, no IP-to-wallet linkability, and no metadata leakage at any point in the chain.
+
+### Cross-Chain Privacy
+
+MegaRPC also plays a critical role in Quilibrium's cross-chain architecture. When the bridge imports Ethereum state or when a user queries cross-chain balances, MegaRPC's ORAM-based queries ensure that:
+- The service operator cannot see which chain state is being queried
+- The user's intent (bridge direction, token, amount) remains private
+- No IP-to-address linking is possible even during cross-chain operations
+
+This means cross-chain interactions on Quilibrium are private by default — not just the on-Q movement, but the querying and verification steps as well.
 
 ---
 
