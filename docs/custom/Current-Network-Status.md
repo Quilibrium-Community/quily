@@ -49,14 +49,13 @@ The shard-out transition is the process of migrating the network from its curren
 - Mining rewards cannot be distributed
 - Full decentralization (beacon decommissioning) is pending
 
-## Network Health (May 1, 2026)
+## Live Network Metrics
 
-- **Total shards:** 3,098
-- **Healthy shards (6+ provers):** 2,377 (76.7%)
-- **Halt risk shards (<3 provers):** 259 (8.4%)
-- **Total workers:** 42,765
+For current quantitative network metrics (shard counts, worker numbers, halt-risk status, etc.), see the auto-generated snapshot:
 
-The network becomes fully activated when **all shards move out of halt risk** (100% shard coverage).
+- **`docs/custom/auto/Network-Health-Snapshot.md`** — updated daily from the Quilibrium Explorer API
+
+This document covers qualitative network status only (what works, what doesn't, and common confusion), which changes on a slower timescale than daily metrics.
 
 ## Common Confusion
 
