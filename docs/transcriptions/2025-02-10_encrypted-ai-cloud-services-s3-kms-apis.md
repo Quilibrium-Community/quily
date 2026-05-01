@@ -37,6 +37,8 @@ At the time of this livestream, nodes on testnet were going through a mainnet dr
 
 ## Upcoming Developer APIs
 
+> **Note:** The API timelines below ("Coming right now", "Coming soon") reflect the February 2025 livestream date. For current availability, see recent Discord announcements and dev-updates.
+
 The goal of Quilibrium, other than the mission itself, is to essentially take the entire TAM of cloud data infrastructure (AWS, Google Cloud Platform, Oracle Cloud, etc.). We're going to be providing a lot of API-compatible services on the network that utilize the features of Quilibrium to preserve privacy while simultaneously providing very easy-to-use familiar interfaces for people who have been building on traditional cloud services.
 
 **S3 API and KMS API** - Coming right now
@@ -168,6 +170,8 @@ In the pre-2.0 era (1.4.9, 2.0, 2.0.1 versions), the proofs accumulating were so
 If you want to run the node in true verifier form and calculate that same hypergraph yourself as a way to add resilience to anything that could go wrong, you're totally able to do so. We will have steps on how to do that. However, some nodes would take so long to produce the hypergraph that they would basically be locked out of joining into all the new shards being created and actively participating. This is our final compromise to get rid of the beacon.
 
 ## Quorum and Public Links
+
+> **Timeline note (February 2025):** The prioritization below reflects the livestream date.
 
 Fixing Quorum public links is equally prioritized alongside the S3 API and KMS API rollout. We will get that solved as fast as possible.
 

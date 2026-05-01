@@ -37,7 +37,7 @@ The near-term roadmap for Quilibrium as of this livestream included several key 
 
 ## Quilibrium 2.1 Architecture Overview
 
-### Current State and Problems Being Solved
+### Current State and Problems Being Solved (as of February 2025)
 
 The 2.1 architecture is a large lift from where we are today. The way the network currently works is essentially one singular data shard which is much larger than a data shard will be on 2.1. It's the entire token application and all its contents consolidated into a single network shard.
 
@@ -198,7 +198,7 @@ The network starts from the 2.0 to 2.1 transition with approximately 2.5 million
 
 ## Why 2.1 Prevents Miner Consolidation
 
-### The 2.0 Model
+### The 2.0 Model (pre-2.1, as of February 2025)
 
 In 2.0, a large cluster takes each frame and constructs a proof by:
 1. Taking the frame's output value
@@ -213,7 +213,7 @@ Rewards distribute based on number of workers on a given proof. Inputs must be u
 
 This fans out quickly - a single master node with relatively large capacity can handle hundreds to thousands to hundreds of thousands of workers, delegating small proof inputs.
 
-### The 2.1 Difference
+### The 2.1 Difference (upcoming at the time of this February 2025 livestream)
 
 In 2.1, individual inputs are entirely different. To maintain proofs, you must maintain that data individually on shards in a unique way. This requires:
 - More work per individual worker
@@ -327,6 +327,8 @@ interface StickerMessage {
 - Pass stickers through message list component
 
 ### Architecture Benefits
+
+> **Timeline note (February 2025):** The "launching in a few days" references below are from this livestream date. For current API status, see recent Discord announcements.
 
 This demonstrates Quorum's powerful architecture where features compose naturally. When new features get added to Quilibrium, applications can potentially supercharge:
 - KMS service launching in a few days
