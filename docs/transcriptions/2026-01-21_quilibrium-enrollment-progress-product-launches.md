@@ -20,6 +20,8 @@ topics:
 
 About 67 shards are at halt risk. 663 need coverage, but we now have over 2,000 healthy shards out of approximately 3,000 total.
 
+> **Coverage threshold note:** "Halt risk" means fewer than 3 active provers (network halts). "Needs coverage" means 3–5 provers (network can proceed). "Healthy" means 6+ provers. Activation requires all shards to be at least "needs coverage" (≥3 provers), not "healthy."
+
 Once we get to at least "needs coverage" instead of "halt risk," the network will be fully kicking into motion. The QUIL token shards will be unlocked and transaction processing will proceed.
 
 Outside of those things, we support alt-fee basis app shards which enable some really cool things, including several features discussed today.
