@@ -71,6 +71,7 @@ Rules:
 - Keep output concise: 200-500 words
 - Use markdown formatting
 - If no substantive discussion happened, write a short note saying it was a quiet day
+- Do NOT use @username mentions — write usernames without the @ symbol to avoid triggering Discord notifications
 - Do NOT invent or fabricate any information — only summarize what is in the messages`;
 
 /**
@@ -121,7 +122,10 @@ export async function summarizeMessages(
     choices: { message: { content: string } }[];
   };
 
-  return data.choices[0]?.message?.content?.trim() || 'No recap generated.';
+  let recap = data.choices[0]?.message?.content?.trim() || 'No recap generated.';
+  // Strip any remaining @username mentions to avoid Discord notifications
+  recap = recap.replace(/@(\w+)/g, '$1');
+  return recap;
 }
 
 /**

@@ -97,6 +97,7 @@ Rules:
 - Keep output concise: 200-500 words
 - Use markdown formatting
 - If no substantive discussion happened, write a short note saying it was a quiet day
+- Do NOT use @username mentions — write usernames without the @ symbol to avoid triggering Discord notifications
 - Do NOT invent or fabricate any information — only summarize what is in the messages` + SKIP_EMPTY_RULE;
 
 const ANNOUNCEMENT_SYSTEM_PROMPT = `You are a digest writer for the Quilibrium Discord server. Summarize the key announcements and updates posted in this channel.
@@ -107,6 +108,7 @@ Rules:
 - Include links shared with a brief description of what they reference
 - Keep it concise: 100-300 words
 - Use markdown formatting
+- Do NOT use @username mentions — write usernames without the @ symbol to avoid triggering Discord notifications
 - Do NOT invent or fabricate any information — only summarize what is in the messages` + SKIP_EMPTY_RULE;
 
 /** Channels that use the general discussion prompt (by name pattern) */
@@ -207,7 +209,9 @@ export async function summarizeForRecap(
     choices: { message: { content: string } }[];
   };
 
-  const content = data.choices[0]?.message?.content?.trim() || SKIP_EMPTY;
+  let content = data.choices[0]?.message?.content?.trim() || SKIP_EMPTY;
+  // Strip any remaining @username mentions to avoid Discord notifications
+  content = content.replace(/@(\w+)/g, '$1');
   return content;
 }
 
