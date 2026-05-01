@@ -276,17 +276,49 @@ This list is not exhaustive - always verify unfamiliar proper nouns.
 
 > **Important:** During Phase 2 (cleaning), preserve ALL technical content. Do NOT remove duplicates yet - that happens in **Phase 3: Dedupe** using [DEDUPE-GUIDE.md](DEDUPE-GUIDE.md). Better to include too much than lose valuable information.
 
-If the transcript discusses:
+#### Why Temporal Context Matters for RAG
+
+These documents are split into chunks for vector retrieval. A chunk that says *"The mainnet launch is scheduled for Q2 2025"* or *"The current version is 2.1.0.18"* becomes misleading once that date passes or a newer version releases. Because the chunker does not know which statements are time-sensitive, **you must embed temporal context directly into the sentences themselves** so every chunk carries its own freshness signal.
+
+#### Add Inline Temporal Notes
+
+When the transcript discusses anything time-sensitive — new features, roadmap items, network state, tokenomics changes, version numbers, deadlines, upcoming releases — annotate it inline:
+
+**Insert temporal markers directly into the sentence:**
+
+| Instead of | Write |
+|-----------|-------|
+| "The mainnet is scheduled to launch in Q2 2025." | "As of January 2025, the mainnet is scheduled to launch in Q2 2025." |
+| "The current version is 2.1.0.18." | "As of March 2025, the current version is 2.1.0.18." |
+| "We plan to release Quorum Mobile next month." | "Cassie stated in March 2025 that Quorum Mobile is planned for release in April 2025." |
+| "The network has 10,000 active nodes." | "As of February 2025, the network has 10,000 active nodes." |
+| "Token emissions will decrease by 50% next year." | "Cassie announced in January 2025 that token emissions are planned to decrease by 50% in 2026." |
+
+**What counts as time-sensitive:**
 - Specific version numbers (2.0, 2.1, etc.)
 - Upcoming features or timelines
-- Token economics or emissions
-- Specific technical implementations
+- Token economics or emissions schedules
+- Network statistics (node counts, throughput, adoption metrics)
+- Release dates or deadlines
+- Statements about what is "current", "now", "soon", "next month", "this year"
+- Any "news" or recent announcements
 
-Add a note:
+**Rules:**
+- Prefer "As of [MONTH YEAR], ..." for statements about current state
+- Prefer "In [MONTH YEAR], Cassie stated that ..." for announcements or plans
+- Do not use relative time references ("soon", "next month", "currently") without anchoring them to an absolute date
+- If the transcript date is known, use it as the anchor even if Cassie said "now" or "currently"
+- Preserve the original time frame; do not update it to present day
+
+**Section-level flag for major outdated blocks (still useful):**
+
+If an entire section is likely to become outdated quickly, also add a section-level note:
 ```markdown
 > **Note (Review Required):** This information was accurate as of [DATE].
 > Verify current status in the official documentation.
 ```
+
+But **never rely on section-level notes alone** — always add inline temporal markers so individual chunks are self-describing.
 
 ### Step 6: Add YAML Frontmatter
 
@@ -327,7 +359,8 @@ Before marking a transcript as cleaned (ready for Phase 3 dedupe):
 - [ ] Filler words, tangents, and boilerplate intro removed
 - [ ] Paragraphs are logical groupings
 - [ ] All technical content preserved (duplicates handled in Phase 3)
-- [ ] Outdated info is flagged with notes
+- [ ] Time-sensitive statements include inline temporal markers ("As of [DATE]...", "In [DATE], Cassie stated that...")
+- [ ] Section-level notes added for major outdated blocks
 - [ ] YAML frontmatter is complete with correct video URL and date
 - [ ] File saved to `transcripts/cleaned/` (within skill folder)
 
@@ -396,4 +429,4 @@ After completing Phase 2 (cleaning):
 
 ---
 
-*Last updated: 2026-02-01*
+*Last updated: 2026-05-01*
