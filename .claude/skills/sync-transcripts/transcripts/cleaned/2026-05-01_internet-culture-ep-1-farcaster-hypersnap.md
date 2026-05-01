@@ -51,7 +51,7 @@ DEGEN is a great project, Gasik has done great things, the community has endured
 
 ## From Hubs to Snapchain
 
-Nayar actually started out by building a client. They built their own Farcaster client called Nayar. I never used it. I was busy hacking on Farcaster under Merkle, so I just didn't bother.
+Neynar actually started out by building a client. They built their own Farcaster client called Neynar. I never used it. I was busy hacking on Farcaster under Merkle, so I just didn't bother.
 
 We started out with basically what was a permissioned protocol. If you wanted to run a hub, you had to be one of the personally vetted hub runners. I ran a hub outside of Farcaster. I'm very much a decentralization maximalist, so I wanted us to get out of this centralized hubs paradigm. To their credit, our goal was to do it permissioned, figure it out, and then once we were confident it could work permissionlessly, open it up so anybody could run a hub. All the nodes would sync with each other poorly, but they synced, and we started to figure out the real problems of how to scale out a CRDT-based synchronization primitive. That was a fun engineering problem, but also very revelatory because social media doesn't have to be strict global consensus like a typical blockchain. You don't usually have to care about which message came first. It's not like a double-spend problem.
 
@@ -73,15 +73,15 @@ I had been building an alternative to Discord for all those years, and I finally
 
 I had some lessons learned from trying to build a client myself on top of also building some of the back-end services at Farcaster. I said, "Okay, you say opportunity for another client, but it's kind of a farce because the actual protocol doesn't support building other clients. If you want to run a client, you have to build your own backend, your own ingestion pipeline, your own ML tools to construct feeds, all that stuff."
 
-I forked Snapchain silently while all this chaos was transpiring. I said, "I'm going to solve this problem the easy way. Every client needs NAR. So we're going to make this fork compatible with NAR's APIs." This was before the announcement about NAR buying out.
+I forked Snapchain silently while all this chaos was transpiring. I said, "I'm going to solve this problem the easy way. Every client needs Neynar. So we're going to make this fork compatible with Neynar's APIs." This was before the announcement about Neynar buying out.
 
 I thought, "Here's how we can solve the problems for building clients. We have the APIs built into the Snapchain fork. We can solve some of the other pressures. All the money is going to Merkle when you register an account, when you buy Farcaster Pro. So we make the protocol ignore Farcaster Pro. You can just do four embeds, you can do long casts, it doesn't matter if you have Farcaster Pro or not."
 
 From there I thought about identity management. How can we actually decentralize identity management? I had all these different FIP proposals. I also sent a PR in addition to the proposal to decentralize the actual validator set. I sent a PR to add our own node in November of last year. Varun responded, "Yeah, absolutely, we'll add you. It's coming up on the holiday season, a lot of people are going to be out, let's talk about it after the new year." I said that's reasonable. We usually had a week off in December.
 
-Fast forward to January, I'm on GM Farcaster talking to Nesh and Adrian. Middle of the broadcast I hear the news about what that quiet period at Farcaster was all about: NAR was buying them out. They wanted to get a first take from somebody who had worked for the Merkle team.
+Fast forward to January, I'm on GM Farcaster talking to Nesh and Adrian. Middle of the broadcast I hear the news about what that quiet period at Farcaster was all about: Neynar was buying them out. They wanted to get a first take from somebody who had worked for the Merkle team.
 
-I had two thoughts primarily. One: Dan and Varun, when you hired me you said "what are we going to work on for the next 10 years and can you commit to that?" I said sure. My first thought is "what happens to the next 10 years, Dan?" The second thought was that NAR has actually been a genuine steward of making client development easier. I can't think of a company that made more sense to become the acquirer. Okay, this makes sense.
+I had two thoughts primarily. One: Dan and Varun, when you hired me you said "what are we going to work on for the next 10 years and can you commit to that?" I said sure. My first thought is "what happens to the next 10 years, Dan?" The second thought was that Neynar has actually been a genuine steward of making client development easier. I can't think of a company that made more sense to become the acquirer. Okay, this makes sense.
 
 Then they started deciding to make changes to the protocol and the app. The very first thing they did on the Twitter account once they got control was start hawking App Studio. I thought, okay, that's a little screwy, but whatever.
 
@@ -99,13 +99,13 @@ After a long amount of back and forth and a call with Ree, ultimately he said "o
 
 ## Protocol Development Post-Acquisition
 
-Basically every major feature that's been shipped since NAR took over, like fixing the memory leak issue, they pulled from Hypersnap. Fixing the ability to use the contract to add a signer, they literally implemented the FIP that I provided. It's been really funny because outside it sounds like we should be collaborating, and I'm not understanding why Quorum is any different from the UNO perspective. It seems like cherry-picking.
+Basically every major feature that's been shipped since Neynar took over, like fixing the memory leak issue, they pulled from Hypersnap. Fixing the ability to use the contract to add a signer, they literally implemented the FIP that I provided. It's been really funny because outside it sounds like we should be collaborating, and I'm not understanding why Quorum is any different from the UNO perspective. It seems like cherry-picking.
 
 I'm not going to speak for them or suggest any conspiracies. I think conspiracies are generally dumb and reality tends to be more mundane. You got a bunch of different pressures, different priorities, you handle those in whatever order makes sense. But it is funny they've been cherry-picking the changes that benefited Snapchain and benefited Hypersnap, and it's been a one-way direction.
 
 We stopped contributing FIPs to Farcaster XYZ. Everything has been under Farcaster.org on GitHub. I've called out the irony of them positioning themselves as champions of what Farcaster should be when they have none of the original protocol dev team. I know they have the Clanker team, but they weren't the original protocol dev team. They didn't do anything to Hubs or Snapchain. I said "okay, cool, I'll just do this fork since you told me to do the fork anyway, and we're going to continue to grow the protocol."
 
-At the very least we have the same goal in mind: grow the user base. Ree said something about 10x in two years or something like that. We're trying to ramp that up as fast as possible. We talked about the token as part of the proof-of-work decentralization of the protocol so it's actually permissionless. That suddenly got a bunch of old users interested. They returned from three-to-six-month hiatuses. People will try to draw meaning out of that, like they're here for the token or whatever. But the reality is, the moment people actually heard the news that there is a token coming, it instantly ramped up the daily active users. The ratio of quality users to low-quality airdrop farmers actually increased in favor of quality users.
+At the very least we have the same goal in mind: grow the user base. Ree said something about 10x in two years or something like that. We're trying to ramp that up as fast as possible. We talked about the Farcaster token as part of the proof-of-work decentralization of the protocol so it's actually permissionless. That suddenly got a bunch of old users interested. They returned from three-to-six-month hiatuses. People will try to draw meaning out of that, like they're here for the token or whatever. But the reality is, the moment people actually heard the news that there is a token coming, it instantly ramped up the daily active users. The ratio of quality users to low-quality airdrop farmers actually increased in favor of quality users.
 
 ## Token Utility and Network Incentives
 
@@ -127,7 +127,7 @@ I draw a sharp line between federated models and decentralized models. It's a nu
 
 Other networks like Bluesky claim they're decentralized, but when you look under the hood, you can look at the Black Sky team's engineering work because they're trying really hard to decentralize what the Bluesky team is doing. Bluesky centralizes the protocol. I have great appreciation for what Black Sky is doing despite not being sociopolitically aligned with the Bluesky crowd. Mostly because they hate crypto and AI, which I think is a really stupid quasi-religious debate.
 
-They are trying to solve the clear centralization problems: how the content delivery network works, how user authentication works, and porting accounts around. All that is still very centralized in comparison to the intent of Farcaster. Whether they've actually met that intent is a different story. The contracts live on Optimism, which in my opinion is not decentralized because it's literally a single sequencer. It does roll up to the L1. At the end of the day, it lives on a substrate not controlled by NAR, but they have the keys, they collect the revenue, they have control over all those things.
+They are trying to solve the clear centralization problems: how the content delivery network works, how user authentication works, and porting accounts around. All that is still very centralized in comparison to the intent of Farcaster. Whether they've actually met that intent is a different story. The contracts live on Optimism, which in my opinion is not decentralized because it's literally a single sequencer. It does roll up to the L1. At the end of the day, it lives on a substrate not controlled by Neynar, but they have the keys, they collect the revenue, they have control over all those things.
 
 ## Farcaster Pro and Centralization Problems
 
@@ -137,7 +137,7 @@ It got really bad with Farcaster Pro because that was a lot more money, $120 a y
 
 What's tricky is there's no governance, no oversight. They moved all the proceeds from Farcaster Pro to a centralized custodian, Coinbase, to hold those funds. It's understandable because there's high risk having access to that much funds with a single private key. I know they had a multi-sig, but at the end of the day, a few signers get popped and suddenly millions could be exfiltrated. Understandable. Put it on Coinbase if you don't want to deal with that.
 
-But the fact that it even works like that is a problem. Every other client is at a disadvantage. When a user onboards through another client, Merkle got paid. When you're wanting to do feed generation, when you're wanting to do normal client things, either Merkle's getting paid, NAR's getting paid, or you're spending a lot of money yourself to build that infrastructure.
+But the fact that it even works like that is a problem. Every other client is at a disadvantage. When a user onboards through another client, Merkle got paid. When you're wanting to do feed generation, when you're wanting to do normal client things, either Merkle's getting paid, Neynar's getting paid, or you're spending a lot of money yourself to build that infrastructure.
 
 Those were the problems I wanted to tackle with Hypersnap. I wanted to fix the actual centralization critical points, the failure points that exist currently in Snapchain today.
 
@@ -153,7 +153,7 @@ Where it gets really interesting, and I think this is one of the most powerful p
 
 It doesn't require a lot of compute. You can run it on the lowest grade of hardware even on the entire history of Farcaster protocol data spanning back years, in about two hours to bootstrap the initial set. Every epoch afterwards is instant. From that, not only did we figure out how to properly reward user growth, it gives us the ability to properly assess whether a user is a spammer.
 
-Merkle's spam scoring system, which NAR has taken over, uses these really intense ML-driven regimes to classify users. A lot of users get screwed. For example, Charlie or What Rocks is right now labeled as a spammer, tagged as a zero, and there is no reason for that. Our evaluation metric does not classify them as a bot. It properly classifies them as an authentic user.
+Merkle's spam scoring system, which Neynar has taken over, uses these really intense ML-driven regimes to classify users. A lot of users get screwed. For example, Charlie or What Rocks is right now labeled as a spammer, tagged as a zero, and there is no reason for that. Our evaluation metric does not classify them as a bot. It properly classifies them as an authentic user.
 
 Having this approach and a basic transparent algorithm, that score feeds back into how validators get registered. In order to register as a validator, you're limited to three total nodes per FID. There is a bar based on that trust score of whether you can even enroll your validator. It's transparent, trustless, doesn't require approval of some intermediary. It helps mediate against Sybiling the network and overloading it with too many validators while we're trying to scale out the underlying consensus primitives.
 
@@ -177,13 +177,13 @@ I think partitioning on FID division is probably not the long-term solution. It 
 
 ## Mini Apps and Protocol-Level Features
 
-When you build a mini app or a client, you tend to rely on a third-party service like NAR, but also a few other third-party services. Video streaming, for example. When you're relying on all these third-party services, oftentimes it's because the underlying thing you're building against doesn't have features to support that.
+When you build a mini app or a client, you tend to rely on a third-party service like Neynar, but also a few other third-party services. Video streaming, for example. When you're relying on all these third-party services, oftentimes it's because the underlying thing you're building against doesn't have features to support that.
 
 For Quorum, we have end-to-end encrypted group chats, which is based on the original direct casts FIP that I contributed. When we think about how you build a client or mini app, there's a lot of things you need. You need a place to store data about the user, so you end up having your own database using Supabase or something. When you need basic computation, you're usually using AWS Lambda or Vercel or some serverless hosting provider. When you're relying on content delivery, you're having to use some backend to host it: GitHub Pages, S3, Cloudflare R2, whatever.
 
 Some of those problems are generic cloud problems, and that's what I spent the last eight years building with Q. But some are actually a failing of the protocol itself.
 
-When you're authenticating a user on a mini app or client, you have to do something like sign in with Farcaster, which actually calls Merkle or NAR's backend APIs and verifies the integrity of the signature, then gives you a yes or no that the user is legitimate. You're relying on something that's not on the protocol when it could be on the protocol. It doesn't even have to really be on the protocol. You just need something to reference for the keys to make them make sense. Putting the signers on protocol, that's why I wrote the FIP.
+When you're authenticating a user on a mini app or client, you have to do something like sign in with Farcaster, which actually calls Merkle or Neynar's backend APIs and verifies the integrity of the signature, then gives you a yes or no that the user is legitimate. You're relying on something that's not on the protocol when it could be on the protocol. It doesn't even have to really be on the protocol. You just need something to reference for the keys to make them make sense. Putting the signers on protocol, that's why I wrote the FIP.
 
 Mini apps when you need to store data about the user — why do we need to incur a cost for Supabase when you could make those interactions data that lives on the protocol? You're genericizing the protocol to work with more than just primitive user data. It's actual computational needs, basic computational needs, but it's the same kind almost any mini app that's not just a static page will need.
 
@@ -193,7 +193,7 @@ Clients are easy. You create a signer for your client, and that immediately give
 
 Mini apps, none of that lives on the network at this time. One of the things that's part of the proof-of-work FIP includes embedding mini app interactions. When you click a button on a mini app, you can store the state on Hypersnap. You don't need a backend, don't need to incur the cost of Supabase, don't need the painful egress fees of Vercel. You end up with enough data that you can measure as a signal how much that mini app is meaningfully contributing to user growth.
 
-In the developer rewards days, a good chunk of the top 50 mini apps were stupid things like "what's my NAR score." They were popular because people wanted to know their NAR score, thinking they'd be eligible for airdrops. None of that would be measured as interaction data meaning anything material for whether that mini app is helping users grow.
+In the developer rewards days, a good chunk of the top 50 mini apps were stupid things like "what's my Neynar score." They were popular because people wanted to know their Neynar score, thinking they'd be eligible for airdrops. None of that would be measured as interaction data meaning anything material for whether that mini app is helping users grow.
 
 For mini apps that do Defense of the Agents or hire.zip, things keeping people using Farcaster, keeping them plugged in, wanting to grow and bring more people on — this gives you an actual measurable signal. It benefits the app developer by storing data on Hypersnap instead of somewhere else. You get these cool composability primitives. Mini apps can use other mini apps' data. It turns into a flourishing ecosystem.
 
@@ -213,11 +213,11 @@ It gets into a question of relativity. A lot of people doing airdrop farming are
 
 ## Fork Compatibility and the Split World
 
-We have to remain compatible with Snapchain. If the powers that be over at NAR are not implementing these same changes, a user wanting to engage in spammy behaviors would simply post to Snapchain and it ends up making it over to Hypersnap due to compatibility.
+We have to remain compatible with Snapchain. If the powers that be over at Neynar are not implementing these same changes, a user wanting to engage in spammy behaviors would simply post to Snapchain and it ends up making it over to Hypersnap due to compatibility.
 
 For today, in order for a user to be seen on both Snapchain and Hypersnap, they would have to be registered as an FID under the OP-based contract. From my personal perspective, I can't speak for the rest of the Hypersnap dev team, but from the perspective of a company that has a client, we're going to subsidize users joining by basically doing the registration for them on the FID contract, ID registry, and key registry, until the gasless key registry goes into effect for Snapchain as well.
 
-We are still going to pursue these things anyway, which means there is going to be a split world perspective at times. For example, Farcaster Pro: the NAR team said they don't intend to make any changes around it just yet, even if they disagree with it. Rish has personally said he does not like Farcaster Pro, how it's currently built. Nobody does.
+We are still going to pursue these things anyway, which means there is going to be a split world perspective at times. For example, Farcaster Pro: the Neynar team said they don't intend to make any changes around it just yet, even if they disagree with it. Rish has personally said he does not like Farcaster Pro, how it's currently built. Nobody does.
 
 Having a Farcaster Pro subscription lets you post a cast with four embeds instead of two, add a banner to your profile, do long casts. On the Hypersnap side, we allow those posts without Farcaster Pro. When the client is interacting with a Hypersnap-aware SDK, it creates two casts: one that we interpret from the Hypersnap side as a Snapchain-compatible cast, and we'll ignore that and accept the one they submitted to Hypersnap. Any Hypersnap-aware client will show the full post correctly. For the Snapchain side, we'll have an embed that handles those problems. Is it a long cast? Great, it's a picture of text when it renders on a Snapchain-based client. Is it four embeds? Great, we'll compact it into a single photo. Where we hit incompatibilities, we'll do what we can to be meaningfully compatible, but we will have some things that break away from compatibility.
 
@@ -233,13 +233,13 @@ As a node runner, you have to run Hypersnap to get data availability rewards. If
 
 Ultimately, those incompatibilities are engineering problems. Yes, in an ideal world there are times where we could say "if you want this, you gotta use Hypersnap," but again, the goal: we're aligned, we want Farcaster as a whole to grow, which means we can't break compatibility with Snapchain. We have to work around those problems, make them work: proxy backends to work with Hypersnap data when you're on Snapchain, rendering casts in a special way to be compatible with Snapchain for users that don't have Farcaster Pro but want to use Farcaster Pro features. These are solvable, tractable problems.
 
-Where things could get weird is when Hypersnap starts to have features that go too far beyond what Snapchain has to support. Near-term, that's not a problem. We're not going to run into that in the near term. Long term, it's entirely possible NAR could simply say "your experiment has succeeded, so we will just be part of this fork and call it a day." That is an entirely possible outcome.
+Where things could get weird is when Hypersnap starts to have features that go too far beyond what Snapchain has to support. Near-term, that's not a problem. We're not going to run into that in the near term. Long term, it's entirely possible Neynar could simply say "your experiment has succeeded, so we will just be part of this fork and call it a day." That is an entirely possible outcome.
 
 ## Why Decentralization Matters for Users
 
 If people are using Farcaster on Farcaster, or on Quorum, or Herocast, or the DEGEN app, that collectively raises all boats. From my perspective, it's not about client adoption. I care about client adoption in the sense that I want users to have a kick-ass experience. For Quorum, we have group chats that are end-to-end encrypted, video and voice calling support, mini app compatibility extended with features to help keep users private.
 
-In the real world, most people don't care about decentralization because they don't understand what it means. With Mastodon, a federated server in Germany has laws they have to comply with. A user based in the US who posts something illegal in Germany finds themselves censored. We can have our philosophical debate about whether that's good, but there will always be rough edges when reality meets law and that law pertains to jurisdictions. NAR servers are based in the US, NAR is incorporated in the US, they are subject to US law. With some of their more centralized behaviors, that puts a lot of responsibility and onus on them to be compliant in ways a truly decentralized protocol doesn't have to be.
+In the real world, most people don't care about decentralization because they don't understand what it means. With Mastodon, a federated server in Germany has laws they have to comply with. A user based in the US who posts something illegal in Germany finds themselves censored. We can have our philosophical debate about whether that's good, but there will always be rough edges when reality meets law and that law pertains to jurisdictions. Neynar servers are based in the US, Neynar is incorporated in the US, they are subject to US law. With some of their more centralized behaviors, that puts a lot of responsibility and onus on them to be compliant in ways a truly decentralized protocol doesn't have to be.
 
 Giving users broad latitude and freedom is something that can only come from a decentralized platform. Users don't care about decentralization. They care about what they can do. If you're using a centralized client, centralized server, you're going to hit roadblocks.
 
@@ -257,7 +257,7 @@ One great example: a lot of people use a mini app called Emerge, which does AI-g
 
 Right now they rely on USDC as the unit of interchange, but when it's based at the protocol level they could gain more because they're producing transactions on network associated with their mini app and rewarded by users interacting. It gives you something like Roblox with Robux, or Epic with V-Bucks for Fortnite: an ecosystem using something not actual US dollars, materially connected to US dollars, but separate, living in that ecosystem.
 
-From our point of view, the token is filling that niche. I expect a lot of applications to be built using that token primitive because it unlocks things in ways restrictions around Circle, requirements when dealing with fiat — those go away. It's intrinsically linked to the overall flywheel.
+From our point of view, the Farcaster token is filling that niche. I expect a lot of applications to be built using that token primitive because it unlocks things in ways restrictions around Circle, requirements when dealing with fiat — those go away. It's intrinsically linked to the overall flywheel.
 
 ## Team and Funding Philosophy
 
@@ -285,9 +285,9 @@ Has the community landed on a TGE date? I'll put it this way: yes. But we won't 
 
 Airdrops: when you look at the history of tokens that have done airdrops, they're generally based on weird criteria. You've casted or tweeted or retweeted posts X number of times, been whatever kind of thing to help the hype wheel but not actually help the product. They also have half-assed hackathons where people build the lamest stuff nobody will ever use, thrown away after the hackathon just to get their cash prize.
 
-We don't do that. The notion of token rewards is literally the same rules the protocol will continue doing after this change on Hypersnap takes effect, but applied to the history of data on Farcaster. You can kind of think of it as a premine, but it's not really a premine because it's the same rules. There's no special "were you a developer, did you contribute to the protocol?" None of that. It's "did you help the network grow in the same way you continue helping the network grow?"
+We don't do that. The notion of Farcaster token rewards is literally the same rules the protocol will continue doing after this change on Hypersnap takes effect, but applied to the history of data on Farcaster. You can kind of think of it as a premine, but it's not really a premine because it's the same rules. There's no special "were you a developer, did you contribute to the protocol?" None of that. It's "did you help the network grow in the same way you continue helping the network grow?"
 
-We have six months of tranches. Every month, when the token comes out, one-sixth of the tokens are released of the retroactive scoring. Every month thereafter it's the remaining sixths until it's done. Part of that is to encourage users to keep posting on the platform. You have to keep engaging in the same way to remain eligible. It's not "boom, suddenly you got a bunch of tokens, go do whatever." It's intrinsically bound to how the protocol is expected to continue growing.
+We have six months of tranches. Every month, when the Farcaster token comes out, one-sixth of the Farcaster tokens are released of the retroactive scoring. Every month thereafter it's the remaining sixths until it's done. Part of that is to encourage users to keep posting on the platform. You have to keep engaging in the same way to remain eligible. It's not "boom, suddenly you got a bunch of tokens, go do whatever." It's intrinsically bound to how the protocol is expected to continue growing.
 
 When MVR posted the snap, he was always the first on tip and allocation campaigns, creating interfaces. Absolute legend. Users looked at the retroactive score and said "oh, this is an airdrop." It's not really an airdrop. An airdrop is one-time retroactive, specifically based on some arbitrary criteria the dev team set. They also have an allocation for their VC, an allocation for themselves. None of that. It is strictly based on the protocol. It's only five months. Six, starting from zero. Month five is the sixth month. After five full months have transpired, that sixth tranche is released.
 
