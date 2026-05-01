@@ -20,7 +20,7 @@ topics:
 
 ## Recap from Part 1
 
-> **Note (updated March 2026):** This July 2024 stream discusses the upcoming 2.0 mainnet launch. Quilibrium 2.1 was later released to mainnet on April 14, 2025. As of March 2026, the network is live and functional but the multi-shard transition ("shard-out") and full decentralization are still in progress. The network is NOT yet fully launched.
+> **Note (updated May 2026):** This July 2024 stream discusses the upcoming 2.0 mainnet launch. Quilibrium 2.1 was later released to mainnet on April 14, 2025. As of May 2026, the network is live on mainnet (QNS, QStorage function) but **tokens, transactions, mining rewards, and full token utility are NOT yet functional** — these require the shard-out transition to complete.
 
 In the last stream we covered a few things that are important. We first talked about the very beginnings of all of this - what happened seven years ago in the journey that led to Quilibrium as it is today. We are getting very very close to a really big moment in this protocol's history. On the 20th we will be launching mainnet with 2.0.
 
