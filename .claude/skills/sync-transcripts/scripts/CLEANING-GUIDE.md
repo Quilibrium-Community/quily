@@ -34,6 +34,7 @@ This is the most important principle of transcript cleaning. Think of yourself a
 - Delete stream housekeeping and technical difficulties
 - Delete off-topic tangents
 - Fix transcription errors (spelling, punctuation, term corrections)
+- **Convert first-person pronouns ("I", "we", "my", "our") to explicit subjects ("Cassie", "the Quilibrium team", "the Farcaster team")** — critical for RAG accuracy; see Pronoun Disambiguation below
 - Add section headers to organize content
 - Break run-on text into paragraphs
 
@@ -101,6 +102,36 @@ Keep only if there's unique content in these sections.
 - Q&A content (valuable for FAQs)
 - Future roadmap discussions (but flag for verification)
 - News/context that's relevant to understanding the content
+
+### Step 2.5: Pronoun Disambiguation (Critical for RAG)
+
+**Why this matters:**
+The chunker splits documents into ~800-token chunks. A chunk that starts with "I did X..." or "We built Y..." gives the RAG bot no subject reference unless the previous chunk is also retrieved. The bot cannot know who "I" or "we" refers to without explicit attribution.
+
+**Convert first-person to explicit subjects:**
+
+| Instead of | Write |
+|-----------|-------|
+| "I" / "me" / "my" | "Cassie" / "Cassandra Heart" / "her" |
+| "We built..." (Cassie + Farcaster team) | "Cassie and the Farcaster team built..." |
+| "We built..." (Cassie + Quilibrium team) | "Cassie and the Quilibrium team built..." |
+| "We allow..." (Hypersnap developers) | "The Hypersnap team allows..." |
+| "They added..." (ambiguous NAR/Merkle) | "NAR added..." / "The Merkle team added..." |
+| "Our protocol" | "The Farcaster protocol" / "The Quilibrium protocol" |
+
+**Rules:**
+- Always use "Cassie" or "Cassandra Heart" instead of "I" — the frontmatter author field is not visible to the LLM in retrieved chunks
+- Disambiguate "we" based on context: which team is Cassie referring to? (Farcaster/Merkle, Quilibrium/Q Inc., Hypersnap, or her stream community)
+- Disambiguate "they" when it could mean NAR, Merkle, the Farcaster team, or a competitor
+- Replace generic "the protocol" with "the Farcaster protocol" or "the Quilibrium protocol" when discussing either
+- Replace generic "the network" with "the Farcaster network" or "the Quilibrium network"
+- Replace generic "the token" with "QUIL" or "the Farcaster token" as appropriate
+
+**Example:**
+
+Raw: "I had started an educational series... We decided to rebuild Discord..."
+
+Cleaned: "Cassie had started an educational series... She and her stream community decided to rebuild Discord..."
 
 ### Step 3: Add Structure (Critical for RAG)
 
