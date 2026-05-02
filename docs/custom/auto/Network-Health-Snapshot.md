@@ -1,7 +1,7 @@
 ---
-title: "Quilibrium Network Health Snapshot — May 1, 2026"
+title: "Quilibrium Network Health Snapshot — May 2, 2026"
 source: Quilibrium Explorer API (automated daily)
-date: 2026-05-01
+date: 2026-05-02
 type: network_status
 topics:
   - network health
@@ -17,8 +17,8 @@ topics:
 
 # Quilibrium Network Health Snapshot
 
-**Date:** May 1, 2026
-**Data source:** Quilibrium Explorer API (live data as of 2026-05-01)
+**Date:** May 2, 2026
+**Data source:** Quilibrium Explorer API (live data as of 2026-05-02)
 
 ## Overview
 
@@ -26,16 +26,16 @@ topics:
 |---|---|
 | World Size | 154.16 GB |
 | Total Shards | 3,098 |
-| Peers | 444 |
-| Total Workers | 42,765 |
+| Peers | 445 |
+| Total Workers | 42,809 |
 
 ## Shard Health
 
 | Status | Count | Percentage |
 |---|---|---|
 | Healthy (6+ active provers) | 2,377 | 76.7% |
-| Warning (3–5 active provers) | 462 | 14.9% |
-| Halt Risk (<3 active provers) | 259 | 8.4% |
+| Warning (3–5 active provers) | 461 | 14.9% |
+| Halt Risk (<3 active provers) | 260 | 8.4% |
 
 A shard is considered "healthy" when it has 6 or more active provers. Shards with fewer than 3 provers are at risk of halting. The network becomes fully activated when all shards move out of the "halt risk" category.
 
@@ -53,13 +53,13 @@ A shard is considered "healthy" when it has 6 or more active provers. Shards wit
 
 | Status | Count |
 |---|---|
-| Active | 26,244 |
-| Joining | 16,521 |
-| Leaving | 1,831 |
-| Rejected | 5,441 |
+| Active | 26,243 |
+| Joining | 16,566 |
+| Leaving | 1,827 |
+| Rejected | 7,912 |
 
 ## Summary
 
-As of May 1, 2026, the Quilibrium network has 3,098 total shards. Of these, 2,377 (76.7%) are healthy, 462 (14.9%) need more coverage, and 259 (8.4%) are at halt risk. The network has 444 peers and 42,765 total workers.
+As of May 2, 2026, the Quilibrium network has 3,098 total shards. Of these, 2,377 (76.7%) are healthy, 461 (14.9%) need more coverage, and 260 (8.4%) are at halt risk. The network has 445 peers and 42,809 total workers.
 
 This snapshot is updated daily from the Quilibrium Explorer API.
