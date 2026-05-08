@@ -115,8 +115,8 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          CHUTES_API_KEY: ${{ secrets.CHUTES_API_KEY }}
-        run: yarn ingest run --clean
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: yarn ingest run-openrouter --clean
 
       - name: Commit synced docs and manifest
         if: steps.check.outputs.has_changes == 'true'
