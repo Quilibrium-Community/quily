@@ -499,6 +499,19 @@ export async function POST(request: Request) {
     const turnstileToken = body.turnstileToken;
     const isProduction = process.env.NODE_ENV === 'production';
 
+    // Debug bypass: if the request supplies a valid debug token (via ?debug= or x-debug-token),
+    // skip Turnstile and stream extra diagnostics back as a `data-debug` part. The token must
+    // match DEBUG_BYPASS_TOKEN (server env) and that env must be set — there is no implicit
+    // "any token works" mode. Used for live API reproduction without browser interaction.
+    const debugBypassEnv = process.env.DEBUG_BYPASS_TOKEN;
+    const debugTokenFromUrl = new URL(request.url).searchParams.get('debug');
+    const debugTokenFromHeader = request.headers.get('x-debug-token');
+    const providedDebugToken = debugTokenFromUrl || debugTokenFromHeader || null;
+    const isDebug = Boolean(
+      debugBypassEnv && providedDebugToken && providedDebugToken === debugBypassEnv
+    );
+    if (isDebug) console.log('[Chat] Debug bypass active — skipping Turnstile, streaming diagnostics');
+
     // Check for existing verified session (cookie set after first successful verification)
     const cookies = request.headers.get('cookie') || '';
     const hasVerifiedSession = cookies.includes('turnstile_verified=true');
@@ -506,7 +519,7 @@ export async function POST(request: Request) {
     // Track if we need to set the session cookie in the response
     let shouldSetVerifiedCookie = false;
 
-    if (isProduction && !hasVerifiedSession && !turnstileToken) {
+    if (isProduction && !isDebug && !hasVerifiedSession && !turnstileToken) {
       // No session and no token - need verification
       console.warn('[Chat] Missing Turnstile token and no verified session');
       return new Response(
@@ -518,7 +531,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (turnstileToken && !hasVerifiedSession) {
+    if (!isDebug && turnstileToken && !hasVerifiedSession) {
       // Fresh token provided and no session yet - verify it
       // Get client IP for additional validation
       const forwarded = request.headers.get('x-forwarded-for');
@@ -776,8 +789,44 @@ export async function POST(request: Request) {
     // Pick a random search message for this request
     const searchMessage = getRandomSearchMessage();
 
+    // Diagnostics collected when isDebug is true. Emitted as `data-debug` events.
+    const debugErrors: string[] = [];
+    const writeDebug = (payload: Record<string, unknown>, writer: { write: (chunk: { type: `data-${string}`; data: unknown; transient?: boolean }) => void }) => {
+      if (!isDebug) return;
+      writer.write({ type: 'data-debug' as const, data: payload, transient: true });
+    };
+
+    /**
+     * Emit a `data-error` SSE part the client can render. Always on (not gated by debug mode),
+     * since this is the only way users learn what actually failed when the bot returns nothing.
+     * `source` identifies the layer (rag, llm, ui-stream, empty-response) so the client can
+     * choose how to style it; `message` is human-readable and free of secrets.
+     */
+    const writeError = (
+      writer: { write: (chunk: { type: `data-${string}`; data: unknown; transient?: boolean }) => void },
+      source: 'rag' | 'llm' | 'ui-stream' | 'empty-response' | 'fallback-exhausted',
+      message: string
+    ) => {
+      writer.write({ type: 'data-error' as const, data: { source, message } });
+    };
+
     const stream = createUIMessageStream({
       execute: async ({ writer }) => {
+        // Debug snapshot: env + request shape, before any work
+        writeDebug({
+          phase: 'request',
+          freeMode: isFreeMode,
+          provider,
+          model,
+          messageCount: messages.length,
+          rawUserQuery: rawUserQuery.slice(0, 200),
+          normalizedQuery: userQuery.slice(0, 200),
+          hasOpenRouterKey: Boolean(openrouterKey),
+          hasChutesToken: Boolean(chutesAccessToken),
+          embeddingProvider,
+          embeddingModel,
+        }, writer);
+
         // Step 1: Search knowledge base
         writeStatus(writer, {
           stepId: 'search',
@@ -819,8 +868,21 @@ export async function POST(request: Request) {
             description: chunks.length > 0 ? `Found ${chunks.length} relevant sources` : 'No sources found',
             status: 'completed',
           });
+
+          writeDebug({
+            phase: 'rag-complete',
+            ragChunks: chunks.length,
+            ragQuality,
+            maxSimilarity: chunks.length > 0 ? Math.max(...chunks.map(c => c.similarity)) : 0,
+            sourceCount: formattedSources.length,
+            systemPromptLength: systemPrompt.length,
+          }, writer);
         } catch (ragError) {
+          const msg = ragError instanceof Error ? ragError.message : String(ragError);
           console.error('RAG retrieval error:', ragError);
+          debugErrors.push(`rag: ${msg}`);
+          writeDebug({ phase: 'rag-error', error: msg }, writer);
+          writeError(writer, 'rag', `Knowledge retrieval failed: ${msg}`);
           // Mark search as completed even on error (we'll continue without RAG)
           writeStatus(writer, {
             stepId: 'search',
@@ -960,6 +1022,7 @@ export async function POST(request: Request) {
           if (fallbacks.length === 0) {
             // No more fallbacks available
             hadError = true;
+            writeError(writer, 'fallback-exhausted', `All Chutes models tried and unavailable: ${triedModels.join(', ')}`);
             writer.write({
               type: 'text-delta',
               id: textId,
@@ -1010,6 +1073,7 @@ export async function POST(request: Request) {
             hadError = true;
             const errorMsg = lastResult.error || 'Unknown error';
             console.error('Chutes streaming error:', errorMsg);
+            writeError(writer, 'llm', errorMsg);
 
             if (isCreditsError(errorMsg)) {
               writer.write({
@@ -1144,16 +1208,49 @@ export async function POST(request: Request) {
           messages: llmMessages,
           tools: ragTools,
           onError: (error) => {
-            console.error('LLM streaming error:', error);
+            const msg = error.error instanceof Error ? error.error.message : String(error.error);
+            console.error('LLM streaming error:', msg);
+            debugErrors.push(`llm: ${msg}`);
+            writeError(writer, 'llm', msg);
           },
         });
 
         writer.merge(result.toUIMessageStream({
           onError: (error: unknown) => {
+            const msg = error instanceof Error ? error.message : 'An error occurred while streaming the response.';
             console.error('UI message stream error:', error);
-            return error instanceof Error ? error.message : 'An error occurred while streaming the response.';
+            debugErrors.push(`ui-stream: ${msg}`);
+            writeError(writer, 'ui-stream', msg);
+            return msg;
           },
           onFinish: async () => {
+            // Debug snapshot after streaming completes
+            try {
+              const text = await result.text;
+              const tools = await result.toolCalls;
+
+              // If the model produced no visible content AND no error was already
+              // surfaced, emit a synthetic empty-response error so the user sees something.
+              if (text.length === 0 && debugErrors.length === 0) {
+                writeError(
+                  writer,
+                  'empty-response',
+                  'The model returned no content. This usually means the upstream provider rate-limited the request, returned a malformed response, or silently dropped the stream. Try again, or switch model in Settings.'
+                );
+              }
+
+              writeDebug({
+                phase: 'stream-finished',
+                outputLength: text.length,
+                outputPreview: text.slice(0, 300),
+                toolCallNames: (tools || []).map((t) => t.toolName),
+                hasToolCallTextLeak: text.includes('create_knowledge_issue'),
+                errors: debugErrors,
+              }, writer);
+            } catch (e) {
+              writeDebug({ phase: 'stream-finished', error: String(e), errors: debugErrors }, writer);
+            }
+
             // Send RAG quality for confidence indicator
             writer.write({
               type: 'data-rag-quality' as const,

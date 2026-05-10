@@ -19,6 +19,8 @@ interface MessageListProps {
   messages: UIMessage[];
   status: ChatStatus;
   error: Error | null;
+  /** Mid-stream error surfaced via `data-error` SSE part (RAG fail, LLM error, empty response) */
+  streamError?: { source: string; message: string } | null;
   rateLimitError?: RateLimitError | null;
   onQuickAction?: (command: string) => void;
   thinkingSteps?: ThinkingStep[];
@@ -59,7 +61,7 @@ const QUICK_ACTIONS = [
  * - Empty state for new conversations
  * - Throttled scroll updates during streaming to reduce layout thrashing
  */
-export function MessageList({ messages, status, error, rateLimitError, onQuickAction, thinkingSteps = [], followUpQuestions = [], correctionIssueUrl, ragQuality, inputProps }: MessageListProps) {
+export function MessageList({ messages, status, error, streamError, rateLimitError, onQuickAction, thinkingSteps = [], followUpQuestions = [], correctionIssueUrl, ragQuality, inputProps }: MessageListProps) {
   const {
     scrollRef,
     anchorRef,
@@ -222,8 +224,27 @@ export function MessageList({ messages, status, error, rateLimitError, onQuickAc
           </div>
         )}
 
+        {/* Stream-level error from data-error SSE parts (RAG / LLM / empty response).
+            Distinct from useChat's `error`, which only fires for fatal HTTP failures. */}
+        {streamError && !rateLimitError && (
+          <div className="flex justify-center mb-4">
+            <div className="bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 max-w-md">
+              <p className="font-medium">
+                {streamError.source === 'empty-response' ? 'No response received' :
+                 streamError.source === 'rag' ? 'Search failed' :
+                 streamError.source === 'fallback-exhausted' ? 'All models unavailable' :
+                 'Error'}
+              </p>
+              <p className="text-sm sm:text-xs mt-1">{streamError.message}</p>
+              <p className="text-xs text-red-600/70 dark:text-red-400/60 mt-2 font-mono">
+                source: {streamError.source}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Error message */}
-        {error && !rateLimitError && (
+        {error && !rateLimitError && !streamError && (
           <div className="flex justify-center mb-4">
             <div className="bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 max-w-md">
               <p className="font-medium">Error</p>

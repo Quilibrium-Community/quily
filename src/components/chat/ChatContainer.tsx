@@ -155,6 +155,11 @@ export function ChatContainer({
     retryAfter: number;
   } | null>(null);
 
+  // Stream error state — populated from `data-error` SSE parts emitted by the route
+  // when retrieval fails, the LLM errors, or the model returns an empty response.
+  // Distinct from useChat's `error`, which only fires for fatal HTTP/network failures.
+  const [streamError, setStreamError] = useState<{ source: string; message: string } | null>(null);
+
   // Create transport with API endpoint and body parameters
   // Memoize to prevent recreating on every render
   // Uses prepareSendMessagesRequest to extract priority doc IDs from the current message state
@@ -179,8 +184,9 @@ export function ChatContainer({
         },
         // Custom fetch to handle rate limiting and free mode credit exhaustion
         fetch: async (url, options) => {
-          // Clear any previous rate limit error when making a new request
+          // Clear any previous errors when making a new request
           setRateLimitError(null);
+          setStreamError(null);
 
           const response = await fetch(url, options);
 
@@ -235,6 +241,13 @@ export function ChatContainer({
         const qualityData = dataPart.data as { quality?: 'high' | 'low' | 'none' };
         if (qualityData?.quality) {
           setRagQuality(qualityData.quality);
+        }
+      }
+      // Stream-level error (RAG fail, LLM error, empty response) — surface to the user
+      if (dataPart.type === 'data-error') {
+        const err = dataPart.data as { source?: string; message?: string };
+        if (err?.message) {
+          setStreamError({ source: err.source || 'unknown', message: err.message });
         }
       }
     },
@@ -472,6 +485,7 @@ export function ChatContainer({
         messages={messages}
         status={status}
         error={error || null}
+        streamError={streamError}
         rateLimitError={rateLimitError}
         onQuickAction={handleSubmit}
         thinkingSteps={thinkingSteps}
