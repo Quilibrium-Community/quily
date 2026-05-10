@@ -13,6 +13,7 @@ This is the main index for all documentation, bug reports, and task management.
 - [Discord Bot Architecture](docs/discord-bot-architecture.md) — Discord bot design: @mention handler, shared RAG service, rate limiting, conversation memory, and VPS deployment via pm2
 - [Knowledge Update Pipeline — Processing GitHub Issues into Docs](docs/knowledge-update-pipeline.md) — Auto-correction flow (Discord & web chat), deterministic issue creation, and the /process-issues skill for applying changes to docs
 - [Model-Specific Instruction Handling](docs/model-specific-instruction-handling.md) — How frontier models (Claude/GPT/Gemini) vs open-source models are handled differently on low-relevance RAG results to prevent hallucination
+- [Production Debug Pipeline](docs/production-debug-pipeline.md) — Two-layer pipeline for debugging the live chatbot in production: yarn prod-logs (Vercel CLI wrapper) and ?debug=<token> bypass on /api/chat that streams diagnostics as data-debug SSE events.
 - [QA Evaluation Harness](docs/qa-evaluation-harness.md) — CLI testing suite with 34 test cases across 10 categories, using deterministic checks and LLM-as-judge to evaluate chatbot response quality
 - [RAG Knowledge Base Workflow](docs/rag-knowledge-base-workflow.md) — End-to-end RAG pipeline: document ingestion, BGE-M3 embeddings, Supabase pgvector storage, two-stage retrieval with reranking, and runtime query flow
 - [RAG Query Decomposition](docs/rag-query-decomposition.md) — Multi-entity query splitting into per-product sub-queries with Reciprocal Rank Fusion for broad or multi-topic retrieval
@@ -36,13 +37,12 @@ This is the main index for all documentation, bug reports, and task management.
 - [Monorepo Integration for Release Context](tasks/2026-03-23-monorepo-integration.md)
 - [Monorepo Release Sync — Design Spec](tasks/2026-03-23-monorepo-release-sync-design.md)
 - [Monorepo Release Sync — Implementation Plan](tasks/2026-03-23-monorepo-release-sync-plan.md)
-- [Daily Recap Posting — Implementation Plan](tasks/2026-03-24-daily-recap-posting-plan.md)
-- [Design Spec: Automated Daily Recap Posting](tasks/2026-03-24-daily-recap-posting.md)
-- [Task: Deduplicate Source Citations in Bot Responses](tasks/2026-03-24-deduplicate-source-citations.md)
+- [Writer Mode - Design Spec](tasks/2026-03-30-writer-mode-design.md)
+- [Writer Mode Implementation Plan](tasks/2026-03-30-writer-mode-plan.md)
+- [Feature Request: Citation-Free Response Mode](tasks/2026-04-13-nosources-flag-feature.md)
 - [Add Self-Review / Fact Check Button to Bot Replies](tasks/self-review-fact-check-button.md)
 - [Add Web Fetching Capability to Chatbot](tasks/web-fetching-capability.md)
 - [Cross-Reference Verification Against Source Docs](tasks/cross-reference-verification.md)
-- [Discord Announcements Scraper with Automated RAG Ingestion](tasks/discord-announcements-scraper.md)
 - [Discord Follow-Up Questions Dropdown](tasks/discord-followup-dropdown.md)
 - [Harden /process-issues Skill](tasks/automated-process-issues-cron.md)
 - [Implement AI-Powered Chat Renaming Feature](tasks/ai-chat-renaming-feature.md)
@@ -51,10 +51,9 @@ This is the main index for all documentation, bug reports, and task management.
 - [Implement Image Support in RAG Responses](tasks/rag-image-support.md)
 - [Query-Failure Logging → Automatic Doc Gap Detection](tasks/query-failure-logging.md)
 - [User Profile Avatar Upload](tasks/user-profile-avatar.md)
-- [Improve Humor and Sarcasm Handling in Bot Responses](tasks/2026-04-13-improve-humor-sarcasm-handling.md)
-- [Feature Request: Citation-Free Response Mode (--nosources)](tasks/2026-04-13-nosources-flag-feature.md)
 
 ### .Archived
+- [Improve Humor and Sarcasm Handling in Bot Responses](tasks/.archived/2026-04-13-improve-humor-sarcasm-handling.md)
 - [Implement Jina Reranker as Free Alternative to Cohere](tasks/.archived/implement-jina-reranker.md)
 
 ## 📋 Completed Tasks
@@ -74,9 +73,18 @@ This is the main index for all documentation, bug reports, and task management.
 - [RAG Confidence Indicator — Implementation Plan](tasks/.done/2026-03-22-rag-confidence-indicator-plan.md)
 - [RAG Confidence Indicator](tasks/.done/2026-03-22-rag-confidence-indicator.md)
 - [Real-time Network Health Data Storage](tasks/.done/2026-03-23-network-health-data-storage.md)
+- [Daily Recap Posting — Implementation Plan](tasks/.done/2026-03-24-daily-recap-posting-plan.md)
+- [Design Spec: Automated Daily Recap Posting](tasks/.done/2026-03-24-daily-recap-posting.md)
+- [Task: Deduplicate Source Citations in Bot Responses](tasks/.done/2026-03-24-deduplicate-source-citations.md)
+- [Design Spec: Multi-Channel Daily Digest](tasks/.done/2026-03-28-multi-channel-digest-design.md)
+- [Multi-Channel Daily Digest Implementation Plan](tasks/.done/2026-03-28-multi-channel-digest-plan.md)
+- [Writer Mode - Design Spec](tasks/.done/2026-03-30-writer-mode-design.md)
+- [Writer Mode Implementation Plan](tasks/.done/2026-03-30-writer-mode-plan.md)
+- [Writer Mode Refinement](tasks/.done/2026-03-30-writer-mode-refinement.md)
 - [Add Conversational Context to RAG Retrieval](tasks/.done/rag-conversational-context-memory.md)
 - [Add External Chutes API Key Option](tasks/.done/external-chutes-api-key-option.md)
 - [Convert Settings Modal to Standalone Settings Page](tasks/.done/convert-settings-modal-to-page.md)
+- [Discord Announcements Scraper with Automated RAG Ingestion](tasks/.done/discord-announcements-scraper.md)
 - [Discord Bot — Remaining Manual Steps](tasks/.done/discord-bot-remaining-steps.md)
 - [Implement Automated Daily Documentation Sync via GitHub Actions](tasks/.done/automated-weekly-docs-sync.md)
 - [Implement Cloudflare Workers AI Reranker](tasks/.done/implement-cloudflare-reranker.md)
@@ -104,6 +112,7 @@ This is the main index for all documentation, bug reports, and task management.
 - [Discord Bot Integration Research — Quily Chatbot](reports/2026-03-16_discord-bot-integration-research.md)
 - [Model Scout — LLM Benchmark Results](reports/2026-03-21-model-scout-benchmark.md)
 - [Model Benchmark — Full Eval Suite Results](reports/2026-03-22-model-benchmark.md)
+- [Research: Humanizing LLM Output for Social Media Content](reports/2026-03-30-humanizing-llm-output-research.md)
 
 ### Archived
 - [LLM Provider Pricing Research](reports/archived/2026-01-30_llm-provider-pricing-research.md)
@@ -120,4 +129,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-04-13 12:00:00
+**Last Updated**: 2026-05-10 09:05:36
