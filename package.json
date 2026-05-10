@@ -30,6 +30,8 @@
     "release": "tsx scripts/release/index.ts",
     "release:prepare": "tsx scripts/release/index.ts prepare",
     "release:run": "tsx scripts/release/index.ts run",
+    "prod-logs": "tsx scripts/prod-logs.ts",
+    "prod-curl": "tsx scripts/prod-curl.ts",
     "icons": "tsx .claude/skills/seo-audit/scripts/icons.ts",
     "icons:audit": "tsx .claude/skills/seo-audit/scripts/icons.ts audit",
     "icons:generate": "tsx .claude/skills/seo-audit/scripts/icons.ts generate",
