@@ -1,7 +1,7 @@
- ---
+---
 title: "Quilibrium Tech Tree — Development Roadmap"
 source: qstorage.quilibrium.com/techtree (automated weekly)
-date: 2026-03-23
+date: 2026-05-11
 type: roadmap
 topics:
   - tech tree
@@ -17,7 +17,7 @@ topics:
 
 # Quilibrium Tech Tree — Development Roadmap
 
-**Last updated:** March 23, 2026
+**Last updated:** May 11, 2026
 **Source:** [Interactive Tech Tree](https://qstorage.quilibrium.com/techtree/index.html) — a visual, explorable graph of every component in the Quilibrium ecosystem. Users can scroll, zoom, and click on individual items to see details and dependencies.
 
 ## Overview
