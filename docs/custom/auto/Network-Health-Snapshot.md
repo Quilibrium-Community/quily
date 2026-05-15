@@ -1,7 +1,7 @@
 ---
-title: "Quilibrium Network Health Snapshot — May 14, 2026"
+title: "Quilibrium Network Health Snapshot — May 15, 2026"
 source: Quilibrium Explorer API (automated daily)
-date: 2026-05-14
+date: 2026-05-15
 type: network_status
 topics:
   - network health
@@ -17,8 +17,8 @@ topics:
 
 # Quilibrium Network Health Snapshot
 
-**Date:** May 14, 2026
-**Data source:** Quilibrium Explorer API (live data as of 2026-05-14)
+**Date:** May 15, 2026
+**Data source:** Quilibrium Explorer API (live data as of 2026-05-15)
 
 ## Overview
 
@@ -26,16 +26,16 @@ topics:
 |---|---|
 | World Size | 154.16 GB |
 | Total Shards | 3,132 |
-| Peers | 343 |
-| Total Workers | 43,963 |
+| Peers | 346 |
+| Total Workers | 43,966 |
 
 ## Shard Health
 
 | Status | Count | Percentage |
 |---|---|---|
 | Healthy (6+ active provers) | 2,387 | 76.2% |
-| Warning (3–5 active provers) | 451 | 14.4% |
-| Halt Risk (<3 active provers) | 294 | 9.4% |
+| Warning (3–5 active provers) | 454 | 14.5% |
+| Halt Risk (<3 active provers) | 291 | 9.3% |
 
 A shard is considered "healthy" when it has 6 or more active provers. Shards with fewer than 3 provers are at risk of halting. The network becomes fully activated when all shards move out of the "halt risk" category.
 
@@ -53,13 +53,13 @@ A shard is considered "healthy" when it has 6 or more active provers. Shards wit
 
 | Status | Count |
 |---|---|
-| Active | 26,492 |
-| Joining | 17,471 |
-| Leaving | 2,032 |
-| Rejected | 18,825 |
+| Active | 26,502 |
+| Joining | 17,464 |
+| Leaving | 2,044 |
+| Rejected | 18,849 |
 
 ## Summary
 
-As of May 14, 2026, the Quilibrium network has 3,132 total shards. Of these, 2,387 (76.2%) are healthy, 451 (14.4%) need more coverage, and 294 (9.4%) are at halt risk. The network has 343 peers and 43,963 total workers.
+As of May 15, 2026, the Quilibrium network has 3,132 total shards. Of these, 2,387 (76.2%) are healthy, 454 (14.5%) need more coverage, and 291 (9.3%) are at halt risk. The network has 346 peers and 43,966 total workers.
 
 This snapshot is updated daily from the Quilibrium Explorer API.

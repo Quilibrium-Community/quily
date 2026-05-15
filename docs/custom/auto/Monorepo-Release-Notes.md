@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-05-14
+date: 2026-05-15
 type: release_notes
 topics:
   - release notes
@@ -16,61 +16,67 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** May 14, 2026
+**Last updated:** May 15, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
 ## v2.1.0.22 (version .22) *(auto-generated)*
-- improved prover commands and worker ID visibility
+- improved prover commands and added worker ID display
 - relaxed peerstore clearing interval
-- optimized component-level logging
+- tuned component-level logging
 - enhanced prover management TUI with manual tracking and worker ID joins
-- fixed prover eviction and leaving status bugs
-- resolved dbscan compiler error and merge issues
-- improved shard allocation join/confirm/reject with leave details
-- added default archive peer list
-- tweaked prover visibility during implicit acceptance
-- renamed pending state to joining for clarity
-- fixed spend marker and ring position sorting in TUI
+- optimized TUI rendering and interaction
+- fixed dbscan compiler error
+- added logging for shard allocation join/leave confirmations
+- set default archive peer list
+- fixed prover eviction bug
+- improved prover visibility during implicit leave acceptance
+- corrected prover leaving status in event distributor
+- renamed "pending" status to "joining"
+- fixed merge spend marker issue
+- resolved sorting/ring position issues in TUI
 - adjusted render width for [M] marker
-- improved timereel behavior for immediate head acceptance
+- fixed timereel to accept new head immediately
 - added timeout and LRU cache for global frame fetch
-- optimized reward calculations and logical shard count in worker TUI
+- improved ring position and membership set calculations
+- fixed worker TUI reward calculations and logical shard count
 - implemented auto-sized filters
-- enhanced blossomsub behavior and estimation calculations
+- optimized shard join/leave logging
 - fixed dynamic filter width
-- improved migrations and logging
+- improved blossomsub behavior and estimation calculations
+- added migration to resolve eviction issue
 - refactored global consensus engine into discrete components
-- optimized bandwidth usage on app worker
+- adjusted RPC/worker ring display
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
-- resolved feedback reconciliation between old and new config paths
-- fixed formatting and precision issues in prover reward data
+- resolved feedback and reconciled old/new config paths
+- fixed formatting and precision on prover reward data
 - fixed potential peering issue
-- corrected app shard lookups on mainnet
+- fixed app shard lookups on mainnet
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
-- fixed high CPU overhead in initial worker behaviors and sync
-- optimized docker builds with better caching
-- added node info metrics and CLI query support
-- implemented automatic leave proposals for overcrowded shards
-- enabled hub-and-spoke global message broadcasts
-- improved CLI output formatting for join frames
-- fixed pebbleDB constructor config parameter
+- fixed high CPU overhead in initial worker behaviors and ongoing sync
 - added debug environment variable support
+- fixed pebbleDB constructor config parameter
+- optimized docker builds with better caching
+- added extra node info data and command line metrics query
+- implemented automatic leave proposals for overcrowded shards
+- added hub-and-spoke global message broadcast system
+- improved CLI output formatting for join frames
 
 ## v2.1.0.19 (version .19) *(auto-generated)*
 - fixed sync message size limits and signature handling
-- resolved prover registry issues including abandoned joins and stale workers
-- improved shutdown handling for workers and pubsub
-- fixed peer discovery and connection fallback logic
-- addressed various edge cases in worker allocation and registration
-- enhanced error logging for debugging
-- switched from dnsaddr to dns4 for blossomsub
-- resolved rare crashes and freezes during shutdown
-- optimized pubsub subscription management
-- added deterministic keys to prevent false sybil detection
+- resolved prover registry pruning issues and abandoned joins
+- fixed worker allocation race conditions and expired join blocking
+- improved shutdown handling for workers and coverage checks
+- added deterministic keys for worker peer IDs to prevent sybil flags
+- fixed blossomsub pubsub lifecycle and subscription panics
+- switched from dnsaddr to dns4 for blossomsub connectivity
+- enhanced error logging for merge operations and sync failures
+- resolved rare crashes (SIGFPE) and worker proposal edge cases
+- tweaked peer discovery and reconnect logic with fallbacks
+- fixed hypergraph freeze after respawn and missing bitmask unsubscribes
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
@@ -123,14 +129,15 @@ This document tracks changes in each Quilibrium node release.
 - Resolved infinitessimal rings divide-by-zero error
 
 ## v2.1.0.11 (version .11) *(auto-generated)*
-- fixed blossomsub peer discovery edge case
-- improved hypergraph validation performance
-- optimized pebble storage compaction
-- added graceful shutdown handling for channel manager
-- resolved deadlock in peer connection state machine
-- fixed memory leak in proof verification cache
-- improved sync resilience during network partitions
-- reduced CPU spikes during large batch processing
+- fixed blossomsub peer discovery and connection issues
+- improved peer scoring and connection stability
+- optimized peerstore persistence and reduced disk writes
+- added support for new DKLs23 fork
+- resolved sync race condition with prover registry pruning
+- fixed channel bug causing message processing delays
+- improved hypergraph synchronization performance
+- reduced memory usage in pebble storage operations
+- enhanced network resilience during chain reorganizations
 
 ---
 
