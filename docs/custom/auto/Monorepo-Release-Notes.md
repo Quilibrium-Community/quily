@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-05-15
+date: 2026-05-16
 type: release_notes
 topics:
   - release notes
@@ -16,67 +16,70 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** May 15, 2026
+**Last updated:** May 16, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
 ## v2.1.0.22 (version .22) *(auto-generated)*
-- improved prover commands and added worker ID display
+- improved prover commands with worker id visibility
 - relaxed peerstore clearing interval
-- tuned component-level logging
-- enhanced prover management TUI with manual tracking and worker ID joins
-- optimized TUI rendering and interaction
-- fixed dbscan compiler error
-- added logging for shard allocation join/leave confirmations
-- set default archive peer list
+- enhanced prover management TUI with manual tracking and worker id joins
+- optimized TUI interface and display
 - fixed prover eviction bug
-- improved prover visibility during implicit leave acceptance
-- corrected prover leaving status in event distributor
-- renamed "pending" status to "joining"
+- improved shard allocation logging for join/leave confirmations
+- added default archive peer list
+- fixed prover leaving status in event distributor
+- renamed pending status to joining for clarity
 - fixed merge spend marker issue
-- resolved sorting/ring position issues in TUI
-- adjusted render width for [M] marker
+- resolved TUI sorting and ring position display issues
 - fixed timereel to accept new head immediately
-- added timeout and LRU cache for global frame fetch
+- added timeout and LRU cache for global frame fetching
 - improved ring position and membership set calculations
-- fixed worker TUI reward calculations and logical shard count
+- fixed worker TUI reward calculations and logical shard counts
 - implemented auto-sized filters
 - optimized shard join/leave logging
 - fixed dynamic filter width
 - improved blossomsub behavior and estimation calculations
-- added migration to resolve eviction issue
+- added migration to resolve eviction issues
 - refactored global consensus engine into discrete components
 - adjusted RPC/worker ring display
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
-- resolved feedback and reconciled old/new config paths
-- fixed formatting and precision on prover reward data
-- fixed potential peering issue
+- resolved feedback reconciliation between old and new config paths
+- fixed formatting and precision issues with prover reward data
+- improved peering stability
 - fixed app shard lookups on mainnet
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
 - fixed high CPU overhead in initial worker behaviors and ongoing sync
 - added debug environment variable support
-- fixed pebbleDB constructor config parameter
+- fixed pebbleDB constructor configuration parameter
 - optimized docker builds with better caching
-- added extra node info data and command line metrics query
+- added node info metrics and command line query support
 - implemented automatic leave proposals for overcrowded shards
 - added hub-and-spoke global message broadcast system
 - improved CLI output formatting for join frames
 
 ## v2.1.0.19 (version .19) *(auto-generated)*
-- fixed sync message size limits and signature handling
-- resolved prover registry pruning issues and abandoned joins
-- fixed worker allocation race conditions and expired join blocking
-- improved shutdown handling for workers and coverage checks
-- added deterministic keys for worker peer IDs to prevent sybil flags
-- fixed blossomsub pubsub lifecycle and subscription panics
-- switched from dnsaddr to dns4 for blossomsub connectivity
-- enhanced error logging for merge operations and sync failures
-- resolved rare crashes (SIGFPE) and worker proposal edge cases
-- tweaked peer discovery and reconnect logic with fallbacks
-- fixed hypergraph freeze after respawn and missing bitmask unsubscribes
+- fixed sync race conditions and message size limits
+- resolved signature failures and merge-related signature issues
+- fixed one-shot sync message size and app shard TC signature size
+- addressed collector/hotstuff race condition and expired join blocking issues
+- removed compatibility with old 2.0.0 blossomsub
+- resolved abandoned prover joins and stale worker proposal edge
+- added sanity checks for join submissions
+- fixed rare SIGFPE and orphan expired join allocation issues
+- improved peer discovery with reconnect fallback and updated base peer count
+- fixed expired prover join frames and port range issues
+- resolved shutdown panics and libp2p peer selection problems
+- fixed worker registry refresh and snapshot blocking during shutdown
+- added deterministic worker keys to prevent sybil attack flags
+- corrected pubsub lifecycle management and subscription handling
+- switched from dnsaddr to dns4 for blossomsub
+- added quic-v1 support
+- fixed hypergraph freezing after respawn and bitmask unsubscribe issues
+- improved respawn logic and shutdown handling
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
@@ -129,15 +132,13 @@ This document tracks changes in each Quilibrium node release.
 - Resolved infinitessimal rings divide-by-zero error
 
 ## v2.1.0.11 (version .11) *(auto-generated)*
-- fixed blossomsub peer discovery and connection issues
-- improved peer scoring and connection stability
-- optimized peerstore persistence and reduced disk writes
-- added support for new DKLs23 fork
-- resolved sync race condition with prover registry pruning
-- fixed channel bug causing message processing delays
-- improved hypergraph synchronization performance
-- reduced memory usage in pebble storage operations
-- enhanced network resilience during chain reorganizations
+- fixed channel bug
+- added DKLs23 fork
+- resolve sync race condition with prover registry pruning
+- improved blossomsub message handling
+- optimized hypergraph traversal
+- fixed pebble storage leak
+- reduced memory usage in proof generation
 
 ---
 
