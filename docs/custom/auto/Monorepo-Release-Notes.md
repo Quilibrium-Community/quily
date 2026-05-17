@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-05-16
+date: 2026-05-17
 type: release_notes
 topics:
   - release notes
@@ -16,70 +16,65 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** May 16, 2026
+**Last updated:** May 17, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
 ## v2.1.0.22 (version .22) *(auto-generated)*
-- improved prover commands with worker id visibility
+- improved prover commands and worker ID visibility
 - relaxed peerstore clearing interval
-- enhanced prover management TUI with manual tracking and worker id joins
-- optimized TUI interface and display
+- tuned component-level logging
+- enhanced prover management TUI with manual tracking and worker ID joins
 - fixed prover eviction bug
-- improved shard allocation logging for join/leave confirmations
-- added default archive peer list
-- fixed prover leaving status in event distributor
-- renamed pending status to joining for clarity
-- fixed merge spend marker issue
-- resolved TUI sorting and ring position display issues
-- fixed timereel to accept new head immediately
-- added timeout and LRU cache for global frame fetching
-- improved ring position and membership set calculations
-- fixed worker TUI reward calculations and logical shard counts
+- resolved shard allocation join/confirm/reject logic and plan leave details
+- optimized TUI rendering and fixed display issues
+- added timeout for global frame fetch
+- adjusted estimation behavior for ring position and membership calculations
+- improved worker TUI reward calculations and logical shard count
 - implemented auto-sized filters
-- optimized shard join/leave logging
-- fixed dynamic filter width
-- improved blossomsub behavior and estimation calculations
-- added migration to resolve eviction issues
+- optimized blossomsub behavior and fixed dynamic filter width
+- resolved migration issues and improved logging
 - refactored global consensus engine into discrete components
-- adjusted RPC/worker ring display
+- fixed bandwidth reduction on app worker
+- updated default archive peer list
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - resolved feedback reconciliation between old and new config paths
-- fixed formatting and precision issues with prover reward data
-- improved peering stability
+- fixed formatting and precision issues in prover reward data
 - fixed app shard lookups on mainnet
+- addressed potential peering issues
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
-- fixed high CPU overhead in initial worker behaviors and ongoing sync
-- added debug environment variable support
-- fixed pebbleDB constructor configuration parameter
-- optimized docker builds with better caching
-- added node info metrics and command line query support
-- implemented automatic leave proposals for overcrowded shards
-- added hub-and-spoke global message broadcast system
-- improved CLI output formatting for join frames
+- allow debug mode via environment variable
+- fix pebbledb constructor configuration
+- reduce CPU overhead in initial worker behaviors and sync
+- improve docker build caching
+- add node info metrics and command line queries
+- skip proposals for overcrowded shards
+- implement hub-and-spoke global message broadcasts
+- refine cli output for join frames
 
 ## v2.1.0.19 (version .19) *(auto-generated)*
 - fixed sync race conditions and message size limits
 - resolved signature failures and merge-related signature issues
-- fixed one-shot sync message size and app shard TC signature size
-- addressed collector/hotstuff race condition and expired join blocking issues
+- fixed one-shot sync message size, app shard TC signature size, and collector/hotstuff race condition
 - removed compatibility with old 2.0.0 blossomsub
 - resolved abandoned prover joins and stale worker proposal edge
 - added sanity checks for join submissions
-- fixed rare SIGFPE and orphan expired join allocation issues
-- improved peer discovery with reconnect fallback and updated base peer count
-- fixed expired prover join frames and port range issues
+- fixed rare SIGFPE and orphan expired joins blocking worker allocation
+- added reconnect fallback with variable timing when no peers are found
+- updated base peer count to 1
+- fixed expired prover joins, port ranges, stuck proposers, and seniority issues
 - resolved shutdown panics and libp2p peer selection problems
-- fixed worker registry refresh and snapshot blocking during shutdown
-- added deterministic worker keys to prevent sybil attack flags
-- corrected pubsub lifecycle management and subscription handling
+- fixed worker registry refresh issues and shutdown quirks
+- improved worker allocation filtering and snapshot handling
+- enforced deterministic worker keys to prevent sybil flags
+- fixed pubsub lifecycle management and sync respawn issues
+- corrected blossomsub subscription tracking and nil panics
 - switched from dnsaddr to dns4 for blossomsub
 - added quic-v1 support
-- fixed hypergraph freezing after respawn and bitmask unsubscribe issues
-- improved respawn logic and shutdown handling
+- fixed hypergraph freeze after respawn and bitmask unsubscribe issues
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
@@ -132,13 +127,16 @@ This document tracks changes in each Quilibrium node release.
 - Resolved infinitessimal rings divide-by-zero error
 
 ## v2.1.0.11 (version .11) *(auto-generated)*
-- fixed channel bug
-- added DKLs23 fork
-- resolve sync race condition with prover registry pruning
-- improved blossomsub message handling
-- optimized hypergraph traversal
-- fixed pebble storage leak
-- reduced memory usage in proof generation
+- added support for blossomsub peer discovery
+- fixed peer discovery race condition in pubsub
+- improved peer scoring and connection stability
+- optimized message propagation in pubsub network
+- reduced memory usage in pubsub message cache
+- fixed deadlock in peer connection handling
+- improved error handling for peer dialing failures
+- added metrics for pubsub message validation
+- optimized peer handshake protocol
+- fixed edge cases in peer routing table updates
 
 ---
 
