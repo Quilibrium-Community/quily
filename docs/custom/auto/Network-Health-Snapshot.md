@@ -1,7 +1,7 @@
 ---
-title: "Quilibrium Network Health Snapshot — May 28, 2026"
+title: "Quilibrium Network Health Snapshot — May 29, 2026"
 source: Quilibrium Explorer API (automated daily)
-date: 2026-05-28
+date: 2026-05-29
 type: network_status
 topics:
   - network health
@@ -17,8 +17,8 @@ topics:
 
 # Quilibrium Network Health Snapshot
 
-**Date:** May 28, 2026
-**Data source:** Quilibrium Explorer API (live data as of 2026-05-28)
+**Date:** May 29, 2026
+**Data source:** Quilibrium Explorer API (live data as of 2026-05-29)
 
 ## Overview
 
@@ -26,16 +26,16 @@ topics:
 |---|---|
 | World Size | 154.16 GB |
 | Total Shards | 3,132 |
-| Peers | 301 |
-| Total Workers | 45,095 |
+| Peers | 304 |
+| Total Workers | 45,124 |
 
 ## Shard Health
 
 | Status | Count | Percentage |
 |---|---|---|
-| Healthy (6+ active provers) | 2,408 | 76.9% |
-| Warning (3–5 active provers) | 670 | 21.4% |
-| Halt Risk (<3 active provers) | 54 | 1.7% |
+| Healthy (6+ active provers) | 2,410 | 76.9% |
+| Warning (3–5 active provers) | 667 | 21.3% |
+| Halt Risk (<3 active provers) | 55 | 1.8% |
 
 A shard is considered "healthy" when it has 6 or more active provers. Shards with fewer than 3 provers are at risk of halting. The network becomes fully activated when all shards move out of the "halt risk" category.
 
@@ -53,13 +53,13 @@ A shard is considered "healthy" when it has 6 or more active provers. Shards wit
 
 | Status | Count |
 |---|---|
-| Active | 27,197 |
-| Joining | 17,898 |
-| Leaving | 2,120 |
+| Active | 27,205 |
+| Joining | 17,919 |
+| Leaving | 2,129 |
 | Rejected | 19,346 |
 
 ## Summary
 
-As of May 28, 2026, the Quilibrium network has 3,132 total shards. Of these, 2,408 (76.9%) are healthy, 670 (21.4%) need more coverage, and 54 (1.7%) are at halt risk. The network has 301 peers and 45,095 total workers.
+As of May 29, 2026, the Quilibrium network has 3,132 total shards. Of these, 2,410 (76.9%) are healthy, 667 (21.3%) need more coverage, and 55 (1.8%) are at halt risk. The network has 304 peers and 45,124 total workers.
 
 This snapshot is updated daily from the Quilibrium Explorer API.
