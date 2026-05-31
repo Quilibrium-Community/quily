@@ -10,6 +10,34 @@ const BATCH_SIZE = 50;
 // and compatibility with both OpenRouter and Chutes providers
 const EMBEDDING_MODEL = 'baai/bge-m3';
 
+const MAX_RETRIES = 5;
+const RETRY_BASE_DELAY_MS = 2000;
+
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  batchNum: number,
+  totalBatches: number
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < MAX_RETRIES) {
+        const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+        console.error(
+          `\n  ⚠ Batch ${batchNum}/${totalBatches} attempt ${attempt} failed (${error instanceof Error ? error.message : String(error)}), retrying in ${delay / 1000}s...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+  throw new Error(
+    `Embedding batch ${batchNum}/${totalBatches} failed after ${MAX_RETRIES} attempts: ${lastError instanceof Error ? lastError.message : String(lastError)}`
+  );
+}
+
 /**
  * Format chunk content with heading context for better embeddings
  */
@@ -44,37 +72,36 @@ export async function generateEmbeddings(
     const batch = chunks.slice(i, i + BATCH_SIZE);
     const texts = batch.map(formatForEmbedding);
 
-    try {
-      const { embeddings } = await embedMany({
-        model: openrouter.textEmbeddingModel(EMBEDDING_MODEL),
-        values: texts,
-        maxRetries: 3,
+    const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+    const totalBatches = Math.ceil(chunks.length / BATCH_SIZE);
+
+    const { embeddings } = await withRetry(
+      () =>
+        embedMany({
+          model: openrouter.textEmbeddingModel(EMBEDDING_MODEL),
+          values: texts,
+          maxRetries: 0,
+        }),
+      batchNum,
+      totalBatches
+    );
+
+    // Attach embeddings to chunks
+    for (let j = 0; j < batch.length; j++) {
+      results.push({
+        ...batch[j],
+        embedding: embeddings[j],
       });
+    }
 
-      // Attach embeddings to chunks
-      for (let j = 0; j < batch.length; j++) {
-        results.push({
-          ...batch[j],
-          embedding: embeddings[j],
-        });
-      }
+    // Report progress
+    if (onProgress) {
+      onProgress(Math.min(i + BATCH_SIZE, total), total);
+    }
 
-      // Report progress
-      if (onProgress) {
-        onProgress(Math.min(i + BATCH_SIZE, total), total);
-      }
-
-      // Small delay between batches to avoid rate limits
-      if (i + BATCH_SIZE < chunks.length) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-    } catch (error) {
-      // Re-throw with context about which batch failed
-      const batchNum = Math.floor(i / BATCH_SIZE) + 1;
-      const totalBatches = Math.ceil(chunks.length / BATCH_SIZE);
-      throw new Error(
-        `Embedding batch ${batchNum}/${totalBatches} failed: ${error instanceof Error ? error.message : String(error)}`
-      );
+    // Small delay between batches to avoid rate limits
+    if (i + BATCH_SIZE < chunks.length) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
     }
   }
 
