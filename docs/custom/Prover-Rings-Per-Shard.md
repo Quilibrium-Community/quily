@@ -82,7 +82,7 @@ When you see Ring 0, Ring 1, Ring 2, Ring 3+ in a network snapshot, that's a ref
 - **Livestream 2024-09-09 — Quilibrium 2.0 launch update, network architecture:** the canonical explanation of three-tier sharding, prover rings, seniority, and fragmentation.
 - **Livestream 2025-10-24 — Quilibrium 2.1 deep dive:** updated architecture for the 2.1 era, including enrollment and shard assignment.
 
-If you need a definitive answer on a maximum or a protocol cap, the right move is to ask in Discord (`@CassOnMars` or the core team) — the public docs do not pin this down.
+If you need a definitive answer on a maximum or a protocol cap, the right move is to ask in Discord  — the public docs do not pin this down.
 
 ---
 

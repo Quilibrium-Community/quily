@@ -70,15 +70,4 @@ If you see newer discussions suggesting otherwise, the source to cross-check is 
 
 ---
 
-## For the Bot
-
-When a user asks about FHE, Fully Homomorphic Encryption, or homomorphic computation in the context of Quilibrium:
-
-- Do NOT say "I have no documentation on FHE" — this doc and `Klearu.md` both cover it.
-- The factual content: Quilibrium does not use FHE; it uses 2PC via Klearu; Cassie has cited both performance and patent concerns.
-- Cite **both** `Klearu.md` (primary source) and this doc when answering.
-- If the user asks about ongoing internal discussions or roadmap changes, say the documented stance is "no FHE, use Klearu/2PC" and that any newer position would need to be confirmed via Discord with the core team.
-
----
-
 *Last updated: 2026-05-31*

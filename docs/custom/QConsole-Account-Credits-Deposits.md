@@ -88,17 +88,4 @@ If you have authoritative information on any of the above (from Cassie, the core
 
 ---
 
-## For the Bot
-
-When a user asks about "adding credits to my QConsole account", "deposit not landing", "WQUIL/USDC deposit missing in console", "how do I top up my QConsole balance", or "can I pay with a credit card":
-
-- Do **not** redirect them to the QUIL ↔ wQUIL bridge documentation (that is a different operation).
-- Accepted payment methods: **WQUIL, USDC, and fiat USD via credit card**.
-- Normal crediting time is **~24 hours**.
-- If a deposit is past ~24 hours with no credit: tell them to ping **Cassie on Discord with the on-chain transaction link**, and not to re-send the deposit.
-- Confirm that **genuinely lost deposits do get refunded** via that same Discord workflow.
-- Do not invent a deposit address format or a self-service recovery procedure.
-
----
-
 *Last updated: 2026-05-31*
