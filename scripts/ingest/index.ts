@@ -21,9 +21,14 @@ program
   .description('Ingest documentation into Supabase vector database')
   .version('1.0.0');
 
+/**
+ * Default ingestion command — uses OpenRouter for BGE-M3 embeddings.
+ * Aliased as `run-openrouter` for back-compat.
+ */
 program
-  .command('run-openrouter')
-  .description('Run ingestion pipeline using OpenRouter embeddings (BGE-M3, 1024 dims)')
+  .command('run')
+  .aliases(['run-openrouter'])
+  .description('Run ingestion pipeline using OpenRouter embeddings (BGE-M3, 1024 dims) — DEFAULT')
   .option('-d, --docs <path>', 'Path to documentation directory', './docs')
   .option('-v, --version <tag>', 'Version tag for chunks', new Date().toISOString().split('T')[0])
   .option('--dry-run', 'Preview without uploading to database', false)
@@ -159,9 +164,14 @@ program
     }
   });
 
+/**
+ * Legacy Chutes-backed ingestion. Opt-in only — use `run` (OpenRouter) by default.
+ * The Chutes BGE-M3 chute has been intermittently 404ing; OpenRouter is the
+ * default path for both local runs and CI.
+ */
 program
-  .command('run')
-  .description('Run full ingestion pipeline using BGE-M3 embeddings (1024 dims, via Chutes)')
+  .command('run-chutes')
+  .description('Run ingestion using Chutes BGE-M3 embeddings (legacy, opt-in only)')
   .option('-d, --docs <path>', 'Path to documentation directory', './docs')
   .option('-v, --version <tag>', 'Version tag for chunks', new Date().toISOString().split('T')[0])
   .option('--dry-run', 'Preview without uploading to database', false)

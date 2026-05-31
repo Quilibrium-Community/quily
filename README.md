@@ -169,7 +169,7 @@ yarn sync-docs:ingest
 
 # Or step by step:
 yarn sync-docs:run    # Sync latest from GitHub
-yarn ingest:run       # Update the RAG database (via Chutes)
+yarn ingest:run       # Update the RAG database (via OpenRouter, BGE-M3)
 ```
 
 ### After deleting files
@@ -217,8 +217,8 @@ yarn ingest:status
 
 | Command | Description |
 |---------|-------------|
-| `yarn ingest:run` | Run ingestion pipeline (Chutes, default) |
-| `yarn ingest:run-openrouter` | Run ingestion via OpenRouter |
+| `yarn ingest:run` | Run ingestion pipeline (OpenRouter, default) |
+| `yarn ingest:run-chutes` | Run ingestion via Chutes (legacy, opt-in) |
 | `yarn ingest:clean` | Ingest + remove orphaned chunks |
 | `yarn ingest:dry` | Preview without uploading |
 | `yarn ingest:status` | Show local vs database sync |
