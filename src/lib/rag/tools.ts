@@ -8,17 +8,17 @@ import { z } from 'zod';
 export const ragTools = {
   create_knowledge_issue: tool({
     description:
-      'Create a GitHub issue to report a factual correction or inaccuracy in the knowledge base. ' +
-      'Call this when: (1) the user provides a specific correction, (2) the user explicitly asks to open an issue, ' +
-      'or (3) the user confirmed something is wrong but does not know the correct answer (flag as needs-research).',
+      'Report a factual error in the Quilibrium knowledge base (docs, transcripts, announcements). ' +
+      'ONLY call when the user (a) gives a specific factual correction, (b) says a prior answer is wrong about a Quilibrium topic (even without the correct value — flag as needs-research), or (c) explicitly asks to open an issue about a knowledge topic. ' +
+      'NEVER call for: bot-meta feedback (prompt, persona, style, behavior), clarification questions, or generic disagreement. When in doubt, do NOT call.',
     inputSchema: zodSchema(
       z.object({
         title: z
           .string()
-          .describe('Short issue title summarizing the correction, e.g. "Node version outdated: should be v2.1.0.22"'),
+          .describe('Short issue title summarizing the knowledge correction, e.g. "Node version outdated: should be v2.1.0.22"'),
         correction: z
           .string()
-          .describe('What is wrong in the current answer and what the correct information should be'),
+          .describe('What is factually wrong and what the correct Quilibrium information should be'),
       }),
     ),
     // No execute function — handled manually in the Discord mention handler
