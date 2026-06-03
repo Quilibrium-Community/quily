@@ -228,6 +228,7 @@ export function registerMentionHandler(client: Client): void {
                 originalQuestion,
                 quilyAnswer,
                 discordMessageLink: discordMessageLink || undefined,
+                kind: issueCall.input.kind,
               });
               recordIssueCreation(message.author.id);
               console.log(

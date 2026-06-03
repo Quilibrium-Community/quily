@@ -438,7 +438,7 @@ function isVagueCorrection(userMessage: string): boolean {
   return VAGUE_CORRECTION_PATTERNS.test(userMessage.trim());
 }
 
-function parseToolCallFromText(text: string): { title: string; correction: string } | null {
+function parseToolCallFromText(text: string): { title: string; correction: string; kind?: 'knowledge' | 'behavior' } | null {
   // Check if the text contains a tool call pattern
   if (!text.includes('create_knowledge_issue')) return null;
 
@@ -456,20 +456,24 @@ function parseToolCallFromText(text: string): { title: string; correction: strin
   }
   if (jsonEnd === -1) return null;
 
+  const normalizeKind = (v: unknown): 'knowledge' | 'behavior' | undefined =>
+    v === 'behavior' || v === 'knowledge' ? v : undefined;
+
   try {
     const parsed = JSON.parse(text.slice(jsonStart, jsonEnd));
     const title = parsed.title;
     // Accept "correction", "body", "description", or "content" as the correction field
     const correction = parsed.correction || parsed.body || parsed.description || parsed.content;
     if (title && correction) {
-      return { title, correction };
+      return { title, correction, kind: normalizeKind(parsed.kind) };
     }
   } catch {
     // Lenient regex fallback
     const titleMatch = text.match(/"title"\s*:\s*"([^"]+)"/);
     const correctionMatch = text.match(/"(?:correction|body|description|content)"\s*:\s*"([^"]+)"/);
+    const kindMatch = text.match(/"kind"\s*:\s*"([^"]+)"/);
     if (titleMatch && correctionMatch) {
-      return { title: titleMatch[1], correction: correctionMatch[1] };
+      return { title: titleMatch[1], correction: correctionMatch[1], kind: normalizeKind(kindMatch?.[1]) };
     }
   }
   return null;
@@ -1155,9 +1159,14 @@ export async function POST(request: Request) {
 
           // Try model-based tool call first
           const issueCall = capturedToolCalls.find((tc) => tc.toolName === 'create_knowledge_issue');
-          let issueArgs = issueCall?.args?.title && issueCall?.args?.correction
-            ? { title: issueCall.args.title, correction: issueCall.args.correction }
-            : parseToolCallFromText(fullResponseText);
+          const issueCallKind: 'knowledge' | 'behavior' | undefined =
+            issueCall?.args?.kind === 'behavior' || issueCall?.args?.kind === 'knowledge'
+              ? issueCall.args.kind
+              : undefined;
+          let issueArgs: { title: string; correction: string; kind?: 'knowledge' | 'behavior' } | null =
+            issueCall?.args?.title && issueCall?.args?.correction
+              ? { title: issueCall.args.title, correction: issueCall.args.correction, kind: issueCallKind }
+              : parseToolCallFromText(fullResponseText);
 
           // Deterministic fallback: if bot asked for correction and user provided details
           // Track the original question and wrong answer for the issue body
@@ -1188,6 +1197,7 @@ export async function POST(request: Request) {
                 discordUsername: 'Web UI user',
                 originalQuestion: issueOriginalQuestion || lastUserMsg?.content || userQuery,
                 quilyAnswer: issueQuilyAnswer || lastAssistantMsg?.content || '',
+                kind: issueArgs.kind,
               });
               console.log(`[auto-issue] Created ${issueUrl} from web UI`);
               writer.write({
@@ -1294,11 +1304,12 @@ export async function POST(request: Request) {
 
               const toolCalls = await result.toolCalls;
               const issueCall = toolCalls?.find((tc) => tc.toolName === 'create_knowledge_issue');
-              const issueInput = issueCall && 'input' in issueCall ? issueCall.input as { title?: string; correction?: string } : null;
+              const issueInput = issueCall && 'input' in issueCall ? issueCall.input as { title?: string; correction?: string; kind?: 'knowledge' | 'behavior' } : null;
               const fullText = await result.text;
-              let issueArgs = issueInput?.title && issueInput?.correction
-                ? { title: issueInput.title, correction: issueInput.correction }
-                : parseToolCallFromText(fullText);
+              let issueArgs: { title: string; correction: string; kind?: 'knowledge' | 'behavior' } | null =
+                issueInput?.title && issueInput?.correction
+                  ? { title: issueInput.title, correction: issueInput.correction, kind: issueInput.kind }
+                  : parseToolCallFromText(fullText);
 
               // Deterministic fallback
               let issueOriginalQuestion = '';
@@ -1323,6 +1334,7 @@ export async function POST(request: Request) {
                   discordUsername: 'Web UI user',
                   originalQuestion: issueOriginalQuestion || lastUserMsg?.content || userQuery,
                   quilyAnswer: issueQuilyAnswer || lastAssistantMsg?.content || '',
+                  kind: issueArgs.kind,
                 });
                 console.log(`[auto-issue] Created ${issueUrl} from web UI`);
                 writer.write({

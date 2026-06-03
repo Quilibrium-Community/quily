@@ -6,6 +6,8 @@ export interface CreateIssueParams {
   quilyAnswer: string;
   /** Discord message link to the original bot answer, if available */
   discordMessageLink?: string;
+  /** "knowledge" (default) for factual corrections; "behavior" for bot misbehavior reports */
+  kind?: 'knowledge' | 'behavior';
 }
 
 /**
@@ -25,21 +27,29 @@ export async function createGitHubIssue(params: CreateIssueParams): Promise<stri
     ? `\n\n[View original message on Discord](${params.discordMessageLink})`
     : '';
 
-  const body = `## Correction (via Discord)
+  const isBehavior = params.kind === 'behavior';
+  const heading = isBehavior ? 'Bot Behavior Report (via Discord)' : 'Correction (via Discord)';
+  const userSectionTitle = isBehavior ? 'What the user reported:' : 'What the user corrected:';
+  const primaryLabel = isBehavior ? 'bot-behavior' : 'knowledge-update';
+  const footer = isBehavior
+    ? '*This issue was automatically created by Quily from a Discord bot-behavior report.*'
+    : '*This issue was automatically created by Quily from a Discord correction.*';
+
+  const body = `## ${heading}
 
 **Reported by:** ${params.discordUsername}
 
 ### What Quily said:
 > ${params.quilyAnswer.replace(/\n/g, '\n> ')}
 
-### What the user corrected:
+### ${userSectionTitle}
 > ${params.correction.replace(/\n/g, '\n> ')}
 
 ### Original question:
 > ${params.originalQuestion.replace(/\n/g, '\n> ')}
 ${discordLink}
 ---
-*This issue was automatically created by Quily from a Discord correction.*`;
+${footer}`;
 
   const response = await fetch(`https://api.github.com/repos/${repo}/issues`, {
     method: 'POST',
@@ -52,7 +62,7 @@ ${discordLink}
     body: JSON.stringify({
       title: params.title,
       body,
-      labels: ['knowledge-update', 'auto-reported'],
+      labels: [primaryLabel, 'auto-reported'],
     }),
   });
 
