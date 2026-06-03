@@ -38,7 +38,7 @@ console.log('[Chat route] Config:', {
 /** Default model for free mode when no model is specified by client. */
 function getDefaultFreeModel(): string {
   if (process.env.NEXT_PUBLIC_FREE_MODE !== 'true') return '';
-  return process.env.FREE_MODE_DEFAULT_MODEL || 'deepseek/deepseek-v3.2';
+  return process.env.FREE_MODE_DEFAULT_MODEL || 'deepseek/deepseek-v4-flash';
 }
 
 /**
@@ -586,7 +586,7 @@ export async function POST(request: Request) {
       body.model ||
       (provider === 'chutes'
         ? process.env.CHUTES_DEFAULT_MODEL || ''
-        : getDefaultFreeModel() || 'deepseek/deepseek-v3.2');
+        : getDefaultFreeModel() || 'deepseek/deepseek-v4-flash');
 
     const isFreeMode = process.env.NEXT_PUBLIC_FREE_MODE === 'true';
 

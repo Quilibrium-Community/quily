@@ -8,8 +8,8 @@
  * Open-source models are listed first, followed by proprietary options.
  */
 
-/** Default model ID - DeepSeek V3 for best open-source quality */
-export const DEFAULT_MODEL_ID = process.env.NEXT_PUBLIC_DEFAULT_MODEL_ID || 'deepseek/deepseek-v3.2';
+/** Default model ID — DeepSeek V4 Flash (cheapest path with quality parity vs V3.2, ~50% lower cost and 27% lower latency per 2026-06-03 benchmark). */
+export const DEFAULT_MODEL_ID = process.env.NEXT_PUBLIC_DEFAULT_MODEL_ID || 'deepseek/deepseek-v4-flash';
 
 /**
  * The model used in free mode. Driven by NEXT_PUBLIC_FREE_MODE_DEFAULT_MODEL
@@ -17,7 +17,7 @@ export const DEFAULT_MODEL_ID = process.env.NEXT_PUBLIC_DEFAULT_MODEL_ID || 'dee
  * Matches FREE_MODE_DEFAULT_MODEL on the server side.
  */
 export const FREE_MODE_DEFAULT_MODEL_ID =
-  process.env.NEXT_PUBLIC_FREE_MODE_DEFAULT_MODEL || 'deepseek/deepseek-v3.2';
+  process.env.NEXT_PUBLIC_FREE_MODE_DEFAULT_MODEL || 'deepseek/deepseek-v4-flash';
 
 export interface ModelMetadata {
   id: string;
@@ -30,9 +30,9 @@ export interface ModelMetadata {
 const BASE_RECOMMENDED_MODELS: ModelMetadata[] = [
   // Open Source Models - Recommended
   {
-    id: 'deepseek/deepseek-v3.2',
-    name: 'DeepSeek V3.2',
-    description: 'Best open-source. Excellent reasoning and accuracy.',
+    id: 'deepseek/deepseek-v4-flash',
+    name: 'DeepSeek V4 Flash',
+    description: 'Best open-source value. Same quality as V3.2 at half the cost.',
     isOpenSource: true,
     isRecommended: true,
   },

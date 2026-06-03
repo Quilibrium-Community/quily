@@ -25,6 +25,9 @@ This is the main index for all documentation, bug reports, and task management.
 
 ## 🐛 Bug Reports
 
+### Active Issues
+- [Bot behavior bugs from Discord thread (issues #83, #84)](bugs/2026-06-03-bot-behavior-url-false-positive-and-issue-refusal.md)
+
 ### Solved Issues
 - [RAG retrieval surfaces outdated sharding/milestone info despite recency improvements](bugs/.solved/2026-03-21-rag-outdated-sharding-sources.md)
 - [Sidebar Scroll Snaps Back When Collapsible Nav Items Change Height](bugs/.solved/sidebar-scroll-snapback-collapsible-nav.md)
@@ -81,6 +84,7 @@ This is the main index for all documentation, bug reports, and task management.
 - [Writer Mode - Design Spec](tasks/.done/2026-03-30-writer-mode-design.md)
 - [Writer Mode Implementation Plan](tasks/.done/2026-03-30-writer-mode-plan.md)
 - [Writer Mode Refinement](tasks/.done/2026-03-30-writer-mode-refinement.md)
+- [Tighten "Open GitHub Issue" Trigger in Bot System Prompt](tasks/.done/2026-05-31-tighten-issue-reporting-trigger.md)
 - [Add Conversational Context to RAG Retrieval](tasks/.done/rag-conversational-context-memory.md)
 - [Add External Chutes API Key Option](tasks/.done/external-chutes-api-key-option.md)
 - [Convert Settings Modal to Standalone Settings Page](tasks/.done/convert-settings-modal-to-page.md)
@@ -129,4 +133,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-05-10 09:05:36
+**Last Updated**: 2026-06-03 08:59:05

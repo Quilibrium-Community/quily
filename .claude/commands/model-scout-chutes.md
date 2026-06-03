@@ -1,6 +1,6 @@
 ---
-name: model-scout
-description: Scout for better open-source LLM/embedding models on Chutes. Checks previous reports to avoid duplicating work.
+name: model-scout-chutes
+description: Scout for better open-source LLM/embedding models on Chutes (subscription pricing). Checks previous reports to avoid duplicating work.
 allowed-tools:
   - Bash
   - Read
@@ -11,7 +11,7 @@ allowed-tools:
 ---
 
 <objective>
-Discover better or cheaper open-source models available on Chutes, avoiding duplicate work by checking previous scouting reports first.
+Discover better or cheaper open-source models available on Chutes (subscription pricing — cost is informational, not a filter), avoiding duplicate work by checking previous scouting reports first.
 </objective>
 
 <process>
@@ -19,9 +19,9 @@ Discover better or cheaper open-source models available on Chutes, avoiding dupl
 <step name="check-previous-reports">
 **Check for existing scouting reports:**
 
-Search `.agents/reports/` for previous model scout reports:
+Search `.agents/reports/` for previous Chutes scout reports (older reports may be named `*model-scout*` without a provider suffix — those are Chutes reports from before the OpenRouter/Chutes split):
 ```bash
-ls -la .agents/reports/*model-scout* 2>/dev/null || echo "none"
+ls -la .agents/reports/*model-scout-chutes* .agents/reports/*model-scout*.md 2>/dev/null | grep -v openrouter || echo "none"
 ```
 
 If previous reports exist, read the most recent one and extract:
@@ -29,20 +29,12 @@ If previous reports exist, read the most recent one and extract:
 2. **Models already evaluated** (both tested and excluded)
 3. **Current recommendations** still in play
 
-Present a summary to the user:
-```
-Last scout: 2026-03-21
-  Models tested: DeepSeek V3.2, Qwen3 Coder Next, Hermes 4 405B, ...
-  Excluded: DeepSeek R1 0528 (reasoning model, too slow)
-  Current recommendation: Qwen3 Coder Next (22/27)
+Present a brief summary to the user, then ask:
+- Yes, full scout
+- Yes, but only show models NOT in the previous report
+- No, just review the existing report
 
-Run a fresh scout anyway? This will discover any NEW models added to Chutes/OpenRouter since the last run.
-  - Yes, full scout
-  - Yes, but only show models NOT in the previous report
-  - No, just review the existing report
-```
-
-If no previous reports exist, proceed directly to scouting.
+If no previous Chutes reports exist, proceed directly to scouting.
 </step>
 
 <step name="choose-type">
@@ -50,30 +42,30 @@ If no previous reports exist, proceed directly to scouting.
 
 Ask the user:
 - **LLM models** (default) — chat/completion models for the bot
-- **Embedding models** — for RAG retrieval
+- **Embedding models** — for RAG retrieval (Chutes hosts the BGE family + others)
 
 Default to LLM unless specified otherwise.
 </step>
 
 <step name="run-scout">
-**Run the model scout script:**
+**Run the model scout script in Chutes mode:**
 
 ```bash
-python scripts/model-scout.py --type <llm|embedding> --benchmark-count 10
+python scripts/model-scout.py --provider chutes --type <llm|embedding> --benchmark-count 10
 ```
 
-Add `--benchmark` if the user wants quality testing (requires `OPENROUTER_API_KEY`):
+Add `--benchmark` if the user wants quality testing (requires `OPENROUTER_API_KEY` for the benchmark calls):
 ```bash
-python scripts/model-scout.py --benchmark --benchmark-count 10
+python scripts/model-scout.py --provider chutes --benchmark --benchmark-count 10
 ```
 
-**Important:** The script now auto-skips reasoning/thinking models (DeepSeek R1, QwQ, etc.) during benchmarking since they're too slow for chatbot use. They'll still appear in discovery but won't be benchmarked.
+The script auto-skips reasoning/thinking models (DeepSeek R1, QwQ, etc.) during benchmarking — they are too slow for chatbot use. They still appear in discovery.
 
 The script outputs to stdout. Capture and review the output.
 </step>
 
 <step name="diff-with-previous">
-**If a previous report exists, highlight what's new:**
+**If a previous Chutes report exists, highlight what's new:**
 
 Compare the scout output against the previous report:
 - **New models** not in the previous report (flag these clearly)
@@ -109,13 +101,13 @@ If there are strong candidates, ask if the user wants to run `/benchmark` on the
 <step name="save-report">
 **Save the updated report:**
 
-Save to `.agents/reports/<date>-model-scout.md` (or `-model-scout-benchmark.md` if benchmarks were included).
+Save to `.agents/reports/<date>-model-scout-chutes.md` (or `-model-scout-chutes-benchmark.md` if benchmarks were included).
 
 If updating an existing report from the same day, update it in place rather than creating a duplicate.
 
 Include:
-- Date and scope of the scout
-- Full candidate list with Chutes availability
+- Date and scope of the scout (Chutes, LLM vs embedding)
+- Full candidate list with Chutes availability, invocations, TEE flag
 - Any benchmark scores (if run)
 - Exclusions and reasons (e.g., reasoning models skipped)
 - Recommendations and next steps
@@ -124,10 +116,12 @@ Include:
 </process>
 
 <notes>
-- The script requires internet access to query OpenRouter and Chutes APIs
+- The script requires internet access to query OpenRouter (for discovery) and Chutes APIs (for cross-check)
 - Benchmarking requires `OPENROUTER_API_KEY` in `.env`
 - Reasoning/thinking models (DeepSeek R1, QwQ, etc.) are auto-skipped during benchmarking — they are too slow for interactive chatbot use
 - Discovery without benchmarking is free and fast (~30 seconds)
 - Benchmarking adds ~2 minutes per model tested
 - The script outputs to stdout — save the report manually to `.agents/reports/`
+- Chutes uses subscription pricing — `$/M` figures are shown for reference only, not as a filter
+- Use `/model-scout-openrouter` instead if you want pay-as-you-go pricing comparisons across all OpenRouter open-source models
 </notes>

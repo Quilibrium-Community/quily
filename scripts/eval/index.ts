@@ -69,10 +69,17 @@ process.on('SIGTERM', () => { cleanupServer(); process.exit(143); });
  * Check if the dev server is reachable at the given URL.
  */
 async function isServerReachable(url: string): Promise<boolean> {
+  // Hit /api/chat with OPTIONS — avoids the root page (which can hang during
+  // first compile or when an unrelated page-level error blocks render) while
+  // still proving the API surface we care about is live.
+  const target = url.replace(/\/$/, '') + '/api/chat';
   try {
-    const resp = await fetch(url, { signal: AbortSignal.timeout(3000) });
+    const resp = await fetch(target, {
+      method: 'OPTIONS',
+      signal: AbortSignal.timeout(5000),
+    });
     await resp.text();
-    return true; // Any response (even 404) means the server is up
+    return true; // Any response (even 404/405) means the server is up
   } catch {
     return false;
   }
@@ -176,6 +183,8 @@ program
   .option('--no-judge', 'Skip LLM judge (deterministic checks only)')
   .option('--collect', 'Collect responses for manual judgment (no API key needed)')
   .option('--auto-start', 'Auto-start the dev server if not already running')
+  .option('--direct', 'Run RAG + LLM in-process (skip dev server entirely). OpenRouter only. ~5x less RAM, no Turbopack.')
+  .option('--direct-embedding <model>', 'Embedding model for --direct mode', 'baai/bge-m3')
   .action(async (options) => {
     const spinner = ora();
 
@@ -282,19 +291,32 @@ program
 
     console.log('');
 
-    // Health check
-    spinner.start('Checking dev server...');
-    if (await isServerReachable(options.url)) {
-      spinner.succeed('Dev server is responsive');
-    } else if (options.autoStart) {
-      spinner.info('Dev server not reachable — starting one automatically');
-      await startDevServer(options.url, spinner);
+    // Health check (skipped in direct mode — no server involved)
+    if (options.direct) {
+      if (options.provider !== 'openrouter') {
+        console.error(chalk.red('--direct only supports --provider openrouter'));
+        process.exit(1);
+      }
+      if (!openrouterApiKey && !options.apiKey) {
+        console.error(chalk.red('--direct requires OPENROUTER_API_KEY (env or --api-key)'));
+        process.exit(1);
+      }
+      spinner.info(`Direct mode: in-process RAG + LLM (embedding=${options.directEmbedding})`);
     } else {
-      spinner.fail('Dev server not reachable');
-      console.error(chalk.red(`Cannot connect to ${options.url}`));
-      console.error(chalk.gray('Start the dev server with: yarn dev -p 4000'));
-      console.error(chalk.gray('Or use --auto-start to launch it automatically'));
-      process.exit(1);
+      spinner.start('Checking dev server...');
+      if (await isServerReachable(options.url)) {
+        spinner.succeed('Dev server is responsive');
+      } else if (options.autoStart) {
+        spinner.info('Dev server not reachable — starting one automatically');
+        await startDevServer(options.url, spinner);
+      } else {
+        spinner.fail('Dev server not reachable');
+        console.error(chalk.red(`Cannot connect to ${options.url}`));
+        console.error(chalk.gray('Start the dev server with: yarn dev -p 4000'));
+        console.error(chalk.gray('Or use --auto-start to launch it automatically'));
+        console.error(chalk.gray('Or use --direct to skip the dev server entirely (OpenRouter only)'));
+        process.exit(1);
+      }
     }
 
     // Run evaluation
@@ -312,6 +334,8 @@ program
         timeout: parseInt(options.timeout),
         skipJudge: options.judge === false,
         collectMode: options.collect || false,
+        direct: options.direct || false,
+        directEmbeddingModel: options.directEmbedding,
       },
       (completed, total, result) => {
         const icon = result.passed ? chalk.green('PASS') : chalk.red('FAIL');

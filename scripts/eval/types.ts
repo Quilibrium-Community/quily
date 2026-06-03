@@ -214,4 +214,8 @@ export interface RunnerConfig {
   timeout: number;
   skipJudge: boolean;
   collectMode: boolean;
+  /** Bypass the dev server and run RAG + LLM in-process (see direct-adapter.ts) */
+  direct?: boolean;
+  /** Embedding model for direct mode (defaults to baai/bge-m3) */
+  directEmbeddingModel?: string;
 }

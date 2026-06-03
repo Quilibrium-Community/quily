@@ -27,8 +27,12 @@ Ask the user which models they want to test. They may provide:
 **Important:** Exclude reasoning/thinking models (DeepSeek R1, QwQ, models with "thinking" in the name) — they are too slow for chatbot use. If the user suggests one, warn them and recommend skipping it.
 
 The **baseline model** (current primary) is always included automatically:
-- Chutes: `chutes-deepseek-ai-deepseek-v3-1-tee` (DeepSeek V3.1)
-- OpenRouter: `deepseek/deepseek-chat-v3-0324`
+- Chutes: `chutes-deepseek-ai-deepseek-v3-2-tee` (DeepSeek V3.2)
+- OpenRouter: `deepseek/deepseek-v3.2`
+
+Sources of truth in code (update these refs if the primary ever moves):
+- `src/lib/rag/service.ts:72` (`CHUTES_DEFAULT_MODEL`)
+- `src/lib/openrouter.ts:12` (`DEFAULT_MODEL_ID`)
 
 **Resolving model IDs:**
 
@@ -50,7 +54,7 @@ For **OpenRouter** models, IDs look like `deepseek/deepseek-r1-0528`. Check at o
 Present the resolved model list to the user for confirmation:
 ```
 Benchmark plan:
-  Baseline: chutes-deepseek-ai-deepseek-v3-1-tee (DeepSeek V3.1 — current primary)
+  Baseline: chutes-deepseek-ai-deepseek-v3-2-tee (DeepSeek V3.2 — current primary)
   Candidate 1: chutes-deepseek-ai-deepseek-r1-0528-tee (DeepSeek R1 0528)
   Candidate 2: chutes-qwen-qwen3-coder-next-tee (Qwen3 Coder Next)
   Candidate 3: chutes-deepseek-ai-deepseek-v3-2-tee (DeepSeek V3.2)
@@ -80,48 +84,54 @@ grep -c "OPENROUTER_API_KEY" .env 2>/dev/null || echo "0"
 If set, offer both options. If not, use collect mode.
 </step>
 
-<step name="ensure-server">
-**Ensure the dev server is running:**
-
-```bash
-curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/ 2>/dev/null || echo "down"
-```
-
-If not running, tell the user to start it:
-```
-Dev server needed on port 4000. Start with:
-  NEXT_PUBLIC_FREE_MODE=true yarn dev -p 4000
-```
-
-Wait for confirmation before proceeding.
-</step>
-
 <step name="run-evals">
-**Run the eval suite for each model sequentially:**
+**Run the eval suite for each model sequentially using `--direct` mode (preferred):**
+
+`--direct` runs RAG + LLM in-process — no dev server needed, ~5× less RAM than `yarn dev`, and crash-resistant. It's the canonical path for benchmarking. The legacy HTTP path is still available (see "Legacy HTTP path" notes below) but should NOT be used for multi-model benchmark runs — the dev server's Tailwind error-spam has crashed the machine during long runs.
 
 For each model (baseline first, then candidates):
 
 ```bash
-yarn eval:run --provider <provider> --model <model-slug> --collect --auto-start --url http://localhost:4000
+yarn eval run --direct --provider openrouter --model <model-id> \
+  --collect --suite scripts/eval/test-suite.yaml \
+  --concurrency 2 --timeout 120000 --output ./results
 ```
 
-Or for automated judge mode:
-```bash
-yarn eval:run --provider <provider> --model <model-slug> --auto-start --url http://localhost:4000
-```
+Notes on the flags:
+- `--direct` — bypasses the dev server entirely. **OpenRouter only** (Chutes auth chain not ported; for Chutes benchmarks fall back to HTTP path).
+- `--concurrency 2` — sane default. Bumping to 3 helps on fast providers but increases memory spikes during multi-model runs.
+- `--timeout 120000` — 2-min ceiling per test. Full suite takes 4-8 min per model depending on model latency.
 
 After each run, report progress:
 ```
-✓ Model 1/4: DeepSeek V3.1 (baseline) — collected 34 responses
-✓ Model 2/4: DeepSeek R1 0528 — collected 34 responses
-  Running 3/4: Qwen3 Coder Next...
+✓ Model 1/3: DeepSeek V3.2 (baseline) — collected 45 responses in 336s
+✓ Model 2/3: DeepSeek V4 Flash — collected 45 responses in 247s
+  Running 3/3: DeepSeek V4 Pro...
 ```
 
-**Important:** If a model errors on most tests (e.g., 503s from Chutes), report it and skip:
+**Important:** If a model errors on most tests, report it and skip:
 ```
-⚠ DeepSeek R1 0528: 28/34 tests returned errors (likely unavailable on Chutes)
+⚠ <model>: N/45 tests returned errors (likely temporarily unavailable)
   Skip this model? (y/n)
 ```
+
+### Legacy HTTP path (only when needed)
+
+If you need to exercise the full production route (Turnstile, sessions, cookies, fallback chain, Chutes auth), use the HTTP path:
+
+```bash
+# Terminal 1 — start dev server
+NEXT_PUBLIC_FREE_MODE=true yarn dev -p 4000
+
+# Terminal 2 — run eval against it
+yarn eval run --provider <chutes|openrouter> --model <model-id> \
+  --collect --url http://localhost:4000 --suite scripts/eval/test-suite.yaml \
+  --concurrency 2 --timeout 120000 --output ./results
+```
+
+Caveats with the HTTP path:
+- The repo has a pre-existing Tailwind parent-dir resolution bug that floods stderr; over long runs this has caused OOM/freeze. If using HTTP path, run one model at a time and avoid background polling loops.
+- Cold-start to first-eval-ready is ~25-30s. Manually warm the API once before starting: `curl -X POST http://localhost:4000/api/chat -H "Content-Type: application/json" -d '{"messages":[{"role":"user","content":"hi"}],"provider":"openrouter","model":"deepseek/deepseek-v3.2"}' -m 60`.
 </step>
 
 <step name="judge">
@@ -130,6 +140,8 @@ After each run, report progress:
 If using collect mode, for each model's judgment file:
 1. Read the judgment file
 2. For each criterion needing judgment, evaluate based on the response text and rubric
+
+**Speed tip — parallelize via subagents:** for multi-model runs, dispatch one Sonnet subagent per judgment file (e.g. 3 agents for a 3-model benchmark). Each agent fills its file in-place. ~7 min wall-clock for ~150 judgments instead of single-threaded.
 3. Fill in passed/score/reasoning
 4. Run `yarn eval judge <judgment-file>` to produce the scored report
 
@@ -150,7 +162,7 @@ Overall Results:
 ┌────────────────────────┬───────┬────────┬─────────┬────────┐
 │ Model                  │ Pass  │ Score  │ Latency │ Errors │
 ├────────────────────────┼───────┼────────┼─────────┼────────┤
-│ DeepSeek V3.1 (base)   │ 30/34 │ 88.2%  │ 2.1s    │ 0      │
+│ DeepSeek V3.2 (base)   │ 30/34 │ 88.2%  │ 2.1s    │ 0      │
 │ DeepSeek R1 0528       │ 32/34 │ 92.1%  │ 4.8s    │ 0      │
 │ Qwen3 Coder Next       │ 31/34 │ 90.5%  │ 1.9s    │ 0      │
 │ DeepSeek V3.2          │ 31/34 │ 89.7%  │ 2.3s    │ 0      │
@@ -224,10 +236,34 @@ To switch primary model, update:
 </process>
 
 <notes>
-- A full 34-test run takes 3-5 minutes per model depending on latency
-- Collect mode is free; automated judge costs ~$0.15/model via OpenRouter
-- The dev server must run with `NEXT_PUBLIC_FREE_MODE=true` for Chutes provider
-- Chutes models may return 503 if overloaded — the runner handles this gracefully
-- For OpenRouter, the runner now passes `apiKey` in the request body (use `--api-key` flag)
+- The full suite is **45 tests** (`scripts/eval/test-suite.yaml`); the focused suite is 9 tests (`scripts/eval/test-suite-focused.yaml`, which is the default if `--suite` is omitted).
+- A full 45-test run takes ~5-10 minutes per model depending on latency and concurrency (`--concurrency 3` is the default in the harness; bump to `--concurrency 5` on a fast OpenRouter provider for ~30% speedup).
+- Collect mode is free; automated judge costs ~$0.15/model via OpenRouter.
+- The dev server must run with `NEXT_PUBLIC_FREE_MODE=true` for Chutes provider.
+- Chutes models may return 503 if overloaded — the runner handles this gracefully.
+- For OpenRouter, the runner now passes `apiKey` in the request body (use `--api-key` flag).
 - **Skip reasoning/thinking models** (e.g., DeepSeek R1, QwQ, models with "thinking" in the name). These are too slow for chatbot use — chain-of-thought adds unacceptable latency for interactive conversations. If a user proposes one, flag it and recommend skipping unless they explicitly want to test it anyway.
+
+## Operational lessons (read before kicking off a run)
+
+These come from real failure modes hit in past sessions — saves debugging time.
+
+1. **Don't trust the dev server's "Ready in Xs" log line.** Next.js prints that the moment the listener binds, well before the first page compiles. The root page `/` can still hang for 30-60s while Turbopack compiles. The harness's reachability check now pings `/api/chat` with OPTIONS (which doesn't need a page render); if a future change breaks it, the easiest first step is to manually `curl -X POST http://localhost:4000/api/chat -d '{"messages":[{"role":"user","content":"hi"}],"provider":"openrouter","model":"deepseek/deepseek-v3.2"}'` to confirm reachability and warm the route. 14-15s cold for a first hit is normal on this repo.
+
+2. **Tailwind resolution errors in `yarn dev` output are noisy but non-fatal.** You'll see `Error: Can't resolve 'tailwindcss' in 'd:\GitHub\Quilibrium'` spam — this is the parent directory probe and only breaks the home page render. `/api/chat` is unaffected.
+
+3. **Start the dev server yourself, in the background.** Don't ask the user. Pattern that works:
+   ```bash
+   NEXT_PUBLIC_FREE_MODE=true yarn dev -p 4000   # run_in_background: true
+   ```
+   Then warm and verify the API with one POST before launching the eval. Total cold-start to first-eval-ready: ~25-30s.
+
+4. **Sources of truth for the current primary model** (verify these BEFORE writing scout/benchmark reports — otherwise stale references propagate):
+   - `src/lib/openrouter.ts:12` → `DEFAULT_MODEL_ID`
+   - `src/lib/rag/service.ts:72` → `CHUTES_DEFAULT_MODEL`
+   - `scripts/model-scout.py:53` → `CURRENT_LLM_MODELS` (this one has drifted before; double-check).
+
+5. **For full-suite (45 tests) collect-mode runs, `--concurrency 3` and `--timeout 120000` are sane defaults.** Increasing concurrency to 5 helps with fast OpenRouter providers (DeepInfra, StreamLake); on slower ones it can trigger rate-limit 429s.
+
+6. **OpenRouter free-mode runs need both env var AND flag.** Set `NEXT_PUBLIC_FREE_MODE=true` on the dev server (route auth) AND pass `--api-key $OPENROUTER_API_KEY` to the harness — the harness no longer auto-reads `.env` for the API key.
 </notes>

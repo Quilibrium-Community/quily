@@ -11,6 +11,7 @@
 
 import { parseStreamResponse } from './stream-parser.js';
 import { evaluateCriterion } from './judge.js';
+import { sendChatRequestDirect } from './direct-adapter.js';
 import type {
   TestCase,
   TestResult,
@@ -45,6 +46,28 @@ async function sendChatRequest(
   messages: { role: string; content: string }[],
   config: RunnerConfig
 ): Promise<ParsedResponse> {
+  // Direct mode: skip the dev server entirely (see direct-adapter.ts).
+  // Only OpenRouter is wired in direct mode for now — Chutes auth would
+  // need additional plumbing and we use OpenRouter for all benchmarking.
+  if (config.direct) {
+    if (config.provider !== 'openrouter') {
+      return {
+        text: '',
+        sources: [],
+        followUpQuestions: [],
+        statusMessages: [],
+        latencyMs: 0,
+        error: `Direct mode only supports OpenRouter provider, got: ${config.provider}`,
+      };
+    }
+    return await sendChatRequestDirect(messages, {
+      apiKey: config.providerApiKey,
+      model: config.model,
+      embeddingModel: config.directEmbeddingModel,
+      timeoutMs: config.timeout,
+    });
+  }
+
   try {
     const httpResponse = await fetchWithTimeout(
       `${config.baseUrl}/api/chat`,

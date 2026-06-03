@@ -50,9 +50,9 @@ load_dotenv()
 # ─── Current Models (mirror of what's in the codebase) ─────────────────────
 
 CURRENT_LLM_MODELS = {
-    "chutes-deepseek-ai-deepseek-v3-1-tee": {
-        "display": "DeepSeek V3.1",
-        "openrouter_id": "deepseek/deepseek-chat",
+    "chutes-deepseek-ai-deepseek-v3-2-tee": {
+        "display": "DeepSeek V3.2",
+        "openrouter_id": "deepseek/deepseek-v3.2",
         "role": "primary",
     },
     "chutes-deepseek-ai-deepseek-r1-tee": {
@@ -443,6 +443,113 @@ def extract_model_size(name: str) -> float:
         if key in name_clean:
             return float(size)
     return 0.0
+
+
+def print_openrouter_report(
+    candidates: list[dict],
+    model_type: str,
+    benchmark_results: dict = None,
+):
+    """Print a pure OpenRouter scout report — pricing-first, no Chutes cross-check."""
+    current = get_current_models(model_type)
+    current_or_ids = {
+        v["openrouter_id"] for v in current.values() if v.get("openrouter_id")
+    }
+
+    type_label = "LLM" if model_type == "llm" else "Embedding"
+    print()
+    print("=" * 110)
+    print(f"  MODEL SCOUT REPORT — OpenRouter {type_label} Models")
+    print(f"  Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    print("=" * 110)
+
+    # Current models the project uses (for reference)
+    print(f"\n  CURRENT {type_label.upper()} MODELS (in codebase)")
+    print("  " + "-" * 106)
+    print(f"  {'Model':<35} {'Role':<12} {'OpenRouter ID':<50}")
+    print("  " + "-" * 106)
+    for slug, info in current.items():
+        or_id = info.get("openrouter_id") or "—"
+        print(f"  {info['display']:<35} {info['role']:<12} {or_id}")
+
+    # New candidates only — already-in-use models filtered out
+    new_candidates = [c for c in candidates if c["id"] not in current_or_ids]
+    if not new_candidates:
+        print(f"\n  No new open-source {type_label} candidates on OpenRouter within price range.")
+    else:
+        # Annotate with size for capability ranking
+        for c in new_candidates:
+            c["_size"] = extract_model_size(c.get("name", ""))
+
+        # Reference: current primary price (best-effort)
+        primary = next(
+            (info for info in current.values() if info["role"] == "primary"), None
+        )
+        primary_or_id = primary.get("openrouter_id") if primary else None
+        primary_candidate = next(
+            (c for c in candidates if primary_or_id and c["id"] == primary_or_id), None
+        )
+        ref_in = primary_candidate["price_in"] if primary_candidate else 0
+
+        print(f"\n  OPENROUTER CANDIDATES — ranked by capability (size, then context) "
+              f"({len(new_candidates)} found)")
+        print("  Pricing is pay-as-you-go on OpenRouter ($/M tokens).")
+        if primary_candidate:
+            print(f"  Current primary on OpenRouter: {primary_or_id} "
+                  f"(${ref_in:.3f}/M in, ${primary_candidate['price_out']:.3f}/M out)")
+        print("  " + "-" * 106)
+        header = (
+            f"  {'Model':<45} {'Size':>6} {'Ctx':>6} "
+            f"{'$/M In':>10} {'$/M Out':>11}  {'vs Primary'}"
+        )
+        print(header)
+        print("  " + "-" * 106)
+
+        new_candidates.sort(key=lambda c: (
+            -c["_size"],
+            -c.get("context_length", 0),
+            c.get("price_in", 0),
+        ))
+
+        for c in new_candidates:
+            size = c.get("_size", 0)
+            size_str = f"{size:.0f}B" if size >= 1 else (f"{size}B" if size > 0 else "—")
+            ctx = c.get("context_length", 0)
+            ctx_str = f"{ctx // 1000}k" if ctx > 0 else "—"
+
+            if ref_in > 0:
+                if c["price_in"] < ref_in * 0.8:
+                    price_tag = "CHEAPER"
+                elif c["price_in"] > ref_in * 1.2:
+                    price_tag = "PRICIER"
+                else:
+                    price_tag = "SIMILAR COST"
+            else:
+                price_tag = ""
+
+            bench_str = ""
+            if benchmark_results and c["id"] in benchmark_results:
+                br = benchmark_results[c["id"]]
+                bench_str = f" [Bench: {br['score']}/{br['max']}]"
+
+            print(
+                f"  {c['name']:<45} {size_str:>6} {ctx_str:>6} "
+                f"${c['price_in']:>8.3f} ${c['price_out']:>9.3f}  "
+                f"{price_tag}{bench_str}"
+            )
+
+    print()
+    print("=" * 110)
+    print("  Notes:")
+    print("  - OpenRouter pricing is pay-as-you-go, billed per token.")
+    print("  - Sorted by model size (capability proxy), then context, then price.")
+    print("  - Size = total parameters (MoE models show total, e.g. 235B-A22B = 235B total).")
+    print("  - Open-source filter applied (proprietary models like GPT/Claude/Gemini excluded).")
+    print("  - Free-tier (:free / :extended) variants excluded — rate-limited, not production-grade.")
+    if benchmark_results:
+        print("  - Bench scores: higher is better (tests Q&A quality with Quilibrium questions).")
+    print("=" * 110)
+    print()
 
 
 def print_report(
@@ -924,6 +1031,12 @@ def main():
         help="Model type to scout (default: llm)",
     )
     parser.add_argument(
+        "--provider",
+        choices=["openrouter", "chutes"],
+        default="openrouter",
+        help="Which provider to scout. 'openrouter' (default) = pure OpenRouter discovery, no Chutes cross-check. 'chutes' = OpenRouter discovery + Chutes cross-check.",
+    )
+    parser.add_argument(
         "--max-input",
         type=float,
         default=2.0,
@@ -949,7 +1062,7 @@ def main():
     args = parser.parse_args()
 
     type_label = "LLM" if args.type == "llm" else "Embedding"
-    print(f"Model Scout — {type_label} Discovery")
+    print(f"Model Scout — {type_label} Discovery ({args.provider})")
     print(f"  Price ceiling: ${args.max_input:.2f}/M in, ${args.max_output:.2f}/M out")
     print(f"  Benchmark: {'Yes' if args.benchmark else 'No'}")
     print()
@@ -959,42 +1072,60 @@ def main():
         print("Phase 1: Chutes Direct Discovery (embeddings)")
         on_chutes, not_on_chutes = discover_chutes_embeddings()
         print_report(on_chutes, not_on_chutes, args.type)
-    else:
-        # LLM models: OpenRouter discovery + Chutes cross-check
-        print("Phase 1: OpenRouter Discovery")
-        candidates = discover_openrouter(
-            model_type=args.type,
-            max_input_price=args.max_input,
-            max_output_price=args.max_output,
-        )
+        return
 
-        if not candidates:
-            print("  No candidates found. Try increasing --max-input / --max-output.")
-            return
+    # LLM discovery starts on OpenRouter for both providers
+    print("Phase 1: OpenRouter Discovery")
+    candidates = discover_openrouter(
+        model_type=args.type,
+        max_input_price=args.max_input,
+        max_output_price=args.max_output,
+    )
 
-        # Phase 2: Chutes cross-check
-        print("\nPhase 2: Chutes Cross-Check")
-        on_chutes, not_on_chutes = crosscheck_chutes(candidates, model_type=args.type)
+    if not candidates:
+        print("  No candidates found. Try increasing --max-input / --max-output.")
+        return
 
-        # Phase 3 (optional): Benchmark
+    if args.provider == "openrouter":
+        # Pure OpenRouter scout — no Chutes cross-check.
         benchmark_results = {}
-        if args.benchmark and on_chutes:
-            print("\nPhase 3: Quality Benchmark")
+        if args.benchmark:
+            print("\nPhase 2: Quality Benchmark")
             current = get_current_models(args.type)
             current_or_ids = {
                 v["openrouter_id"] for v in current.values() if v.get("openrouter_id")
             }
-            current_chutes_slugs = set(current.keys())
-            new_on_chutes = [c for c in on_chutes
-            if c["id"] not in current_or_ids
-            and c.get("chutes_slug", "") not in current_chutes_slugs]
-            if new_on_chutes:
-                benchmark_results = run_benchmarks(new_on_chutes, max_models=args.benchmark_count)
+            new_candidates = [c for c in candidates if c["id"] not in current_or_ids]
+            if new_candidates:
+                benchmark_results = run_benchmarks(new_candidates, max_models=args.benchmark_count)
             else:
                 print("  No new candidates to benchmark.")
+        print_openrouter_report(candidates, args.type, benchmark_results)
+        return
 
-        # Report
-        print_report(on_chutes, not_on_chutes, args.type, benchmark_results)
+    # provider == "chutes": OpenRouter discovery + Chutes cross-check (legacy flow)
+    print("\nPhase 2: Chutes Cross-Check")
+    on_chutes, not_on_chutes = crosscheck_chutes(candidates, model_type=args.type)
+
+    # Phase 3 (optional): Benchmark
+    benchmark_results = {}
+    if args.benchmark and on_chutes:
+        print("\nPhase 3: Quality Benchmark")
+        current = get_current_models(args.type)
+        current_or_ids = {
+            v["openrouter_id"] for v in current.values() if v.get("openrouter_id")
+        }
+        current_chutes_slugs = set(current.keys())
+        new_on_chutes = [c for c in on_chutes
+        if c["id"] not in current_or_ids
+        and c.get("chutes_slug", "") not in current_chutes_slugs]
+        if new_on_chutes:
+            benchmark_results = run_benchmarks(new_on_chutes, max_models=args.benchmark_count)
+        else:
+            print("  No new candidates to benchmark.")
+
+    # Report
+    print_report(on_chutes, not_on_chutes, args.type, benchmark_results)
 
 
 if __name__ == "__main__":
