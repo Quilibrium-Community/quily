@@ -68,7 +68,7 @@ export async function prepareQuery(options: PrepareQueryOptions): Promise<Prepar
 }
 
 // Default models per provider
-const OPENROUTER_DEFAULT_MODEL = 'deepseek/deepseek-v3.2';
+const OPENROUTER_DEFAULT_MODEL = 'deepseek/deepseek-v4-flash';
 const CHUTES_DEFAULT_MODEL = 'chutes-deepseek-ai-deepseek-v3-2-tee';
 
 // OpenRouter provider pinning for the primary model: avoid slow/expensive
