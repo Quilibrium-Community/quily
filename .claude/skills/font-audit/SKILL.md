@@ -1,10 +1,21 @@
-# Font Audit Command
+---
+name: font-audit
+description: Audit Tailwind CSS files for font sizes too small on mobile and apply the mobile bump scale (`text-xs` → `text-sm sm:text-xs`, `text-sm` → `text-base sm:text-sm`). Categorises findings as needs-fix vs decorative (badges, timestamps, hints stay small). Use when the user asks to audit fonts, check font sizes, fix mobile typography, find text-xs problems, run a font audit, or check mobile readability of text. Trigger phrases include "font audit", "audit fonts", "fix small text on mobile", "check text sizes", "mobile typography audit", "text too small".
+allowed-tools:
+  - Read
+  - Edit
+  - Glob
+  - Grep
+  - AskUserQuestion
+---
+
+# Font Audit
 
 Audit and fix small font sizes for mobile readability in Tailwind CSS projects.
 
 ## The Problem
 
-`text-xs` in Tailwind is 0.75rem (12px), which is often too small on mobile devices—especially those with high pixel density. The minimum comfortable reading size on mobile is generally `text-sm` (14px).
+`text-xs` in Tailwind is 0.75rem (12px), which is often too small on mobile devices — especially those with high pixel density. The minimum comfortable reading size on mobile is generally `text-sm` (14px).
 
 ## The Mobile Bump Scale
 
@@ -76,19 +87,11 @@ If not a Tailwind project, inform the user and exit.
 
 ### Step 3: Search for Problematic Patterns
 
-Search for these patterns in `.tsx`, `.jsx`, `.html`, `.vue`, `.svelte` files:
+Use Grep to search for these patterns in `.tsx`, `.jsx`, `.html`, `.vue`, `.svelte` files:
 
-```bash
-# Find text-xs usage (needs bump to text-sm on mobile)
-grep -r "text-xs" --include="*.tsx" --include="*.jsx" --include="*.vue" --include="*.svelte" .
-
-# Find text-sm usage (needs bump to text-base on mobile)
-grep -r "text-sm" --include="*.tsx" --include="*.jsx" --include="*.vue" --include="*.svelte" .
-
-# Find arbitrary small sizes
-grep -rE "text-\[(10|11|12|13|14)px\]" --include="*.tsx" --include="*.jsx" .
-grep -rE "text-\[0\.(75|875)rem\]" --include="*.tsx" --include="*.jsx" .
-```
+- `text-xs` usage (needs bump to text-sm on mobile)
+- `text-sm` usage (needs bump to text-base on mobile)
+- Arbitrary small sizes: `text-\[(10|11|12|13|14)px\]` and `text-\[0\.(75|875)rem\]`
 
 **Important:** Exclude patterns that already have a mobile bump (e.g., `text-sm sm:text-xs` or `text-base sm:text-sm`).
 
@@ -140,67 +143,17 @@ Found X instances of potentially small text across Y files.
 
 ### Step 6: Ask User What to Do
 
-Use AskUserQuestion:
-
-```
-Question: "How would you like to proceed?"
-Header: "Action"
-Options:
-  - label: "Fix all recommended"
-    description: "Apply fixes to all items marked 'Needs Fixing'"
-  - label: "Review one by one"
-    description: "Go through each finding and decide individually"
-  - label: "Show me the code"
-    description: "Show the actual code snippets for context"
-  - label: "Setup fluid typography"
-    description: "Add fluid font sizes to tailwind.config.js instead"
-```
+Use AskUserQuestion with options: Fix all recommended / Review one by one / Show me the code / Setup fluid typography.
 
 ### Step 7: Execute Based on User Choice
 
 #### If "Fix all recommended":
 
-Apply the mobile bump pattern to all items in the "Needs Fixing" category.
-
-For each fix:
-1. Read the file
-2. Find the exact line
-3. Replace with the appropriate fix
-4. Confirm the change
+Apply the mobile bump pattern to all items in the "Needs Fixing" category. For each fix: Read the file, find the exact line, replace with the appropriate fix, confirm the change.
 
 #### If "Review one by one":
 
-For each finding, show:
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-File: components/Sidebar.tsx:45
-
-Context: Navigation item in sidebar
-
-Current code:
-  <span className="text-xs text-muted-foreground">
-    {item.label}
-  </span>
-
-Suggested fix:
-  <span className="text-sm sm:text-xs text-muted-foreground">
-    {item.label}
-  </span>
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-Then ask:
-```
-Question: "What should we do with this instance?"
-Header: "Fix"
-Options:
-  - label: "Apply mobile bump"
-    description: "Add responsive prefix (e.g., text-sm sm:text-xs or text-base sm:text-sm)"
-  - label: "Bump permanently"
-    description: "Change to larger size everywhere (e.g., text-sm or text-base)"
-  - label: "Skip"
-    description: "Leave as-is (decorative/non-essential text)"
-```
+For each finding, show the file path, line, context, current code, and suggested fix. Then ask: Apply mobile bump / Bump permanently / Skip.
 
 #### If "Show me the code":
 
@@ -226,32 +179,7 @@ After applying fixes:
 
 ### Step 9: Final Summary
 
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- AUDIT COMPLETE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-## Summary
-
-- Files scanned: X
-- Issues found: Y
-- Issues fixed: Z
-- Skipped: W
-
-## Changes Made
-
-- components/Sidebar.tsx: 3 fixes applied
-- components/Sources.tsx: 2 fixes applied
-
-## Testing Checklist
-
-- [ ] Test on mobile device or Chrome DevTools mobile emulator
-- [ ] Check sidebar readability
-- [ ] Check source citations readability
-- [ ] Verify desktop appearance unchanged (text should be smaller)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
+Report files scanned, issues found, issues fixed, skipped, and a testing checklist (mobile device test, sidebar readability, source citations readability, desktop appearance unchanged).
 
 ## Notes
 
@@ -259,6 +187,7 @@ After applying fixes:
 - `text-base sm:text-sm` = 16px on mobile, 14px on screens ≥ 640px
 - Tailwind is mobile-first: unprefixed classes apply to all sizes, `sm:` applies at 640px+
 - Always preserve other classes on the element (colors, spacing, etc.)
+- For a combined audit (typography + touch targets), invoke this skill alongside `touch-target-audit`.
 
 ---
-*Last updated: 2025-02-03*
+*Last updated: 2026-06-03*

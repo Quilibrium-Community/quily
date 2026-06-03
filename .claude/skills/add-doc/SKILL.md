@@ -1,6 +1,6 @@
 ---
 name: add-doc
-description: Add a new document to the RAG knowledge base (docs/custom/)
+description: Add one or more new documents to the Quily RAG knowledge base under `docs/custom/`. Handles URLs (WebFetch), file paths (Read), and pasted markdown — infers document type (discord_transcript, technical_reference, whitepaper_excerpt, blog_post, community_faq, community_guide, community_analysis), checks for duplicates/overlap with existing docs, adds YAML frontmatter, and writes the formatted file. Use ONLY when the user explicitly asks to add, ingest, or include a document/article/post/transcript in the knowledge base. Do NOT trigger on tangential mentions of docs. For official docs.quilibrium.com syncs use `sync-docs` instead. For livestream transcripts use `sync-transcripts`.
 allowed-tools:
   - Read
   - Write
@@ -14,7 +14,7 @@ allowed-tools:
 <objective>
 Add one or more documents to the Quily chatbot's RAG knowledge base. All new docs go to `docs/custom/` (everything from official content not on docs.quilibrium.com to community-contributed content).
 
-**Note:** For official docs from docs.quilibrium.com, use `/sync-docs`. For livestream transcripts, use `/sync-transcripts`.
+**Note:** For official docs from docs.quilibrium.com, use the `sync-docs` skill. For livestream transcripts, use the `sync-transcripts` skill.
 </objective>
 
 <document_taxonomy>
@@ -228,3 +228,6 @@ and this community analysis from https://..."
 ```
 
 </examples>
+
+---
+*Last updated: 2026-06-03*

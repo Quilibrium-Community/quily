@@ -1,6 +1,6 @@
 ---
 name: model-scout-chutes
-description: Scout for better open-source LLM/embedding models on Chutes (subscription pricing). Checks previous reports to avoid duplicating work.
+description: Scout for better open-source LLM or embedding models hosted on Chutes (subscription pricing). Checks previous `.agents/reports/*model-scout-chutes*` reports first to avoid duplicating work, then runs `scripts/model-scout.py --provider chutes`, diffs against the previous report (new / changed / disappeared), and writes an updated report. Use ONLY when the user explicitly asks to scout Chutes models, find new Chutes models, look for better LLMs on Chutes, or update the Chutes model report. For OpenRouter scouting use `model-scout-openrouter` instead. For head-to-head testing of candidate models use `benchmark`. Do NOT auto-fire on tangential model mentions.
 allowed-tools:
   - Bash
   - Read
@@ -91,11 +91,11 @@ Disappeared:
 **Make recommendations:**
 
 Based on the scout results (and previous report context), recommend:
-1. Which new models are worth benchmarking with `/benchmark`
+1. Which new models are worth benchmarking with the `benchmark` skill
 2. Whether the current primary model should change
 3. Any new embedding models worth testing for RAG
 
-If there are strong candidates, ask if the user wants to run `/benchmark` on them now.
+If there are strong candidates, ask if the user wants to run the `benchmark` skill on them now.
 </step>
 
 <step name="save-report">
@@ -123,5 +123,8 @@ Include:
 - Benchmarking adds ~2 minutes per model tested
 - The script outputs to stdout — save the report manually to `.agents/reports/`
 - Chutes uses subscription pricing — `$/M` figures are shown for reference only, not as a filter
-- Use `/model-scout-openrouter` instead if you want pay-as-you-go pricing comparisons across all OpenRouter open-source models
+- Use `model-scout-openrouter` instead if you want pay-as-you-go pricing comparisons across all OpenRouter open-source models
 </notes>
+
+---
+*Last updated: 2026-06-03*

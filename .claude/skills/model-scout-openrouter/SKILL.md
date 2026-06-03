@@ -1,6 +1,6 @@
 ---
 name: model-scout-openrouter
-description: Scout for better or cheaper open-source LLM/embedding models on OpenRouter. Checks previous reports to avoid duplicating work.
+description: Scout for better or cheaper open-source LLM or embedding models on OpenRouter (pay-as-you-go pricing). Checks previous `.agents/reports/*model-scout-openrouter*` reports first to avoid duplicating work, then runs `scripts/model-scout.py --provider openrouter`, diffs against the previous report (new / price-changes / disappeared), and writes an updated report. Use ONLY when the user explicitly asks to scout OpenRouter models, find cheaper models, compare OpenRouter pricing, or update the OpenRouter model report. For Chutes scouting use `model-scout-chutes` instead. For head-to-head testing of candidate models use `benchmark`. Do NOT auto-fire on tangential model mentions.
 allowed-tools:
   - Bash
   - Read
@@ -79,11 +79,11 @@ Present the diff in a compact list (new / changed / removed).
 **Make recommendations:**
 
 Based on the scout results (and previous report context), recommend:
-1. Which new models are worth benchmarking with `/benchmark`
+1. Which new models are worth benchmarking with the `benchmark` skill
 2. Whether the current primary model should change
 3. Any pricing wins (cheaper models that match the current primary's capability)
 
-If there are strong candidates, ask if the user wants to run `/benchmark` on them now.
+If there are strong candidates, ask if the user wants to run the `benchmark` skill on them now.
 </step>
 
 <step name="save-report">
@@ -110,5 +110,8 @@ Include:
 - Discovery without benchmarking is free and fast (~30 seconds)
 - Benchmarking adds ~2 minutes per model tested
 - The script outputs to stdout — save the report manually to `.agents/reports/`
-- Use `/model-scout-chutes` instead if you want to scout for models hosted on Chutes (subscription pricing, cross-checked against OpenRouter for discovery)
+- Use `model-scout-chutes` instead if you want to scout for models hosted on Chutes (subscription pricing, cross-checked against OpenRouter for discovery)
 </notes>
+
+---
+*Last updated: 2026-06-03*

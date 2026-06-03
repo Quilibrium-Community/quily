@@ -1,12 +1,23 @@
-# Touch Target Audit Command
+---
+name: touch-target-audit
+description: Audit Tailwind CSS files for interactive elements smaller than the 44×44px mobile touch-target minimum (Apple HIG / WCAG) and apply fixes (`w-6 h-6` → `w-11 h-11`, `py-1` on nav links → `py-3`, `h-8` inputs → `h-11`, etc.). Categorises findings as needs-fix vs OK (non-interactive icons, desktop-dense tables). Use when the user asks to audit touch targets, check mobile tap targets, find small buttons, run a touch-target audit, or fix mobile tappability. Trigger phrases include "touch target audit", "audit touch targets", "fix small buttons", "buttons too small on mobile", "44px audit", "mobile tap targets".
+allowed-tools:
+  - Read
+  - Edit
+  - Glob
+  - Grep
+  - AskUserQuestion
+---
+
+# Touch Target Audit
 
 Audit and fix touch targets that are too small for comfortable mobile interaction in Tailwind CSS projects.
 
 ## The Problem
 
-The minimum recommended touch target size is **44×44px** (Apple's HIG) or **48×48dp** (Material Design). Many UI elements—buttons, links, icons—are too small on mobile, causing frustration and mis-taps.
+The minimum recommended touch target size is **44×44px** (Apple's HIG) or **48×48dp** (Material Design). Many UI elements — buttons, links, icons — are too small on mobile, causing frustration and mis-taps.
 
-## What This Command Audits
+## What This Skill Audits
 
 ### Touch Target Minimum Sizes
 
@@ -69,29 +80,16 @@ Scanning for touch targets that may be too small on mobile...
 
 ### Step 2: Verify This is a Tailwind Project
 
-Check for:
-- `tailwind.config.js` or `tailwind.config.ts`
-- Tailwind classes in component files
-
-If not a Tailwind project, inform the user and exit.
+Check for `tailwind.config.js` or `tailwind.config.ts` and Tailwind classes in component files. Exit if not a Tailwind project.
 
 ### Step 3: Search for Problematic Patterns
 
-Search in `.tsx`, `.jsx`, `.html`, `.vue`, `.svelte` files:
+Use Grep in `.tsx`, `.jsx`, `.html`, `.vue`, `.svelte` files:
 
-```bash
-# Find small icon buttons (w-6, w-7, w-8 with onClick or button)
-grep -rE "(w-[678]|h-[678]).*(onClick|button|Button)" --include="*.tsx" --include="*.jsx" .
-
-# Find small padding on buttons
-grep -rE "className=.*p-[12][^0-9].*button" --include="*.tsx" --include="*.jsx" .
-
-# Find small heights on interactive elements
-grep -rE "h-[89].*onClick|onClick.*h-[89]" --include="*.tsx" --include="*.jsx" .
-
-# Find cramped list items with click handlers
-grep -rE "py-[12][^0-9].*(onClick|href)" --include="*.tsx" --include="*.jsx" .
-```
+- Small icon buttons (w-6, w-7, w-8 with onClick or button)
+- Small padding on buttons (`p-[12]` near button)
+- Small heights on interactive elements (`h-[89]` near onClick)
+- Cramped list items with click handlers (`py-[12]` near onClick or href)
 
 ### Step 4: Analyze Context for Each Finding
 
@@ -143,19 +141,7 @@ Found X touch target issues across Y files.
 
 ### Step 6: Ask User What to Do
 
-Use AskUserQuestion:
-
-```
-Question: "How would you like to proceed?"
-Header: "Action"
-Options:
-  - label: "Fix all recommended"
-    description: "Apply fixes to all items marked 'Needs Fixing'"
-  - label: "Review one by one"
-    description: "Go through each finding and decide individually"
-  - label: "Show me the code"
-    description: "Show the actual code snippets for context"
-```
+Use AskUserQuestion with options: Fix all recommended / Review one by one / Show me the code.
 
 ### Step 7: Execute Based on User Choice
 
@@ -168,18 +154,7 @@ Apply fixes to all items in the "Needs Fixing" category:
 
 #### If "Review one by one":
 
-For each finding, show context and ask:
-```
-Question: "What should we do with this instance?"
-Header: "Fix"
-Options:
-  - label: "Apply fix"
-    description: "Increase touch target to 44px minimum"
-  - label: "Make it larger"
-    description: "Go beyond minimum (48px+) for important actions"
-  - label: "Skip"
-    description: "Leave as-is (desktop-only or non-interactive)"
-```
+For each finding, show context and ask: Apply fix / Make it larger (48px+) / Skip.
 
 ### Step 8: Verify Changes
 
@@ -189,33 +164,7 @@ After applying fixes:
 
 ### Step 9: Final Summary
 
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- AUDIT COMPLETE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-## Summary
-
-- Files scanned: X
-- Issues found: Y
-- Issues fixed: Z
-- Skipped: W
-
-## Changes Made
-
-- components/Header.tsx: Close button enlarged
-- components/Sidebar.tsx: Menu toggle enlarged
-- components/Nav.tsx: Nav links padded
-
-## Testing Checklist
-
-- [ ] Test on mobile device or Chrome DevTools mobile emulator
-- [ ] Try tapping each fixed element - should be comfortable
-- [ ] Check that spacing between elements is adequate
-- [ ] Verify desktop appearance is still acceptable
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
+Report files scanned, issues found, issues fixed, skipped, files modified, and a testing checklist (mobile device test, comfort of each tap target, adequate spacing, desktop appearance acceptable).
 
 ## Quick Reference
 
@@ -255,6 +204,7 @@ After applying fixes:
 - Always test on actual mobile devices, not just emulators
 - Consider adding `active:scale-95` for tactile feedback
 - Ensure adequate spacing between adjacent touch targets (at least 8px)
+- For a combined audit (typography + touch targets), invoke this skill alongside `font-audit`.
 
 ---
-*Last updated: 2025-02-03*
+*Last updated: 2026-06-03*

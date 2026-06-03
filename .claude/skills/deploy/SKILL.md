@@ -1,7 +1,6 @@
 ---
 name: deploy
-description: "Smart deploy: test-only (scp) when iterating, full deploy (commit+push+git pull) when confirmed working."
-argument-hint: "[optional: 'test' for quick push, or commit message hint for full deploy]"
+description: Smart deploy for the Quily chatbot to the VPS. Two modes — TEST (scp changed files to VPS, rebuild, restart, no commit, no GitHub push) for iterating; FULL (commit, push to GitHub, git pull on VPS, rebuild, restart) for confirmed-working changes. Auto-picks the mode based on conversation signals (uncommitted changes + active iteration → test; "it works"/"deploy"/commit-message hint → full). Use ONLY when the user explicitly asks to deploy, push to VPS, ship, or sync changes to the VPS. NEVER auto-fire on tangential mentions — this touches production. Always confirm the chosen mode before executing if there is ambiguity.
 allowed-tools:
   - Bash
   - Agent
@@ -29,14 +28,14 @@ The goal is to never commit untested code. Default to test mode unless there's a
 **Use TEST mode when:**
 - The conversation involves active development (writing code, fixing bugs, iterating)
 - The user just made changes and wants to try them
-- The user says "push this to test", "try this", "let's see if this works"
-- $ARGUMENTS is "test", "try", "quick", or empty during an active coding session
+- The user says "push this to test", "try this", "let's see if this works", "vps-push", "quick deploy"
+- The user invokes this skill mid-iteration without explicitly saying "deploy for real"
 - There are uncommitted changes AND no prior successful test in this session
 
 **Use FULL mode when:**
 - The user confirms something works: "it works", "confirmed", "looks good", "ship it"
 - The user explicitly says "commit", "deploy for real", "full deploy"
-- $ARGUMENTS contains a commit message hint (implies intent to commit)
+- The user provides a commit message hint (implies intent to commit)
 - The user says "deploy" after a previous test deploy in the same session confirmed working
 - The working tree is clean but there are unpushed commits (already committed, just needs push+deploy)
 
@@ -92,7 +91,7 @@ Pushed to VPS for testing (not committed).
 
   Files: <list>
   VPS:   bot restarted
-  Next:  test it, then run /deploy again to commit & ship.
+  Next:  test it, then invoke `deploy` again to commit & ship.
 ```
 
 ---
@@ -101,7 +100,7 @@ Pushed to VPS for testing (not committed).
 
 ### F1. Commit (if uncommitted changes)
 
-If `git status --short` shows changes, run `/commit-all` (passing $ARGUMENTS as hint if provided).
+If `git status --short` shows changes, stage and commit. Use the user's commit message hint if provided; otherwise draft a conventional commit message based on the diff. **Never** use `git add .` — stage specific files. **Never** mention Claude, Pi, or any AI tool in commit messages.
 
 If already clean but unpushed commits exist, skip to push.
 
@@ -130,3 +129,6 @@ Deployed.
 ```
 
 </process>
+
+---
+*Last updated: 2026-06-03*

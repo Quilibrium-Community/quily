@@ -1,6 +1,6 @@
 ---
 name: benchmark
-description: Run the eval suite across multiple models and compare results. Use for model selection decisions.
+description: Run the Quily QA eval suite (45-test full or 9-test focused) across multiple candidate LLM models and compare results side-by-side to inform model-selection decisions. Includes a baseline (current primary), candidate models, latency, pass-rate, category breakdowns (hallucination / factual / multi-hop), head-to-head discriminating tests, and a switch/stay/test-more verdict. Saves a comparison report to `.agents/reports/<date>-model-benchmark.md`. Use ONLY when the user explicitly asks to benchmark models, compare models, run a multi-model eval, or decide whether to switch the primary model. Do NOT auto-fire on tangential model mentions — this is a long-running operation (multiple minutes per model) and may cost money.
 allowed-tools:
   - Bash
   - Read
@@ -151,37 +151,7 @@ If using automated judge mode, reports are already scored — skip this step.
 <step name="compare">
 **Generate comparison report:**
 
-Read all JSON reports from `./results/` for this benchmark session. Build a comparison table:
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  Model Benchmark Comparison — <date>                        ║
-╠══════════════════════════════════════════════════════════════╣
-
-Overall Results:
-┌────────────────────────┬───────┬────────┬─────────┬────────┐
-│ Model                  │ Pass  │ Score  │ Latency │ Errors │
-├────────────────────────┼───────┼────────┼─────────┼────────┤
-│ DeepSeek V3.2 (base)   │ 30/34 │ 88.2%  │ 2.1s    │ 0      │
-│ DeepSeek R1 0528       │ 32/34 │ 92.1%  │ 4.8s    │ 0      │
-│ Qwen3 Coder Next       │ 31/34 │ 90.5%  │ 1.9s    │ 0      │
-│ DeepSeek V3.2          │ 31/34 │ 89.7%  │ 2.3s    │ 0      │
-└────────────────────────┴───────┴────────┴─────────┴────────┘
-
-Category Breakdown:
-┌────────────────────────┬──────────────┬──────────────┬──────────────┬──────────────┐
-│ Category               │ V3.1 (base)  │ R1 0528      │ Qwen3 Coder  │ V3.2         │
-├────────────────────────┼──────────────┼──────────────┼──────────────┼──────────────┤
-│ factual (9)            │ 9/9          │ 9/9          │ 8/9          │ 9/9          │
-│ hallucination (14)     │ 11/14        │ 13/14        │ 12/14        │ 12/14        │
-│ multi_hop (6)          │ 5/6          │ 5/6          │ 6/6          │ 5/6          │
-└────────────────────────┴──────────────┴──────────────┴──────────────┴──────────────┘
-
-Head-to-Head: Tests Where Models Differ:
-  nodeops-port-numbers:      V3.1 ✓  R1 ✓  Qwen ✗  V3.2 ✓
-  techalluc-metavm-acronym:  V3.1 ✗  R1 ✓  Qwen ✓  V3.2 ✗
-  ...
-```
+Read all JSON reports from `./results/` for this benchmark session. Build a comparison table showing overall results (pass / score / latency / errors per model), category breakdown (factual, hallucination, multi_hop), and head-to-head tests where models differ.
 
 Focus the analysis on:
 1. **Hallucination category** — this is the primary decision factor
@@ -267,3 +237,6 @@ These come from real failure modes hit in past sessions — saves debugging time
 
 6. **OpenRouter free-mode runs need both env var AND flag.** Set `NEXT_PUBLIC_FREE_MODE=true` on the dev server (route auth) AND pass `--api-key $OPENROUTER_API_KEY` to the harness — the harness no longer auto-reads `.env` for the API key.
 </notes>
+
+---
+*Last updated: 2026-06-03*

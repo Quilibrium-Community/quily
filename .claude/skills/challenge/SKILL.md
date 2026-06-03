@@ -1,6 +1,6 @@
 ---
 name: challenge
-description: Verify a bot answer against internal documentation
+description: Fact-check a Quily bot answer against the internal `docs/` knowledge base. Breaks the bot's response into individual claims, searches official docs, custom docs, and livestream transcripts in parallel, then verifies each claim (CORRECT / PARTIALLY CORRECT / INCORRECT / UNVERIFIABLE / HALLUCINATED) with citations. Use when the user provides a question + bot answer pair and asks to verify, fact-check, challenge, audit, or cross-reference it against the docs. Trigger phrases include "challenge this answer", "is this correct", "verify the bot's response", "fact-check this", "did the bot hallucinate", "audit this Q&A".
 allowed-tools:
   - Read
   - Glob
@@ -202,3 +202,6 @@ Bot: "To stake QUIL, go to stake.quilibrium.com and connect your wallet..."
 ```
 
 </examples>
+
+---
+*Last updated: 2026-06-03*

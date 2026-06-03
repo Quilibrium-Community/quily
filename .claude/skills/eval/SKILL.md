@@ -1,6 +1,6 @@
 ---
 name: eval
-description: Run the QA evaluation harness to test chatbot response quality
+description: Run the Quily QA evaluation harness against a single model (typically the current primary) to measure response quality. Three modes — Automated (full LLM judge via OpenRouter, ~$0.14/run), Manual (collect responses, judge with Claude in-session, $0), or Deterministic-only ($0, skips subjective criteria). Supports full suite (34 tests) or smoke tests (4 quick tests). Use ONLY when the user explicitly asks to run an eval, run the QA harness, test bot quality, or run a single-model evaluation. For multi-model comparison use `benchmark` instead. Do NOT auto-fire — this can cost money and take minutes.
 allowed-tools:
   - Bash
   - Read
@@ -107,3 +107,6 @@ If there were failures, ask if the user wants to investigate specific failing te
 - A full 34-test run takes 3-5 minutes depending on model latency
 - See `.agents/docs/qa-evaluation-harness.md` for full documentation
 </notes>
+
+---
+*Last updated: 2026-06-03*

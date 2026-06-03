@@ -1,6 +1,6 @@
 ---
 name: sync-docs
-description: Sync Quilibrium docs from GitHub and update RAG knowledge base
+description: Sync Quilibrium official documentation from the QuilibriumNetwork/docs GitHub repo into the local `docs/quilibrium-official/` folder, then optionally re-ingest the RAG knowledge base. Use ONLY when the user explicitly asks to sync docs, pull the latest documentation, refresh the official docs, check for doc updates from GitHub, or run a docs sync. Do NOT auto-fire on tangential mentions of "docs". For adding new custom docs use `add-doc`. For livestream transcripts use `sync-transcripts`.
 allowed-tools:
   - Bash
   - Read
@@ -125,3 +125,6 @@ The sync system:
 Source: github.com/QuilibriumNetwork/docs/docs (main branch)
 Destination: ./docs
 </notes>
+
+---
+*Last updated: 2026-06-03*
