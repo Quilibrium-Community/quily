@@ -11,7 +11,6 @@ import { join } from 'path';
 import { generateChannelRecap, type ChannelRecapResult } from '../services/recapGenerator';
 import { chunkMessage } from '../utils/messageChunker';
 import { suppressDiscordEmbeds } from '../formatter';
-import { runBugReportDigest } from './bugReportDigest';
 
 const EMBEDDING_MODEL = 'baai/bge-m3';
 
@@ -98,9 +97,7 @@ export function startDailyRecap(client: Client): void {
       }
 
       if (channelRecaps.length === 0) {
-        console.log('[digest] No channels had substantive content — skipping main post');
-        // Still try the dedicated bug-reports digest — it has its own source channel.
-        await runBugReportDigest(client, destChannelId);
+        console.log('[digest] No channels had substantive content — skipping post');
         return;
       }
 
@@ -143,10 +140,6 @@ export function startDailyRecap(client: Client): void {
       } catch (error) {
         console.error('[digest] Persistence failed (digest was still posted):', error);
       }
-
-      // Chain the dedicated bug-reports digest after the main digest.
-      // Runs only when DISCORD_BUG_REPORTS_CHANNEL_ID is set; errors are isolated.
-      await runBugReportDigest(client, destChannelId);
     } catch (error) {
       console.error('[digest] Failed to generate/post daily digest:', error);
     }

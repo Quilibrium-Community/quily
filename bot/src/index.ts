@@ -3,6 +3,7 @@ import { Client, GatewayIntentBits } from 'discord.js';
 import { registerMentionHandler } from './handlers/mention';
 import { startDailyStats } from './handlers/stats';
 import { startDailyRecap } from './handlers/dailyRecap';
+import { startBugReportDigest } from './handlers/bugReportDigest';
 
 const llmProvider = process.env.BOT_LLM_PROVIDER || 'openrouter';
 const providerKeyVar = llmProvider === 'chutes' ? 'CHUTES_API_KEY' : 'OPENROUTER_API_KEY';
@@ -27,6 +28,7 @@ client.once('ready', (c) => {
   console.log(`Bot ready! Logged in as ${c.user.tag} — ${c.guilds.cache.size} guild(s)`);
   startDailyStats(client);
   startDailyRecap(client);
+  startBugReportDigest(client);
 });
 
 registerMentionHandler(client);

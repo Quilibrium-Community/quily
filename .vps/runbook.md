@@ -152,6 +152,7 @@ CLOUDFLARE_API_TOKEN=<paste>
 # DISCORD_DIGEST_CHANNEL_IDS=1212446222367985726,1212447064861184060,1421639566841876510,1218937664208633957,1331077834084454410,1241046130704519238,1225460230628839586,1456158029627129961
 # DISCORD_RECAP_HOUR=14                    # UTC hour to post (default: 14)
 # DISCORD_BUG_REPORTS_CHANNEL_ID=1456158029627129961   # Dedicated bug-reports digest
+# BUG_DIGEST_HOUR=7                                    # UTC hour to post (default: 7)
 # BUG_TRIAGE_LLM_MODEL=                                # Override triage model
 # BUG_TRIAGE_VISION_MODEL=                             # Override vision model
 EOF
@@ -285,14 +286,15 @@ Note: The GitHub Actions workflow also generates a recap at 06:00 UTC (committed
 
 ## Bug Reports Digest
 
-A dedicated, triaged digest of `#quorum-bug-reports` posts to the same `#daily-digest` channel right after the main digest. It clusters similar reports, groups by severity (blocker / degraded / minor / question), surfaces "needs more info" reports with suggested follow-ups, and OCRs image attachments via a vision pre-pass.
+A dedicated, triaged digest of `#quorum-bug-reports` posts to the `#daily-digest` channel at **07:00 UTC** (separate from the main digest at 14:00 UTC). The early time slot is chosen so the lead dev sees it at the start of the day. It clusters similar reports, groups by severity (blocker / degraded / minor / question), surfaces "needs more info" reports with suggested follow-ups, and OCRs image attachments via a vision pre-pass.
 
 To enable:
 
 1. Set `DISCORD_BUG_REPORTS_CHANNEL_ID=1456158029627129961` in `.env`
-2. Restart the bot: `ssh quily-vps 'pm2 restart quily-bot'`
+2. (Optional) override the schedule with `BUG_DIGEST_HOUR=7` in `.env`
+3. Restart the bot: `ssh quily-vps 'pm2 restart quily-bot'`
 
-When set, this channel is automatically removed from `DISCORD_DIGEST_CHANNEL_IDS` at runtime to avoid double-posting.
+When `DISCORD_BUG_REPORTS_CHANNEL_ID` is set, this channel is automatically removed from `DISCORD_DIGEST_CHANNEL_IDS` at runtime to avoid double-posting.
 
 Cost: ~$0.05/month (triage) + under $0.01/day (vision OCR for image attachments).
 
@@ -305,8 +307,8 @@ A cron job commits and pushes the archive daily:
 ```bash
 ssh quily-vps
 crontab -e
-# Add this line (14:30 UTC = 30 min after digest fires at 14:00):
-30 14 * * * /home/quily/quily-chatbot/scripts/vps-archive-push.sh >> /var/log/quily-archive-push.log 2>&1
+# Add this line (07:30 UTC = 30 min after digest fires at 07:00):
+30 7 * * * /home/quily/quily-chatbot/scripts/vps-archive-push.sh >> /home/quily/quily-archive-push.log 2>&1
 ```
 
 Make the script executable on the VPS after `git pull`:

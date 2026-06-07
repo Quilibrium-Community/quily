@@ -1,6 +1,7 @@
 // bot/src/handlers/bugReportDigest.ts
 // Dedicated daily digest for #quorum-bug-reports.
-// Called from dailyRecap.ts AFTER the main digest posts.
+// Runs on its own schedule (default 07:00 UTC) so the lead dev sees it
+// early in their workday, independent of the main digest at 14:00 UTC.
 
 import type { Client, TextChannel } from 'discord.js';
 import { mkdir, writeFile } from 'fs/promises';
@@ -29,9 +30,45 @@ const SEVERITY_HEADERS: Record<Severity, string> = {
 };
 
 /**
- * Run the bug-reports digest: fetch, triage, post to Discord, write archive.
- * Called by the main daily-digest scheduler after the main digest is posted.
- * Returns silently on any failure (errors logged) so it never blocks the caller.
+ * Start the daily scheduled bug-reports digest.
+ * Posts to DISCORD_RECAP_CHANNEL_ID at BUG_DIGEST_HOUR (default 07:00 UTC).
+ * Independent of the main daily digest schedule.
+ */
+export function startBugReportDigest(client: Client): void {
+  const destChannelId = process.env.DISCORD_RECAP_CHANNEL_ID;
+  if (!destChannelId) {
+    console.log('[bug-digest] DISCORD_RECAP_CHANNEL_ID not set — bug-reports digest disabled');
+    return;
+  }
+
+  const sourceChannelId = process.env.DISCORD_BUG_REPORTS_CHANNEL_ID;
+  if (!sourceChannelId) {
+    console.log('[bug-digest] DISCORD_BUG_REPORTS_CHANNEL_ID not set — bug-reports digest disabled');
+    return;
+  }
+
+  const hour = parseInt(process.env.BUG_DIGEST_HOUR || '7', 10);
+  console.log(`[bug-digest] Scheduled for ${hour}:00 UTC → channel ${destChannelId}`);
+
+  let lastPostedDate = '';
+
+  setInterval(async () => {
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const currentHour = now.getUTCHours();
+    const currentMinute = now.getUTCMinutes();
+
+    if (currentHour !== hour || currentMinute !== 0 || lastPostedDate === todayStr) return;
+    lastPostedDate = todayStr;
+
+    await runBugReportDigest(client, destChannelId);
+  }, 60_000);
+}
+
+/**
+ * Run the bug-reports digest once: fetch, triage, post, write archive.
+ * Exported so the dry-run / manual-trigger scripts can call it.
+ * Returns silently on any failure (errors logged).
  */
 export async function runBugReportDigest(client: Client, destChannelId: string): Promise<void> {
   const sourceChannelId = process.env.DISCORD_BUG_REPORTS_CHANNEL_ID;
@@ -134,7 +171,7 @@ function composeDigest(result: BugTriageResult): string {
     sections.push(lines.join('\n'));
   }
 
-  const footer = `\n\n-# *Posted daily at ${process.env.DISCORD_RECAP_HOUR || '14'}:00 UTC*`;
+  const footer = `\n\n-# *Posted daily at ${process.env.BUG_DIGEST_HOUR || '7'}:00 UTC*`;
 
   return `${header}\n\n${sections.join('\n\n')}${footer}`;
 }
