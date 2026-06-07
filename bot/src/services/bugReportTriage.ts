@@ -5,7 +5,7 @@
 import type { Message, TextChannel } from 'discord.js';
 
 const DEFAULT_TRIAGE_MODEL = 'deepseek/deepseek-v4-flash';
-const DEFAULT_VISION_MODEL = 'google/gemini-flash-1.5';
+const DEFAULT_VISION_MODEL = 'google/gemini-2.5-flash-lite';
 const MAX_INPUT_CHARS = 40_000;
 const MIN_TEXT_LENGTH = 5;
 
