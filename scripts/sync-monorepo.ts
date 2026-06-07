@@ -18,7 +18,7 @@ const REPO_NAME = 'monorepo';
 const BRANCH = 'develop';
 const RELEASE_NOTES_PATH = 'RELEASE-NOTES';
 const OUT_PATH = resolve(__dirname, '../docs/custom/auto/Monorepo-Release-Notes.md');
-const DEFAULT_MODEL = 'deepseek/deepseek-chat-v3-0324';
+const DEFAULT_MODEL = 'deepseek/deepseek-v4-flash';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

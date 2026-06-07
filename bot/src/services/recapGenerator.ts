@@ -79,7 +79,7 @@ export function filterRecapMessages(messages: Message[]): FilteredMessage[] {
 // LLM Summarizer
 // ---------------------------------------------------------------------------
 
-const DEFAULT_RECAP_MODEL = 'deepseek/deepseek-chat-v3-0324';
+const DEFAULT_RECAP_MODEL = 'deepseek/deepseek-v4-flash';
 const MAX_INPUT_CHARS = 60_000;
 
 const SKIP_EMPTY_RULE = `

@@ -1,7 +1,7 @@
 // scripts/sync-discord/recap-summarizer.ts
 import type { FilteredMessage } from './recap-filter.js';
 
-const DEFAULT_MODEL = 'deepseek/deepseek-chat-v3-0324';
+const DEFAULT_MODEL = 'deepseek/deepseek-v4-flash';
 const MAX_INPUT_CHARS = 60_000; // ~15,000 tokens
 
 /**
