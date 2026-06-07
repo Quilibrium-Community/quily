@@ -11,6 +11,7 @@ import { join } from 'path';
 import { generateChannelRecap, type ChannelRecapResult } from '../services/recapGenerator';
 import { chunkMessage } from '../utils/messageChunker';
 import { suppressDiscordEmbeds } from '../formatter';
+import { runBugReportDigest } from './bugReportDigest';
 
 const EMBEDDING_MODEL = 'baai/bge-m3';
 
@@ -46,7 +47,10 @@ export function startDailyRecap(client: Client): void {
   }
 
   const hour = parseInt(process.env.DISCORD_RECAP_HOUR || '14', 10);
-  const channelIds = parseDigestChannelIds();
+  const bugReportsChannelId = process.env.DISCORD_BUG_REPORTS_CHANNEL_ID;
+  // When the dedicated bug-reports digest is enabled, exclude that channel
+  // from the main digest to avoid double-posting the same channel's content.
+  const channelIds = parseDigestChannelIds().filter((id) => id !== bugReportsChannelId);
 
   console.log(`[digest] Daily digest scheduled for ${hour}:00 UTC → channel ${destChannelId} (${channelIds.length} source channels)`);
 
@@ -94,7 +98,9 @@ export function startDailyRecap(client: Client): void {
       }
 
       if (channelRecaps.length === 0) {
-        console.log('[digest] No channels had substantive content — skipping post');
+        console.log('[digest] No channels had substantive content — skipping main post');
+        // Still try the dedicated bug-reports digest — it has its own source channel.
+        await runBugReportDigest(client, destChannelId);
         return;
       }
 
@@ -137,6 +143,10 @@ export function startDailyRecap(client: Client): void {
       } catch (error) {
         console.error('[digest] Persistence failed (digest was still posted):', error);
       }
+
+      // Chain the dedicated bug-reports digest after the main digest.
+      // Runs only when DISCORD_BUG_REPORTS_CHANNEL_ID is set; errors are isolated.
+      await runBugReportDigest(client, destChannelId);
     } catch (error) {
       console.error('[digest] Failed to generate/post daily digest:', error);
     }

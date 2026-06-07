@@ -138,7 +138,7 @@ CLOUDFLARE_ACCOUNT_ID=<paste>
 CLOUDFLARE_API_TOKEN=<paste>
 
 # Bot config (optional — defaults are sensible)
-# BOT_MODEL=deepseek/deepseek-chat-v3-0324
+# BOT_MODEL=deepseek/deepseek-v4-flash
 # BOT_FALLBACK_MODELS=qwen/qwen3-32b,mistralai/mistral-small-3.2-24b-instruct
 # DISCORD_DAILY_LIMIT=200
 # MAX_MESSAGE_LENGTH=2000
@@ -151,6 +151,9 @@ CLOUDFLARE_API_TOKEN=<paste>
 # DISCORD_RECAP_CHANNEL_ID=1487122952532131881   # Channel for daily recap post
 # DISCORD_DIGEST_CHANNEL_IDS=1212446222367985726,1212447064861184060,1421639566841876510,1218937664208633957,1331077834084454410,1241046130704519238,1225460230628839586,1456158029627129961
 # DISCORD_RECAP_HOUR=14                    # UTC hour to post (default: 14)
+# DISCORD_BUG_REPORTS_CHANNEL_ID=1456158029627129961   # Dedicated bug-reports digest
+# BUG_TRIAGE_LLM_MODEL=                                # Override triage model
+# BUG_TRIAGE_VISION_MODEL=                             # Override vision model
 EOF
 chmod 600 /home/quily/quily-chatbot/bot/.env'
 ```
@@ -280,4 +283,40 @@ Note: The GitHub Actions workflow also generates a recap at 06:00 UTC (committed
 
 ---
 
-*Created: 2026-03-18 | Updated: 2026-03-28*
+## Bug Reports Digest
+
+A dedicated, triaged digest of `#quorum-bug-reports` posts to the same `#daily-digest` channel right after the main digest. It clusters similar reports, groups by severity (blocker / degraded / minor / question), surfaces "needs more info" reports with suggested follow-ups, and OCRs image attachments via a vision pre-pass.
+
+To enable:
+
+1. Set `DISCORD_BUG_REPORTS_CHANNEL_ID=1456158029627129961` in `.env`
+2. Restart the bot: `ssh quily-vps 'pm2 restart quily-bot'`
+
+When set, this channel is automatically removed from `DISCORD_DIGEST_CHANNEL_IDS` at runtime to avoid double-posting.
+
+Cost: ~$0.05/month (triage) + under $0.01/day (vision OCR for image attachments).
+
+### Local archive (cron-pushed to GitHub)
+
+Each digest is written to `archives/quorum-bug-reports/YYYY-MM-DD.md` on the VPS. This directory is OUTSIDE `docs/` so it is NOT ingested into the RAG knowledge base.
+
+A cron job commits and pushes the archive daily:
+
+```bash
+ssh quily-vps
+crontab -e
+# Add this line (14:30 UTC = 30 min after digest fires at 14:00):
+30 14 * * * /home/quily/quily-chatbot/scripts/vps-archive-push.sh >> /var/log/quily-archive-push.log 2>&1
+```
+
+Make the script executable on the VPS after `git pull`:
+
+```bash
+chmod +x /home/quily/quily-chatbot/scripts/vps-archive-push.sh
+```
+
+The script stages ONLY `archives/`, so it never touches other VPS working-tree changes. If the push fails (network blip, auth, conflict), it logs and exits clean — next day's run retries. The directory has no retention policy; archives accumulate indefinitely.
+
+---
+
+*Created: 2026-03-18 | Updated: 2026-06-07*
