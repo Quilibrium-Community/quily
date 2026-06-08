@@ -209,7 +209,7 @@ Clustering rules (BE AGGRESSIVE — under-clustering is worse than over-clusteri
 - "Message history slow to load", "messages out of date order", "history shows gaps", "scroll bar shows loading" on the SAME app are ONE cluster (message-history loading behavior), not four.
 - "Node won't start" and "node hangs at startup" -> same cluster.
 - Different components stay separate.
-- Set count to the number of distinct user reports that belong to the cluster, NOT the number of quotes.
+- Set count to the TOTAL NUMBER OF MESSAGES that belong to the cluster (NOT distinct users, NOT example_quotes length). If the same user posted 5 messages about the same issue, count=5. If 3 users each posted 1 message, count=3. If 2 users posted a total of 7 messages, count=7.
 
 Severity rules — IMPORTANT: severity describes the BUG, not how many people reported it. A single "wallet shows zero balance" report is high severity even with count=1. Fifty reports of "button is misaligned" are low.
 - high: data loss, funds at risk, security issue, node/qclient/wallet completely unusable, install fails completely, core functionality broken with no workaround.
