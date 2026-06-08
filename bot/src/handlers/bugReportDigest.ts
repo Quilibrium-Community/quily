@@ -1,11 +1,13 @@
 // bot/src/handlers/bugReportDigest.ts
 // Dedicated daily digest for #quorum-bug-reports.
-// Runs on its own schedule (default 07:00 UTC) so the lead dev sees it
-// early in their workday, independent of the main digest at 14:00 UTC.
+// Posts INTO the same bug-reports channel (so the lead dev sees the triage
+// alongside the raw reports they already monitor). Runs on its own schedule
+// (default 07:00 UTC), independent of the main digest at 14:00 UTC.
 
 import type { Client, TextChannel } from 'discord.js';
 import { mkdir, writeFile } from 'fs/promises';
-import { join } from 'path';
+import { dirname, join, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import {
   generateBugReportDigest,
   type BugTriageResult,
@@ -35,18 +37,15 @@ const SEVERITY_HEADERS: Record<Severity, string> = {
  * Independent of the main daily digest schedule.
  */
 export function startBugReportDigest(client: Client): void {
-  const destChannelId = process.env.DISCORD_RECAP_CHANNEL_ID;
-  if (!destChannelId) {
-    console.log('[bug-digest] DISCORD_RECAP_CHANNEL_ID not set — bug-reports digest disabled');
-    return;
-  }
-
   const sourceChannelId = process.env.DISCORD_BUG_REPORTS_CHANNEL_ID;
   if (!sourceChannelId) {
     console.log('[bug-digest] DISCORD_BUG_REPORTS_CHANNEL_ID not set — bug-reports digest disabled');
     return;
   }
 
+  // Post into the bug-reports channel itself by default. Override with
+  // DISCORD_BUG_REPORTS_POST_CHANNEL_ID if you want the digest in a separate channel.
+  const destChannelId = process.env.DISCORD_BUG_REPORTS_POST_CHANNEL_ID || sourceChannelId;
   const hour = parseInt(process.env.BUG_DIGEST_HOUR || '7', 10);
   console.log(`[bug-digest] Scheduled for ${hour}:00 UTC → channel ${destChannelId}`);
 
@@ -208,8 +207,13 @@ function stripMentions(text: string): string {
 // Local archive
 // ---------------------------------------------------------------------------
 
+// Resolve the repo root independently of process.cwd().
+// The bot's bundled entrypoint runs at <repo>/bot/dist/index.js, so two levels
+// up from that file lands at the repo root regardless of where pm2 cd's first.
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+
 async function writeArchive(result: BugTriageResult, digestText: string): Promise<void> {
-  const archiveDir = join(process.cwd(), 'archives', 'quorum-bug-reports');
+  const archiveDir = join(REPO_ROOT, 'archives', 'quorum-bug-reports');
   const filePath = join(archiveDir, `${result.date}.md`);
 
   const titleDate = new Date(result.date + 'T00:00:00Z').toLocaleDateString('en-US', {
