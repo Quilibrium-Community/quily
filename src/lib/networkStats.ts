@@ -79,10 +79,11 @@ export async function computeStats(): Promise<NetworkSnapshot> {
     totalWorkers += active;
 
     // Shard health (matching dashboard thresholds)
+    // Unassigned shards (0 provers) are tracked separately in `unassigned` below — not folded into haltRisk.
     const activeProvers = counts.active || 0;
     if (activeProvers >= 6) healthy++;
     else if (activeProvers >= 3) warning++;
-    else haltRisk++;
+    else if (activeProvers >= 1) haltRisk++;
 
     // Worker activity
     workersActive += counts.active || 0;
@@ -198,10 +199,15 @@ export function formatDiscordStats(snapshot: NetworkSnapshot, history: NetworkSn
   msg += `🖥️ Workers: **${snapshot.totalWorkers.toLocaleString('en-US')}**\n`;
 
   // Shard Health (quick glance before trends)
+  // Denominator excludes unassigned shards so percentages reflect actively-served shards only.
+  const assigned = total - (snapshot.unassigned || 0);
   msg += `\n❤️ **Shard Health**\n`;
-  msg += `🟢 Healthy (≥6): **${snapshot.healthy.toLocaleString('en-US')}** (${fmtPct(snapshot.healthy, total)})\n`;
-  msg += `🟡 Warning (<6): **${snapshot.warning.toLocaleString('en-US')}** (${fmtPct(snapshot.warning, total)})\n`;
-  msg += `🔴 Halt Risk (<3): **${snapshot.haltRisk.toLocaleString('en-US')}** (${fmtPct(snapshot.haltRisk, total)})\n`;
+  msg += `🟢 Healthy (≥6): **${snapshot.healthy.toLocaleString('en-US')}** (${fmtPct(snapshot.healthy, assigned)})\n`;
+  msg += `🟡 Warning (3–5): **${snapshot.warning.toLocaleString('en-US')}** (${fmtPct(snapshot.warning, assigned)})\n`;
+  msg += `🔴 Halt Risk (1–2): **${snapshot.haltRisk.toLocaleString('en-US')}** (${fmtPct(snapshot.haltRisk, assigned)})\n`;
+  if (snapshot.unassigned > 0) {
+    msg += `\n*Note: ${snapshot.unassigned.toLocaleString('en-US')} shard${snapshot.unassigned === 1 ? ' is' : 's are'} unassigned (0 provers) — see Ring Distribution below.*\n`;
+  }
 
   // Trends (most interesting section)
   const trendLines = buildDiscordTrends(snapshot, history);
@@ -243,11 +249,15 @@ export function formatWebStats(snapshot: NetworkSnapshot): string {
   msg += '\n';
 
   msg += '### Shard Health\n\n';
+  const assigned = total - (snapshot.unassigned || 0);
   msg += '| Status | Count | % |\n';
   msg += '|---|---|---|\n';
-  msg += `| 🟢 Healthy (≥6 provers) | ${snapshot.healthy.toLocaleString('en-US')} | ${((snapshot.healthy / total) * 100).toFixed(1)}% |\n`;
-  msg += `| 🟡 Warning (<6 provers) | ${snapshot.warning.toLocaleString('en-US')} | ${((snapshot.warning / total) * 100).toFixed(1)}% |\n`;
-  msg += `| 🔴 Halt Risk (<3 provers) | ${snapshot.haltRisk.toLocaleString('en-US')} | ${((snapshot.haltRisk / total) * 100).toFixed(1)}% |\n`;
+  msg += `| 🟢 Healthy (≥6 provers) | ${snapshot.healthy.toLocaleString('en-US')} | ${assigned > 0 ? ((snapshot.healthy / assigned) * 100).toFixed(1) : '0.0'}% |\n`;
+  msg += `| 🟡 Warning (3–5 provers) | ${snapshot.warning.toLocaleString('en-US')} | ${assigned > 0 ? ((snapshot.warning / assigned) * 100).toFixed(1) : '0.0'}% |\n`;
+  msg += `| 🔴 Halt Risk (1–2 provers) | ${snapshot.haltRisk.toLocaleString('en-US')} | ${assigned > 0 ? ((snapshot.haltRisk / assigned) * 100).toFixed(1) : '0.0'}% |\n`;
+  if (snapshot.unassigned > 0) {
+    msg += `\n*Note: ${snapshot.unassigned.toLocaleString('en-US')} shard${snapshot.unassigned === 1 ? ' is' : 's are'} unassigned (0 provers) — see Ring Distribution below.*\n`;
+  }
   msg += '\n';
 
   msg += '### Ring Distribution\n\n';
