@@ -13,7 +13,7 @@ const MIN_TEXT_LENGTH = 5;
 // Types
 // ---------------------------------------------------------------------------
 
-export type Severity = 'blocker' | 'degraded' | 'minor' | 'question';
+export type Severity = 'high' | 'medium' | 'low' | 'question';
 
 export interface BugCluster {
   canonical_symptom: string;
@@ -176,8 +176,8 @@ Output a single JSON object with two keys:
   "clusters": [
     {
       "canonical_symptom": "short normalized description of the issue",
-      "component": "node | qclient | rpc | install | network | unclear",
-      "severity": "blocker | degraded | minor | question",
+      "component": "node | qclient | client | rpc | install | network | unclear",
+      "severity": "high | medium | low | question",
       "count": <int>,
       "os_versions": ["Linux 2.1.3", "macOS 2.1.3"],
       "example_quotes": [
@@ -194,21 +194,34 @@ Output a single JSON object with two keys:
   ]
 }
 
-Clustering rules:
-- Group reports that describe the same symptom + component, even if worded differently.
-- "Node won't start" and "node hangs at startup" -> same cluster.
-- "RPC timeout on token balance" and "qclient balance hangs" -> same cluster.
-- Different components stay separate even if symptoms sound similar.
+Component values:
+- node: backend node daemon (start, sync, peer discovery, store)
+- qclient: qclient CLI tool
+- client: frontend app / UI (Quorum app, DMs, message history, scroll, layout)
+- rpc: RPC endpoint behavior, timeouts on calls
+- install: setup/install/upgrade process
+- network: networking, peers, reachability
+- unclear: cannot determine
 
-Severity rules:
-- blocker: node/qclient unusable, install fails completely, network unreachable
-- degraded: partial functionality lost, intermittent failures, performance issues
-- minor: cosmetic, edge-case, single-user environment issues
-- question: not really a bug, user is asking how to do something
+Clustering rules (BE AGGRESSIVE — under-clustering is worse than over-clustering):
+- Group reports that describe the same underlying problem, even if worded very differently or attached to different symptoms.
+- The same user posting multiple consecutive messages about the same general issue MUST be one cluster, not many. Merge their quotes into example_quotes.
+- "Message history slow to load", "messages out of date order", "history shows gaps", "scroll bar shows loading" on the SAME app are ONE cluster (message-history loading behavior), not four.
+- "Node won't start" and "node hangs at startup" -> same cluster.
+- Different components stay separate.
+- Set count to the number of distinct user reports that belong to the cluster, NOT the number of quotes.
+
+Severity rules — IMPORTANT: severity describes the BUG, not how many people reported it. A single "wallet shows zero balance" report is high severity even with count=1. Fifty reports of "button is misaligned" are low.
+- high: data loss, funds at risk, security issue, node/qclient/wallet completely unusable, install fails completely, core functionality broken with no workaround.
+- medium: important functionality has problems but a workaround exists, intermittent failures, significant performance degradation, confusing UX that blocks common flows.
+- low: cosmetic, minor UI quirks, rendering details, mild performance hiccups, edge-case behaviors that don't block real usage.
+- question: not a bug — user is asking how to do something or proposing a feature.
 
 needs_more_info rules:
-- A report is "generic" if ALL of: component is "unclear", no version mentioned, symptom is under 8 words. Examples: "doesn't work", "broken again", "help", "it's not working anymore".
-- suggested_followup is a templated string asking for the missing fields. Keep it under 100 chars.
+- ONLY include here messages that genuinely look like an attempt to report a bug but lack the detail to act on it. Examples: "doesn't work", "broken again", "help me", "node not working".
+- DO NOT include: jokes, sarcasm, banter, rhetorical questions, "wishful" comments, bot @-mention bait. These are channel noise — omit them ENTIRELY from the output, do not classify them anywhere.
+- DO NOT include short reactions or conversational replies between users.
+- suggested_followup is a short string asking for the missing fields. Keep it under 100 chars.
 
 example_quotes:
 - Max 3 per cluster. Pick the most informative ones.

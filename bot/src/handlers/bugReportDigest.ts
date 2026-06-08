@@ -18,17 +18,17 @@ import { chunkMessage } from '../utils/messageChunker';
 import { suppressDiscordEmbeds } from '../formatter';
 
 const SEVERITY_ORDER: Record<Severity, number> = {
-  blocker: 0,
-  degraded: 1,
-  minor: 2,
+  high: 0,
+  medium: 1,
+  low: 2,
   question: 3,
 };
 
 const SEVERITY_HEADERS: Record<Severity, string> = {
-  blocker: '🔴 Blockers',
-  degraded: '🟡 Degraded',
-  minor: '🟢 Minor',
-  question: '❓ Questions',
+  high: '🔴 High severity',
+  medium: '🟡 Medium severity',
+  low: '🟢 Low severity',
+  question: '❓ Questions / Feature requests',
 };
 
 /**
@@ -128,49 +128,56 @@ function composeDigest(result: BugTriageResult): string {
     timeZone: 'UTC',
   });
 
+  // Honest counts: sum reported counts from clusters + needs_more_info entries.
+  // Avoids inflating the header with messages that were dropped as noise.
+  const triagedReports =
+    result.clusters.reduce((sum, c) => sum + (c.count || 0), 0) + result.needs_more_info.length;
   const distinctIssues = result.clusters.length;
-  const header = `**🐛 Bug Reports Digest - ${titleDate}**\n*Last 24h · ${result.totalReports} reports · ${distinctIssues} distinct issue${distinctIssues === 1 ? '' : 's'}*`;
+  const issuesLabel = `${distinctIssues} distinct issue${distinctIssues === 1 ? '' : 's'}`;
+  const reportsLabel = `${triagedReports} report${triagedReports === 1 ? '' : 's'}`;
+  const header = `**🐛 Bug Reports Digest - ${titleDate}**\n*Last 24h · ${reportsLabel} · ${issuesLabel}*`;
 
-  // Group clusters by severity
+  // Group clusters by severity, defaulting unknown values to medium so nothing falls through.
   const bySeverity: Record<Severity, BugCluster[]> = {
-    blocker: [],
-    degraded: [],
-    minor: [],
+    high: [],
+    medium: [],
+    low: [],
     question: [],
   };
   for (const cluster of result.clusters) {
-    const sev = SEVERITY_ORDER[cluster.severity] !== undefined ? cluster.severity : 'minor';
+    const sev = SEVERITY_ORDER[cluster.severity] !== undefined ? cluster.severity : 'medium';
     bySeverity[sev].push(cluster);
   }
 
-  // Sort each bucket by count desc
+  // Within a severity bucket, show higher-count clusters first.
   for (const sev of Object.keys(bySeverity) as Severity[]) {
     bySeverity[sev].sort((a, b) => b.count - a.count);
   }
 
   const sections: string[] = [];
 
-  for (const sev of ['blocker', 'degraded', 'minor', 'question'] as Severity[]) {
+  for (const sev of ['high', 'medium', 'low', 'question'] as Severity[]) {
     const clusters = bySeverity[sev];
     if (clusters.length === 0) continue;
 
-    const sevSection = [`**${SEVERITY_HEADERS[sev]}**`, ''];
-    for (const cluster of clusters) {
-      sevSection.push(renderCluster(cluster));
-    }
-    sections.push(sevSection.join('\n'));
+    const renderedClusters = clusters.map(renderCluster);
+    // Empty line between clusters within the same severity section
+    const sevSection = `**${SEVERITY_HEADERS[sev]}**\n\n${renderedClusters.join('\n\n')}`;
+    sections.push(sevSection);
   }
 
   if (result.needs_more_info.length > 0) {
-    const lines = [`**❓ Needs more info · ${result.needs_more_info.length} report${result.needs_more_info.length === 1 ? '' : 's'}**`, ''];
+    const count = result.needs_more_info.length;
+    const lines = [`**❓ Needs more info · ${count} report${count === 1 ? '' : 's'}**`, ''];
     for (const nmi of result.needs_more_info) {
-      const quote = stripMentions(nmi.quote).slice(0, 200);
+      const quote = truncate(stripMentions(nmi.quote), 200);
       lines.push(`- "${quote}" — ${nmi.author} → ${nmi.suggested_followup}`);
     }
     sections.push(lines.join('\n'));
   }
 
-  const footer = `\n\n-# *Posted daily at ${process.env.BUG_DIGEST_HOUR || '7'}:00 UTC*`;
+  const hour = process.env.BUG_DIGEST_HOUR || '7';
+  const footer = `\n\n-# *Severity rates the bug, not how many users hit it · count = reports · Next digest tomorrow ${hour}:00 UTC*`;
 
   return `${header}\n\n${sections.join('\n\n')}${footer}`;
 }
@@ -192,7 +199,7 @@ function renderCluster(cluster: BugCluster): string {
   }
 
   for (const quote of cluster.example_quotes.slice(0, 3)) {
-    const text = stripMentions(quote.text).slice(0, 200);
+    const text = truncate(stripMentions(quote.text), 200);
     lines.push(`> "${text}" — ${quote.author}`);
   }
 
@@ -201,6 +208,19 @@ function renderCluster(cluster: BugCluster): string {
 
 function stripMentions(text: string): string {
   return text.replace(/@(\w+)/g, '$1').replace(/<@!?\d+>/g, '');
+}
+
+/**
+ * Truncate at a word boundary with an ellipsis when over the limit.
+ * Returns the original text if already within the limit.
+ */
+function truncate(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const slice = text.slice(0, max - 1);
+  const lastSpace = slice.lastIndexOf(' ');
+  // If there's a reasonable word boundary, cut there. Otherwise just hard-cut.
+  const cut = lastSpace > max * 0.6 ? slice.slice(0, lastSpace) : slice;
+  return cut.trimEnd() + '…';
 }
 
 // ---------------------------------------------------------------------------
