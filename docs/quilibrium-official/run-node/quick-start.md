@@ -68,6 +68,14 @@ ufw deny out to 224.0.0.0/4
 ufw deny out to 255.255.255.255
 ```
 
+## Operating System Tuning
+
+The node opens many file descriptors (one per RocksDB SST, one per peer connection, one per worker IPC channel, etc.) and benefits from larger network buffer sizes than the OS default.
+Before running for any extended period, follow the OS-specific tuning guide:
+
+- [Linux Configuration](/docs/run-node/linux_configuration) — `ulimit -n`, `LimitNOFILE`, and `sysctl` network tuning
+- [macOS Manual Install](/docs/run-node/node-provisioning/manual-install/macos) — `launchctl limit` and `sysctl kern.maxfiles`
+
 ## Key and Store Backups
 
 In order to run a node, access rewards or make token operations for your account, you need the node's **keyset** consisting of the `config.yml` and `keys.yml` files. You are strongly advised to maintain copies of these files in an encrypted backup.
@@ -76,13 +84,17 @@ In order to run a node, access rewards or make token operations for your account
 
 If this worker data is lost, it can be restored by running the node which will fetch the data from it's shard peers, but will result in missed rewards and penalties if the worker data is not restored in time.
 
-Keyset and worker data are stored in your node's `.config` directory:
+Keyset and worker data are stored in the `.config` directory relative to the node's working directory:
 
 ```text
 .config/keys.yml
 .config/config.yml
 .config/worker-store/[worker-id]/
 ```
-:::info
-If you used the `release_autorun.sh` script, your config directory should be `ceremonyclient/node/.config`.
+
+If you installed via the [Manual Install](/docs/run-node/node-provisioning/manual-install) guide, this is `/opt/quilibrium/node/.config/`.
+If you used a legacy method like `release_autorun.sh`, your config directory is `ceremonyclient/node/.config/`.
+
+:::tip
+You can override the config path with the `--config` (or `-c`) flag, e.g. `quilibrium-node --config /path/to/.config`.
 :::

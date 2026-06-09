@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-04-21T07:23:33.843Z",
+  "lastSync": "2026-06-09T09:02:22.603Z",
   "source": {
     "owner": "QuilibriumNetwork",
     "repo": "docs",
@@ -1549,10 +1549,10 @@
     },
     "run-node/linux_configuration.md": {
       "path": "run-node/linux_configuration.md",
-      "sha": "5a7b100dfc103b793546068d62b162a5d83a3222",
-      "contentHash": "917395480de93e333f53c6706249a4c8",
-      "syncedAt": "2026-03-20T09:33:04.950Z",
-      "size": 2502
+      "sha": "ecd4d9274bb3e926280dda44935a1549bae23002",
+      "contentHash": "1b5a9f3e4d35f6c11f90a3c7a1952c36",
+      "syncedAt": "2026-06-09T09:02:21.936Z",
+      "size": 6009
     },
     "run-node/node-provisioning/index.md": {
       "path": "run-node/node-provisioning/index.md",
@@ -1591,17 +1591,17 @@
     },
     "run-node/node-provisioning/manual-install/linux.md": {
       "path": "run-node/node-provisioning/manual-install/linux.md",
-      "sha": "8b92cd79846134472afac0818507c529f85c1858",
-      "contentHash": "5054dde8904cbfd45850cb0e339a06eb",
-      "syncedAt": "2026-03-20T09:33:06.504Z",
-      "size": 7034
+      "sha": "204a54ceae9a647eba28e65058324683aadb98c9",
+      "contentHash": "4cdec80602f39274bd21b2746966aa46",
+      "syncedAt": "2026-06-09T09:02:22.196Z",
+      "size": 7454
     },
     "run-node/node-provisioning/manual-install/macos.md": {
       "path": "run-node/node-provisioning/manual-install/macos.md",
-      "sha": "2f65607534f0b186e3561df618e14de2e0c1898e",
-      "contentHash": "ef2154e54b8da7266aed419afda1613f",
-      "syncedAt": "2026-03-20T09:33:06.740Z",
-      "size": 6931
+      "sha": "ee2137c23bc05d6feabf6519ee83c6a2f7e5920d",
+      "contentHash": "c419dddb60451fb841b622121c9600b2",
+      "syncedAt": "2026-06-09T09:02:22.380Z",
+      "size": 8935
     },
     "run-node/node-provisioning/qtools/index.md": {
       "path": "run-node/node-provisioning/qtools/index.md",
@@ -1745,10 +1745,10 @@
     },
     "run-node/quick-start.md": {
       "path": "run-node/quick-start.md",
-      "sha": "ecdf85f7fde9416bf1be18c7e015e77257b71fea",
-      "contentHash": "096583a6f858db1a5046cdbf6db402e2",
-      "syncedAt": "2026-03-20T09:33:11.975Z",
-      "size": 5451
+      "sha": "cd74208d193a275994927bd15b474424fa33f489",
+      "contentHash": "d440d392e1db2f76c48fc72a3c2b8727",
+      "syncedAt": "2026-06-09T09:02:22.553Z",
+      "size": 6288
     },
     "run-node/shard-enrollment-process.md": {
       "path": "run-node/shard-enrollment-process.md",

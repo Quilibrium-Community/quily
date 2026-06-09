@@ -88,7 +88,71 @@ Create a second symlink in `/usr/local/bin` so you can run `quilibrium-node` fro
 sudo ln -sf /opt/quilibrium/node/quilibrium-node /usr/local/bin/quilibrium-node
 ```
 
-## 3. Set Up a launchd Service
+## 3. Raise the File Descriptor Limit
+
+macOS ships with very conservative file descriptor limits — typically `256` for an interactive shell and `1024` system-wide.
+The node opens many file descriptors (one per RocksDB SST file across the hypergraph, clock, key, and token stores; one per libp2p peer; one per worker IPC channel) and will fail under those defaults.
+
+Raise the system-wide limits with `sysctl`:
+
+```bash
+sudo sysctl -w kern.maxfiles=524288
+sudo sysctl -w kern.maxfilesperproc=524288
+```
+
+To persist across reboots, create or edit `/etc/sysctl.conf`:
+
+```text
+kern.maxfiles=524288
+kern.maxfilesperproc=524288
+```
+
+Then tell `launchd` to apply the same per-session limits.
+Create `/Library/LaunchDaemons/limit.maxfiles.plist`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>limit.maxfiles</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>launchctl</string>
+    <string>limit</string>
+    <string>maxfiles</string>
+    <string>524288</string>
+    <string>524288</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>ServiceIPC</key>
+  <false/>
+</dict>
+</plist>
+```
+
+Load it:
+
+```bash
+sudo launchctl load -w /Library/LaunchDaemons/limit.maxfiles.plist
+```
+
+Verify:
+
+```bash
+launchctl limit maxfiles
+```
+
+You should see `524288 524288` (soft and hard).
+
+:::tip
+The node's own launchd plist (next step) also sets a per-service `SoftResourceLimits` so the daemon picks up the new ceiling without needing a reboot.
+:::
+
+## 4. Set Up a launchd Service
 
 macOS uses `launchd` instead of `systemd`. Create a plist file:
 
@@ -120,6 +184,16 @@ Paste the following:
   <string>/opt/quilibrium/node/node.log</string>
   <key>StandardErrorPath</key>
   <string>/opt/quilibrium/node/node-error.log</string>
+  <key>SoftResourceLimits</key>
+  <dict>
+    <key>NumberOfFiles</key>
+    <integer>524288</integer>
+  </dict>
+  <key>HardResourceLimits</key>
+  <dict>
+    <key>NumberOfFiles</key>
+    <integer>524288</integer>
+  </dict>
 </dict>
 </plist>
 ```
@@ -132,9 +206,10 @@ sudo launchctl load /Library/LaunchDaemons/com.quilibrium.node.plist
 
 :::info
 `RunAtLoad` and `KeepAlive` ensure the node starts automatically on boot and restarts if it exits.
+The `SoftResourceLimits` / `HardResourceLimits` entries raise the daemon's per-process file descriptor cap to match the system-wide `kern.maxfilesperproc` you set in step 3.
 :::
 
-## 4. Verify the Node Is Running
+## 5. Verify the Node Is Running
 
 ```bash
 sudo launchctl list | grep quilibrium

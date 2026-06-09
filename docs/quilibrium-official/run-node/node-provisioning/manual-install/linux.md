@@ -115,14 +115,21 @@ KillSignal=SIGINT
 RestartKillSignal=SIGINT
 FinalKillSignal=SIGKILL
 TimeoutStopSec=30s
+LimitNOFILE=1048576
 
 [Install]
 WantedBy=multi-user.target
 ```
 
 :::tip
-Because `ExecStart` points directly at the node binary (via the symlink), systemd can send `SIGINT` to the node process for graceful shutdown.
-This avoids the penalty risk described in the [Linux Configuration](/docs/run-node/linux_configuration) page where `release_autorun.sh` does not trap `SIGINT`.
+Two important properties on this unit:
+
+- `ExecStart` points directly at the node binary (via the symlink), so systemd can send `SIGINT` for graceful shutdown.
+- `LimitNOFILE=1048576` raises the file descriptor cap from the default `1024` to `1M`. Without this, RocksDB will eventually fail to open SST files and the node will stall under load. See [Linux Configuration → File Descriptor Limits](/docs/run-node/linux_configuration#file-descriptor-limits-ulimit--n) for the full background.
+:::
+
+:::info
+The [Linux Configuration](/docs/run-node/linux_configuration) page also covers kernel network tuning (`net.core.rmem_max`, etc.) which is recommended for any node with more than a handful of peers.
 :::
 
 Enable and start the service:
