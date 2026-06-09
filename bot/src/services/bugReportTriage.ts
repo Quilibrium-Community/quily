@@ -364,18 +364,24 @@ export async function generateBugReportDigest(channel: TextChannel): Promise<Bug
     lastId = batch.last()!.id;
   }
 
+  console.log(`[bug-triage] Fetched ${allMessages.length} raw messages from last 24h`);
   if (allMessages.length === 0) return null;
 
   allMessages.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
 
   const filtered = filterBugMessages(allMessages);
+  console.log(`[bug-triage] ${filtered.length} messages survived the filter (out of ${allMessages.length})`);
   if (filtered.length === 0) return null;
 
   const enriched = await enrichWithVision(filtered);
   const todayStr = new Date().toISOString().slice(0, 10);
   const result = await runTriage(enriched, todayStr);
 
-  if (!result) return null;
+  if (!result) {
+    console.log('[bug-triage] LLM returned null (parse failure or empty)');
+    return null;
+  }
+  console.log(`[bug-triage] LLM returned ${result.clusters.length} clusters, ${result.needs_more_info.length} needs-more-info`);
   if (result.clusters.length === 0 && result.needs_more_info.length === 0) return null;
 
   return result;
