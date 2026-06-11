@@ -37,9 +37,6 @@ This is the main index for all documentation, bug reports, and task management.
 
 ### Pending Tasks
 
-- [Monorepo Integration for Release Context](tasks/2026-03-23-monorepo-integration.md)
-- [Monorepo Release Sync — Design Spec](tasks/2026-03-23-monorepo-release-sync-design.md)
-- [Monorepo Release Sync — Implementation Plan](tasks/2026-03-23-monorepo-release-sync-plan.md)
 - [Writer Mode - Design Spec](tasks/2026-03-30-writer-mode-design.md)
 - [Writer Mode Implementation Plan](tasks/2026-03-30-writer-mode-plan.md)
 - [Feature Request: Citation-Free Response Mode](tasks/2026-04-13-nosources-flag-feature.md)
@@ -47,7 +44,6 @@ This is the main index for all documentation, bug reports, and task management.
 - [Add Web Fetching Capability to Chatbot](tasks/web-fetching-capability.md)
 - [Cross-Reference Verification Against Source Docs](tasks/cross-reference-verification.md)
 - [Discord Follow-Up Questions Dropdown](tasks/discord-followup-dropdown.md)
-- [Harden /process-issues Skill](tasks/automated-process-issues-cron.md)
 - [Implement AI-Powered Chat Renaming Feature](tasks/ai-chat-renaming-feature.md)
 - [Implement Data Export/Import Feature](tasks/data-export-import-feature.md)
 - [Implement File Upload & Chat Attachments](tasks/file-upload-chat-attachments.md)
@@ -75,6 +71,9 @@ This is the main index for all documentation, bug reports, and task management.
 - [Repo Transfer: lamat1111 → Quilibrium-Community](tasks/.done/2026-03-20-repo-transfer-to-org.md)
 - [RAG Confidence Indicator — Implementation Plan](tasks/.done/2026-03-22-rag-confidence-indicator-plan.md)
 - [RAG Confidence Indicator](tasks/.done/2026-03-22-rag-confidence-indicator.md)
+- [Monorepo Integration for Release Context](tasks/.done/2026-03-23-monorepo-integration.md)
+- [Monorepo Release Sync — Design Spec](tasks/.done/2026-03-23-monorepo-release-sync-design.md)
+- [Monorepo Release Sync — Implementation Plan](tasks/.done/2026-03-23-monorepo-release-sync-plan.md)
 - [Real-time Network Health Data Storage](tasks/.done/2026-03-23-network-health-data-storage.md)
 - [Daily Recap Posting — Implementation Plan](tasks/.done/2026-03-24-daily-recap-posting-plan.md)
 - [Design Spec: Automated Daily Recap Posting](tasks/.done/2026-03-24-daily-recap-posting.md)
@@ -85,11 +84,14 @@ This is the main index for all documentation, bug reports, and task management.
 - [Writer Mode Implementation Plan](tasks/.done/2026-03-30-writer-mode-plan.md)
 - [Writer Mode Refinement](tasks/.done/2026-03-30-writer-mode-refinement.md)
 - [Tighten "Open GitHub Issue" Trigger in Bot System Prompt](tasks/.done/2026-05-31-tighten-issue-reporting-trigger.md)
+- [Design Spec: Bug Reports Daily Digest](tasks/.done/2026-06-07-bug-reports-digest.md)
+- [Ecosystem Projects → RAG Sync](tasks/.done/2026-06-11-ecosystem-projects-rag-sync.md)
 - [Add Conversational Context to RAG Retrieval](tasks/.done/rag-conversational-context-memory.md)
 - [Add External Chutes API Key Option](tasks/.done/external-chutes-api-key-option.md)
 - [Convert Settings Modal to Standalone Settings Page](tasks/.done/convert-settings-modal-to-page.md)
 - [Discord Announcements Scraper with Automated RAG Ingestion](tasks/.done/discord-announcements-scraper.md)
 - [Discord Bot — Remaining Manual Steps](tasks/.done/discord-bot-remaining-steps.md)
+- [Harden /process-issues Skill](tasks/.done/automated-process-issues-cron.md)
 - [Implement Automated Daily Documentation Sync via GitHub Actions](tasks/.done/automated-weekly-docs-sync.md)
 - [Implement Cloudflare Workers AI Reranker](tasks/.done/implement-cloudflare-reranker.md)
 - [Implement Conversation Search Modal](tasks/.done/conversation-search-modal.md)
@@ -117,6 +119,8 @@ This is the main index for all documentation, bug reports, and task management.
 - [Model Scout — LLM Benchmark Results](reports/2026-03-21-model-scout-benchmark.md)
 - [Model Benchmark — Full Eval Suite Results](reports/2026-03-22-model-benchmark.md)
 - [Research: Humanizing LLM Output for Social Media Content](reports/2026-03-30-humanizing-llm-output-research.md)
+- [Model Benchmark — DeepSeek V3.2 vs V4 Flash vs V4 Pro](reports/2026-06-03-model-benchmark-v3.2-vs-v4.md)
+- [Model Scout — OpenRouter LLM Discovery](reports/2026-06-03-model-scout-openrouter.md)
 
 ### Archived
 - [LLM Provider Pricing Research](reports/archived/2026-01-30_llm-provider-pricing-research.md)
@@ -133,4 +137,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-06-03 08:59:05
+**Last Updated**: 2026-06-11 09:21:55
