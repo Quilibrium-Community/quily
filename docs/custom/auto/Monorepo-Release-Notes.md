@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-06-12
+date: 2026-06-13
 type: release_notes
 topics:
   - release notes
@@ -16,24 +16,48 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** June 12, 2026
+**Last updated:** June 13, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
+## v2.1.0.22 (version .22) *(auto-generated)*
+- improved prover commands to show worker id
+- relax peerstore clearing interval
+- prover management TUI adds manual management tracking and joins by worker id
+- optimize TUI display and rendering
+- fix dbscan compiler error
+- set default archive peer list
+- fix prover eviction bug
+- improve prover visibility when leaving is implicitly accepted
+- fix prover leaving status in event distributor
+- rename pending status to joining
+- fix merge spend marker
+- fix sorting and ring position display in TUI
+- fix render width for [M] marker
+- timereel now accepts new head immediately
+- add timeout for global frame fetch
+- add lru cache to getglobalframe handler
+- adjust estimation behavior for correct ring position and membership set
+- fix worker TUI reward calculations and logical shard count, reduce bandwidth on app worker
+- auto-sized filters in TUI
+- fix dynamic filter width
+- improve blossomsub and estimate/hard calculation changes
+- multiple migration fixes to resolve eviction issues
+
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - reconcile old and new config paths
-- fix formatting/precision on prover reward data
-- apply possible solution to peering issue
+- fix formatting/precision on prover reward data, possible solution to peering issue
 - fix app shard lookups on mainnet
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
-- fix newPebbleDB constructor config param
-- fix high CPU overhead in initial worker behaviors/ongoing sync
-- add extra data to node info and query metrics from command line
+- add debug mode via environment variable
+- fix pebble database constructor configuration parameter
+- resolve high CPU overhead in initial worker behaviors and ongoing sync
+- add extra data to node info and enable querying metrics from command line
 - leave proposals for overcrowded shards
 - implement hub-and-spoke global message broadcasts
-- small tweaks to cli output for join frames
+- tweak CLI output for join frames
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
@@ -86,8 +110,9 @@ This document tracks changes in each Quilibrium node release.
 - Resolved infinitessimal rings divide-by-zero error
 
 ## v2.1.0.11 (version .11) *(auto-generated)*
-- fixed blossomsub peer scoring to not penalize for missing peers that are not in the same mesh
-- fixed blossomsub peer scoring to not penalize for missing peers that are not in the same mesh (duplicate fix)
+- fix blossomsub peer scoring to not penalize on duplicate messages
+- fix blossomsub peer scoring to not penalize on duplicate messages (second attempt)
+- fix blossomsub peer scoring to not penalize on duplicate messages (third attempt)
 
 ---
 
