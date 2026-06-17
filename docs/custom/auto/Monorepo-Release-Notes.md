@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-06-16
+date: 2026-06-17
 type: release_notes
 topics:
   - release notes
@@ -16,128 +16,78 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** June 16, 2026
+**Last updated:** June 17, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
-## v2.1.0.23 (version .23) *(auto-generated)*
-- fix docker build issue with static linking for flint/mpfr/gmp
-- fix standalone worker connection string derivation
-- fix too many joins, invalid signature in qclient, standalone worker mode bugs, workers not logging to own files
-- fix keys file handling, reduce excess joins/leaves
-- demote p2p loggers to debug
-- resolve domain separation bug for invalid signature
-- resolve tokio thread issue re: logging
-- fix leaving prover bug in worker allocator
-- resolve worker storage location bug and reduce log noise
-- fix shard store discrepancy
-- use different source for current frame number
-- cache requests to prevent available shards from flashing
-- resolve stale 0 frame data response, adjust blossomsub params
-- refactor tree behaviors to skip stale data effects
-- handle orphaned allocations and allocations on zero byte shards
-- fix autonat bug crashing worker threads
-- fix build for linux
-- fix too many streams issue
-- address edge case with delegate address, resolve stream connection issue with kad-dht
-- fix quil-engine unit tests and router validator tests
-- support white spaces in genesis seed for testnets
-- fix propose skip on coverage halts
-- fix vdf link order and enable tests in CI
-- support archive endpoints config in rs node
-- use sha3 for prover join vdf verifier
-- fix rust node initialization
-- refactor quil-node main into submodules (storage, keys, engines, frame_pipeline, networking, runtime_state, peer_info_publisher, worker_manager, allocator_and_lifecycle, message_loop, archive_sync, grpc)
-- fix canonicalization bug for peer info
-- propagate errors from subsystems
-- reduce logging noise on connection events
-- increase duration between peer info and key registry publishes
-- fix OOM from unbounded stores, add memory profiling and allocator swap
-- fix message drops diagnostics
-- fix bitmask of workers, cheaper peek-verification on peer info
-- fix proposal bug using joining count as part of halt risk calculation
-- handle 67% barrier for halt risk
-- fix off by one on leave planning
-- fix TUI manage submission of messages
-- fix expired leaves not treated as confirmed leaves in proposal logic and worker allocator
-- resolve loop of halt risk swap
-- resolve race where overlapping joins are submitted
-
 ## v2.1.0.22 (version .22) *(auto-generated)*
-- improved prover commands to show worker id
-- relaxed peerstore clearing interval
-- tuned component-level logging
-- added manual management tracking and worker id joins to prover management TUI
-- optimized TUI performance
-- fixed dbscan compiler error
-- logged shard allocation join confirm/reject and plan leave details
-- set default archive peer list
-- fixed prover eviction bug
-- improved prover visibility when leaving is implicitly accepted
-- fixed prover leaving status in event distributor
-- renamed "pending" to "joining"
-- fixed merge spend marker
-- fixed sorting and ring position issues in TUI
-- fixed render width for [M] marker
-- fixed timereel behavior to accept new head immediately
-- added timeout for global frame fetch
-- added LRU cache to getglobalframe handler
-- adjusted estimation behavior for ring position and membership set calculation
-- fixed worker TUI reward calculation and logical shard count
-- reduced bandwidth on app worker
-- added auto-sized filters
-- optimized logging for plan/decide and confirm/reject for shard joins and leaves
-- fixed dynamic filter width
-- improved blossomsub with estimate/hard calc changes
-- added migration to resolve eviction issue
-- refactored global consensus engine into discrete components
-- adjusted RPC/worker ring display
+- improved prover commands and management TUI, show and specify tasks by worker id
+- relax peerstore clearing interval
+- tune component-level logging
+- auto-size filters and fix dynamic filter width
+- add default archive peer list
+- fix prover eviction bug
+- fix prover leaving status in event distributor
+- fix merge spend marker
+- fix sorting/ring position issues in TUI
+- fix render width for [M] marker
+- fix timereel to accept new head immediately
+- add timeout for global frame fetch with LRU cache
+- adjust estimation behavior for correct ring position and membership set
+- fix worker TUI reward calculation and logical shard count
+- reduce bandwidth on app worker
+- optimize logging for shard join/leave plan, decide, confirm, reject
+- improve blossomsub and estimate/hard calc changes
+- fix migration for eviction issue and add improved logging
+- refactor global consensus engine into discrete components, update tests
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - reconcile old and new config paths
 - fix formatting/precision on prover reward data
-- add possible solution to peering issue
+- fix potential peering issue
 - fix app shard lookups on mainnet
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
-- allow debug env var to be read
-- fix pebble db constructor config parameter
-- fix high cpu overhead during initial worker behaviors / ongoing sync
-- add extra data to node info and query metrics from command line
+- allow debug logging via `DEBUG` environment variable
+- fix `newPebbleDB` constructor configuration parameter
+- resolve high CPU overhead during initial worker behaviors and ongoing sync
+- improve docker build speed with better caching
+- add extra data to node info and enable querying metrics from the command line
 - leave proposals for overcrowded shards
 - implement hub-and-spoke global message broadcasts
-- small tweaks to cli output for join frames
+- tweak CLI output for join frames
 
 ## v2.1.0.19 (version .19) *(auto-generated)*
 - fix seniority marker join blocker and sync message size limit defaults
-- resolve signature failure with additional error logging for merge-related signatures
+- resolve signature failure
 - fix one-shot sync message size, app shard TC signature size, collector/hotstuff race condition, and expired joins blocking new joins due to pruning disable
 - remove compatibility with old 2.0.0 blossomsub
 - resolve abandoned prover joins and reload prover registry
 - fix stale worker proposal edge
-- add full sanity check on join before submitting
+- add full sanity check on join before submission
 - resolve non-fallthrough condition that should be fallthrough
-- fix rare SIGFPE and orphan expired joins blocking workers from reallocating
+- fix rare SIGFPE and orphan expired joins blocking worker reallocation
 - add reconnect fallback with variable reconnect time if no peers found
 - update base peer count to 1
 - fix expired prover join frames, starting port ranges, proposer getting stuck, and seniority on joins
 - fix panic on shutdown, libp2p discovery picking inaccessible peers, coverage event check not in shutdown logic, and amend app shard worker behavior for prover root reconciliation
 - fix shutdown scenario quirks and reload hanging
-- do not bailout early on shutdown of coverage check
+- fix bailout early on shutdown of coverage check
 - force registry refresh on worker waiting for registration
 - fix worker manager refreshing filter on allocation and snapshots blocking close on shutdown
 - force shutdown after five seconds for app worker
-- fix looping when shutting down
+- fix loop when shutting down
 - add named workers to trace hanging shutdowns
-- use deterministic key for peer id of workers to stop flagging workers as sybil attacks
+- use deterministic key for peer id of workers to prevent sybil flagging
 - remove pubsub stop from app consensus engine and integrate shutdown context to PerformSync
-- fix blossomsub pubsub interface not properly tracking subscription status
+- fix blossomsub pubsub interface subscription status tracking
 - fix subscribe order to avoid nil panic
-- switch from dnsaddr to dns4 and add missing quic-v1
-- fix dnsaddr -> dns4 for blossomsub
+- switch from dnsaddr to dns4
+- add missing quic-v1
+- fix dnsaddr to dns4 for blossomsub
 - apply sledgehammer to restart logic
-- fix restore proper respawn logic, frozen hypergraph post respawn, and unsubscribe from bitmask previously missing
+- fix restore proper respawn logic, fix frozen hypergraph post respawn, and unsubscribe from previously missing bitmask
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
@@ -190,10 +140,14 @@ This document tracks changes in each Quilibrium node release.
 - Resolved infinitessimal rings divide-by-zero error
 
 ## v2.1.0.11 (version .11) *(auto-generated)*
-- fixed blossomsub peer scoring to prevent premature disconnections
-- resolved race condition in prover registry pruning
-- added DKLs23 fork for improved cryptographic operations
-- corrected channel synchronization bug
+- fix race condition in peer score management
+- repair goose transport init for consolidation websocket addresses
+- improve peer update handling when prune exists
+- handle zombie peers in revalidation
+- fix blossomsub peer removal on disconnected
+- add peerscore retries on backoff broke condition
+- prune track channels on context cancel
+- fix pebble on windows
 
 ---
 
