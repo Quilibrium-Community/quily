@@ -1,7 +1,7 @@
 ---
 title: Hypersnap
 source: GitHub Repository
-date: 2026-03-19
+date: 2026-06-20
 type: technical_reference
 topics: [snapchain, farcaster, hyper-mode, rust, data-availability]
 ---
@@ -79,6 +79,8 @@ When a Hypersnap node processes blocks:
 - **Namespaced key ranges** separate legacy and hyper data within the same database
 - **Merkle Trie** enables efficient state proofs and incremental synchronization
 - Pruning is configurable: the hyper pipeline disables it entirely while the legacy pipeline follows standard retention rules
+
+> **Operator storage recommendation (community report, June 2026):** When provisioning disk for a Hyper Mode node, community operators recommend planning for **2 TB of SSD** rather than the ~1.5 TB baseline. Because Hyper Mode retains all historical data without pruning, disk usage grows continuously, and storage requirements are expected to increase further after the Proof-of-Work release. 1 TB can work for pre-PoW or budget setups, but operators signing longer-term server rentals should size for 2 TB to avoid coming up short. (Note: actual costs reported by operators are well below the ~$1,000/month upper estimate.)
 
 ### Networking
 
