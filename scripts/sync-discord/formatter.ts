@@ -68,9 +68,17 @@ function formatTime(timestamp: string): string {
   }) + ' UTC';
 }
 
-/** Build a Discord message URL */
-function buildMessageUrl(guildId: string, channelId: string, messageId: string): string {
-  return `https://discord.com/channels/${guildId}/${channelId}/${messageId}`;
+/**
+ * Build a channel-level Discord URL.
+ *
+ * We deliberately link to the channel rather than a specific message. A
+ * message-specific URL (.../{channel}/{messageId}) 404s if that message is later
+ * edited or deleted, which is how dead citation links ended up in bot responses
+ * (see .agents/tasks/2026-06-20-stale-discord-citation-links.md). A channel-level
+ * link never dead-ends. This matches what the recap generator already does.
+ */
+function buildChannelUrl(guildId: string, channelId: string): string {
+  return `https://discord.com/channels/${guildId}/${channelId}`;
 }
 
 /**
@@ -112,14 +120,14 @@ export async function writeMarkdownFiles(
       markdown = existing + '\n\n---\n\n' + newSections.join('\n\n---\n\n');
     } catch {
       // No existing file — create with frontmatter
-      const firstMessageUrl = buildMessageUrl(guildId, channelId, msgs[0].id);
+      const channelUrl = buildChannelUrl(guildId, channelId);
       const frontmatter = [
         '---',
         `title: "${title}"`,
         `type: discord_announcement`,
         `channel: ${channelName}`,
         `date: ${date}`,
-        `source_url: ${firstMessageUrl}`,
+        `source_url: ${channelUrl}`,
         '---',
       ].join('\n');
       markdown = `${frontmatter}\n\n# ${title}\n\n${newSections.join('\n\n---\n\n')}`;

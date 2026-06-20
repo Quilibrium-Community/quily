@@ -22,25 +22,52 @@ function getSupabaseClient(url: string, serviceKey: string): SupabaseClient {
 
 /**
  * Upload document chunks with embeddings to Supabase
- * Uses upsert to handle re-ingestion without duplicates
+ * Uses upsert to handle re-ingestion without duplicates.
+ *
+ * By default, deletes all existing chunks for each touched source file before
+ * inserting the new ones (delete-before-insert). This is required for correctness:
+ * a plain upsert on (source_file, chunk_index) only OVERWRITES colliding rows, so
+ * when a re-synced file produces FEWER chunks than before, the old high-index chunks
+ * survive in the DB with stale content and stale source_url values. Those leftover
+ * chunks get retrieved by the RAG pipeline and surface as dead citation links
+ * (see .agents/tasks/2026-06-20-stale-discord-citation-links.md). Deleting per-file
+ * first guarantees the DB chunks for a file always exactly match its current content.
  *
  * @param chunks - Document chunks with embeddings
  * @param supabaseUrl - Supabase project URL
  * @param supabaseKey - Supabase service role key
  * @param tableName - Target table (document_chunks for OpenRouter, document_chunks_chutes for Chutes)
  * @param onProgress - Optional callback for progress updates
+ * @param replaceFiles - Delete existing chunks for each touched file before inserting (default true)
  */
 export async function uploadChunks(
   chunks: DocumentChunk[],
   supabaseUrl: string,
   supabaseKey: string,
   tableName: EmbeddingTable = 'document_chunks_chutes',
-  onProgress?: (completed: number, total: number) => void
+  onProgress?: (completed: number, total: number) => void,
+  replaceFiles: boolean = true
 ): Promise<{ inserted: number; errors: string[] }> {
   const supabase = getSupabaseClient(supabaseUrl, supabaseKey);
   const total = chunks.length;
   let inserted = 0;
   const errors: string[] = [];
+
+  // Delete-before-insert: remove existing chunks for every source file we're about to
+  // re-ingest, so shrunk files don't leave stale trailing chunks behind.
+  if (replaceFiles) {
+    const touchedFiles = [...new Set(chunks.map((c) => c.metadata.source_file))];
+    for (const sourceFile of touchedFiles) {
+      const { error } = await supabase
+        .from(tableName)
+        .delete()
+        .eq('source_file', sourceFile);
+
+      if (error) {
+        errors.push(`Delete (replace) for ${sourceFile}: ${error.message}`);
+      }
+    }
+  }
 
   // Process in batches
   for (let i = 0; i < chunks.length; i += UPLOAD_BATCH_SIZE) {
