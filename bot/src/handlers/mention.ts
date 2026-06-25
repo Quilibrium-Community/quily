@@ -219,6 +219,15 @@ export function registerMentionHandler(client: Client): void {
             issueCall.input.title &&
             issueCall.input.correction
           ) {
+            // The tool-call input arrives untyped from the AI SDK, so narrow
+            // `kind` at the boundary: anything other than the two known values
+            // (including a hallucinated kind) falls back to undefined, which
+            // createGitHubIssue treats as the "knowledge" default.
+            const kind =
+              issueCall.input.kind === 'behavior' ||
+              issueCall.input.kind === 'knowledge'
+                ? issueCall.input.kind
+                : undefined;
             try {
               const issueUrl = await createGitHubIssue({
                 title: issueCall.input.title,
@@ -228,7 +237,7 @@ export function registerMentionHandler(client: Client): void {
                 originalQuestion,
                 quilyAnswer,
                 discordMessageLink: discordMessageLink || undefined,
-                kind: issueCall.input.kind,
+                kind,
               });
               recordIssueCreation(message.author.id);
               console.log(
