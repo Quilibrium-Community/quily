@@ -53,6 +53,11 @@ jobs:
           fi
 
       - name: Generate network health snapshot
+        # Non-fatal: the Explorer API (explorer-api.quilibrium.com) is occasionally
+        # slow/down and times out (30s). When that happens we keep yesterday's
+        # snapshot and let the rest of the docs/Discord sync proceed, rather than
+        # failing the whole daily job on a flaky third-party API.
+        continue-on-error: true
         run: yarn stats:snapshot
 
       - name: Sync monorepo release notes
