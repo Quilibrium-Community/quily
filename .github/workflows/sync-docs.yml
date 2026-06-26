@@ -30,6 +30,10 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Sync Discord announcements
+        # Non-fatal: the Discord API rate-limits (429) and has transient outages.
+        # discord-api.ts retries on 429/5xx, but a sustained outage should not
+        # take down the docs sync — this enrichment can wait for tomorrow's run.
+        continue-on-error: true
         env:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           DISCORD_CHANNEL_IDS: ${{ secrets.DISCORD_CHANNEL_IDS }}
@@ -41,6 +45,9 @@ jobs:
           fi
 
       - name: Generate general channel recap
+        # Non-fatal: same rationale as the Discord announcements step above —
+        # a Discord 429/outage should not fail the whole daily docs sync.
+        continue-on-error: true
         env:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           DISCORD_GENERAL_CHANNEL_ID: ${{ secrets.DISCORD_GENERAL_CHANNEL_ID }}
