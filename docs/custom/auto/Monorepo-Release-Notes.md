@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-06-28
+date: 2026-06-29
 type: release_notes
 topics:
   - release notes
@@ -16,10 +16,25 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** June 28, 2026
+**Last updated:** June 29, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
+
+## v2.1.0.24 (version .24) *(auto-generated)*
+- fix race condition preventing sync workers from recovering after initial failure
+- make hypergraph store writes transaction-aware to prevent partial persistence
+- make `LazyVectorCommitmentTree::commit` retry-safe by deferring dirty-state clearing
+- make `compute_shard_root` read-only to prevent unintentional writes during root computation
+- require concrete `RocksTxn` for hypergraph store writes, removing silent fallback
+- handle node leaving scenario with store wipe
+- reduce score differential threshold for flagging leave-to-join opportunities
+- extend scoring-based leave window to full cycle
+- adjust margins and thresholds for decide and join decisions
+- use actual rocksdb snapshots for snapshotting
+- resolve unsynced leave issuance condition
+- reapply docker build optimizations to `Dockerfile.source`
+- implement sync of proposals from peers so lagging archive nodes can rejoin consensus
 
 ## v2.1.0.23 (version .23) *(auto-generated)*
 - fix docker build issue with static linking
@@ -32,48 +47,73 @@ This document tracks changes in each Quilibrium node release.
 - fix leaving prover bug in worker allocator
 - resolve worker storage location bug and reduce log noise
 - fix shard store discrepancy
-- use different source for current frame number
-- cache requests to prevent available shards from flashing
-- resolve stale 0 frame data response, adjust blossomsub params
-- refactor tree behaviors to skip stale data effects
-- handle orphaned allocations and allocations on zero byte shards
+- fix stale 0 frame data response, adjust blossomsub params
 - fix autonat bug crashing worker threads
 - fix build for linux, force static link on libchannel
-- fix stream connection issue with kad-dht
+- fix too many streams issue
+- address edge case with delegate address, resolve stream connection issue with kad-dht
 - fix quil-engine unit tests and router validator tests
 - support white spaces in genesis seed for testnets
 - fix propose skip on coverage halts
 - fix vdf link order and enable tests in CI
 - support archive endpoints config in rust node
 - use sha3 for prover join vdf verifier
-- fix router_validator_passes_well_formed_peer_info test
+- fix rust node initialization
 - refactor quil-node main into submodules (storage, keys, engines, frame_pipeline, networking, runtime_state, peer_info_publisher, worker_manager, allocator_and_lifecycle, message_loop, archive_sync, grpc)
 - fix canonicalization bug for peer info
 - propagate errors from subsystems
 - reduce logging noise on connection events
 - increase duration between peer info and key registry publishes
 - fix OOM from unbounded stores, add memory profiling and allocator swap
-- fix proposal bug using joining count in halt risk calculation
+- fix proposal bug using joining count as part of halt risk calculation
 - handle 67% barrier for halt risk
 - fix TUI manage submission of messages
 - fix expired leaves not treated as confirmed leaves in proposal logic and worker allocator
 - resolve loop of halt risk swap
 - resolve race where overlapping joins are submitted
 
+## v2.1.0.22 (version .22) *(auto-generated)*
+- improved prover commands to show worker id
+- relaxed peerstore clearing interval
+- component-level logger tuning
+- prover management TUI adds manual management tracking and joins by worker id
+- optimized TUI performance
+- fixed dbscan compiler error
+- log shard allocation join confirm/reject and plan leave details
+- fixed prover eviction bug
+- small tweaks for prover visibility when leaving is implicitly accepted
+- fixed prover leaving status in event distributor
+- renamed "pending" to "joining"
+- fixed merge spend marker
+- fixed sorting and ring position issues in TUI
+- fixed render width for [M] marker
+- timereel now accepts new head immediately
+- added timeout and LRU cache for global frame fetch
+- adjusted estimation behavior to calculate ring position and membership set correctly
+- fixed worker TUI reward calculation and logical shard count
+- reduced bandwidth usage on app worker
+- auto-sized filters
+- optimized logging for shard join/leave plan, decide, confirm, and reject
+- fixed dynamic filter width
+- blossomsub improvements and estimate/hard calc changes
+- new migration to resolve eviction issue
+- refactored global consensus engine into discrete components
+- adjusted RPC/worker ring display
+
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - reconcile old and new config paths
 - fix formatting/precision on prover reward data
-- apply possible solution to peering issue
+- address peering issue
 - fix app shard lookups on mainnet
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
-- allow reading debug mode via environment variable
-- fix pebbleDB constructor configuration parameter
-- reduce high CPU overhead in initial worker behaviors and ongoing sync
-- add extra data to node info and enable querying metrics from command line
-- leave proposals for overcrowded shards
-- implement hub-and-spoke global message broadcasts
-- tweak CLI output for node info
+- added debug environment variable
+- fixed newPebbleDB constructor config parameter
+- fixed high CPU overhead in initial worker behaviors and ongoing sync
+- added extra data to node info and query metrics from command line
+- made proposals leave overcrowded shards
+- implemented hub-and-spoke global message broadcasts
+- tweaked cli output for join frames
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
@@ -124,9 +164,6 @@ This document tracks changes in each Quilibrium node release.
 - Extends ProverConfirm and ProverReject to have multiple filters per message
 - Adds snapshot integration to allow hypersync to occur concurrently with writes
 - Resolved infinitessimal rings divide-by-zero error
-
-## v2.1.0.11 (version .11) *(auto-generated)*
-- no commit messages provided for this version.
 
 ---
 
