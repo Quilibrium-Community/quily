@@ -308,10 +308,18 @@ async function generateEmbedding(
     return getChutesEmbedding(text, accessToken);
   }
   if (!apiKey) throw new Error('OpenRouter API key is required for embeddings');
+  // Provider pinning on the query embedding: bge-m3 is deterministic, so the vectors stay
+  // compatible with the index (verified via retrieval-parity, task 2026-07-10). This prevents
+  // OpenRouter from routing to a slow provider — the query embed was measured at ~870ms median
+  // with high variance (a known DeepInfra failure mode on kaya showed 13-80s tails).
+  // Toggle: OPENROUTER_EMBED_ORDER="" disables pinning without touching code.
+  const embedOrder = (process.env.OPENROUTER_EMBED_ORDER ?? 'SiliconFlow,DeepInfra')
+    .split(',').map((s) => s.trim()).filter(Boolean);
   const openrouter = createOpenRouter({ apiKey });
   const result = await embed({
     model: openrouter.textEmbeddingModel(
-      model || process.env.OPENROUTER_EMBEDDING_MODEL || UNIFIED_EMBEDDING_MODEL
+      model || process.env.OPENROUTER_EMBEDDING_MODEL || UNIFIED_EMBEDDING_MODEL,
+      embedOrder.length > 0 ? { provider: { order: embedOrder } } : undefined
     ),
     value: text,
   });
