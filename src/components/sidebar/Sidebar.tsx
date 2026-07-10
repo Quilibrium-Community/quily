@@ -43,6 +43,10 @@ export function Sidebar() {
   const isConnected =
     providerId === 'chutes' ? isChutesSignedIn : Boolean(apiKey);
 
+  // In free mode the connection status dot is meaningless (the server holds the
+  // key), so hide it and show only the username. Otherwise show the dot too.
+  const isFreeMode = process.env.NEXT_PUBLIC_FREE_MODE === 'true';
+
   // Track when secondary nav items (About, Links) scroll out of view
   const [showNavSeparator, setShowNavSeparator] = useState(false);
 
@@ -364,7 +368,7 @@ export function Sidebar() {
         />
 
         {/* Settings at bottom - fixed */}
-        <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-surface/15 dark:border-surface/20">
           <Link
             href="/settings"
             onClick={() => {
@@ -375,7 +379,9 @@ export function Sidebar() {
               hover:bg-hover
               transition-colors text-left"
           >
-            <span className={`w-2.5 sm:w-2 h-2.5 sm:h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+            {!isFreeMode && (
+              <span className={`w-2.5 sm:w-2 h-2.5 sm:h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+            )}
             <span className="flex-1 truncate">
               {profileName}
             </span>
