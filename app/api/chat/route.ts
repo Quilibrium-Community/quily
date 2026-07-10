@@ -1212,8 +1212,23 @@ export async function POST(request: Request) {
         } // end normal (non-correction) flow
       } else {
         // OpenRouter and other providers: use standard toUIMessageStream()
+        // Provider routing for latency: OpenRouter's default load-balancing can land on a slow
+        // provider (measured TTFT p50 ~4.4s, worst run ~11s). `sort: 'latency'` cuts p50 to ~1.5s
+        // and removes the slow tail. The quantization allowlist excludes fp4 (DeepInfra/AtlasCloud
+        // serve deepseek-v4-flash at fp4 = degraded quality) so the latency sort can't trade
+        // quality for speed. Toggle: OPENROUTER_SORT="" disables the sort via env.
+        const providerSort = process.env.OPENROUTER_SORT ?? 'latency';
+        const openrouterModel =
+          provider === 'openrouter' && providerSort
+            ? (modelProvider as ReturnType<typeof createOpenRouter>)(model, {
+                provider: {
+                  sort: providerSort as 'latency',
+                  quantizations: ['fp8', 'fp16', 'bf16', 'fp32', 'int8', 'unknown'],
+                },
+              })
+            : modelProvider(model);
         const result = streamText({
-          model: modelProvider(model) as Parameters<typeof streamText>[0]['model'],
+          model: openrouterModel as Parameters<typeof streamText>[0]['model'],
           system: systemPrompt,
           messages: llmMessages,
           tools: ragTools,
