@@ -6,6 +6,7 @@ import { buildContextBlock, buildSystemPrompt, formatSourcesForClient } from './
 import { normalizeQuery } from './queryNormalizer';
 import { parseFollowUpQuestions } from './followUpParser';
 import { ragTools } from './tools';
+import { withZdr } from '../openrouter-routing';
 import type { RetrievedChunk, RetrievalOptions, SourceReference } from './types';
 import type { RelevanceQuality } from './prompt';
 
@@ -130,16 +131,21 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
       const isPrimaryOpenRouter = llmProvider !== 'chutes' && model === primaryModel;
       // Both providers return AI SDK-compatible models; Chutes types include
       // Promise<LanguageModelV2> which confuses the union — cast is safe.
+      // Merge the env-driven ZDR flag into whatever routing this model needs.
+      // Primary model pins fast providers; others use default routing. `withZdr`
+      // returns undefined when ZDR is off and there's no base routing, so we can
+      // pass model settings without an empty `provider: {}`.
+      const providerRouting = withZdr(
+        isPrimaryOpenRouter
+          ? { order: OPENROUTER_PRIMARY_PROVIDER_ORDER, allow_fallbacks: false }
+          : undefined
+      );
       const aiModel = llmProvider === 'chutes'
         ? createChutes({ apiKey: options.llmApiKey })(modelId) as Parameters<typeof generateText>[0]['model']
-        : isPrimaryOpenRouter
-          ? createOpenRouter({ apiKey: options.llmApiKey })(modelId, {
-              provider: {
-                order: OPENROUTER_PRIMARY_PROVIDER_ORDER,
-                allow_fallbacks: false,
-              },
-            })
-          : createOpenRouter({ apiKey: options.llmApiKey })(modelId);
+        : createOpenRouter({ apiKey: options.llmApiKey })(
+            modelId,
+            providerRouting ? { provider: providerRouting } : undefined
+          );
       const t1 = Date.now();
       const result = await generateText({
         model: aiModel,

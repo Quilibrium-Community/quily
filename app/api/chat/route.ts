@@ -15,6 +15,7 @@ import { normalizeQuery } from '@/src/lib/rag/queryNormalizer';
 import { getOAuthConfig, refreshTokens, checkChutesBalance } from '@/src/lib/chutesAuth';
 import { validateApiKeyWithCredits } from '@/src/lib/openrouter';
 import { getProvider } from '@/src/lib/providers';
+import { withZdr } from '@/src/lib/openrouter-routing';
 import { getCuratedModels, getChuteUrl } from '@/src/lib/chutes/chuteDiscovery';
 import {
   COOKIE_ACCESS_TOKEN,
@@ -1236,15 +1237,25 @@ export async function POST(request: Request) {
         // serve deepseek-v4-flash at fp4 = degraded quality) so the latency sort can't trade
         // quality for speed. Toggle: OPENROUTER_SORT="" disables the sort via env.
         const providerSort = process.env.OPENROUTER_SORT ?? 'latency';
-        const openrouterModel =
-          provider === 'openrouter' && providerSort
-            ? (modelProvider as ReturnType<typeof createOpenRouter>)(model, {
-                provider: {
-                  sort: providerSort as 'latency',
-                  quantizations: ['fp8', 'fp16', 'bf16', 'fp32', 'int8', 'unknown'],
-                },
-              })
-            : modelProvider(model);
+        // Build OpenRouter routing (latency sort + quantization allowlist) and
+        // merge the env-driven ZDR flag on top. `withZdr` adds `zdr: true` when
+        // OPENROUTER_ZDR=true, else returns the base unchanged.
+        const openrouterRouting =
+          provider === 'openrouter'
+            ? withZdr(
+                providerSort
+                  ? {
+                      sort: providerSort as 'latency',
+                      quantizations: ['fp8', 'fp16', 'bf16', 'fp32', 'int8', 'unknown'],
+                    }
+                  : undefined
+              )
+            : undefined;
+        const openrouterModel = openrouterRouting
+          ? (modelProvider as ReturnType<typeof createOpenRouter>)(model, {
+              provider: openrouterRouting,
+            })
+          : modelProvider(model);
         const result = streamText({
           model: openrouterModel as Parameters<typeof streamText>[0]['model'],
           system: systemPrompt,
