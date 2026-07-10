@@ -7,6 +7,7 @@ This is the main index for all documentation, bug reports, and task management.
 - [Daily Recap Posting](docs/2026-03-24-daily-recap-posting.md)
 - [Automated Documentation Sync Pipeline](docs/automated-docs-sync-pipeline.md) — Daily GitHub Actions pipeline that syncs official docs, scrapes Discord announcements, and generates general channel recaps into the RAG knowledge base
 - [Automated Versioning and Release System](docs/versioning-release-system.md) — Semantic versioning with conventional commit analysis, changelog generation, git tagging, and /release skill integration
+- [Chat latency pipeline](docs/chat-latency-pipeline.md) — How /api/chat keeps first-token latency low: LLM provider pinning by latency, embedding provider pinning, aggressive rerank timeouts with similarity fallback, per-phase timing logs, and the tools to measure regressions.
 - [Cloudflare Turnstile Bot Protection](docs/cloudflare-turnstile-bot-protection.md) — Invisible bot verification using Cloudflare Turnstile with session cookies, fail-open design, and client/server integration
 - [Cloudflare Workers AI Reranker](docs/cloudflare-workers-ai-reranker.md) — Free semantic reranking via Cloudflare's BGE-reranker-base model, used as fallback when Cohere is unavailable
 - [Daily General Channel Recap](docs/daily-general-recap.md) — Automated daily summaries of Discord #general discussion via LLM, with noise filtering and @Quily recap command
@@ -40,6 +41,9 @@ This is the main index for all documentation, bug reports, and task management.
 - [Writer Mode - Design Spec](tasks/2026-03-30-writer-mode-design.md)
 - [Writer Mode Implementation Plan](tasks/2026-03-30-writer-mode-plan.md)
 - [Feature Request: Citation-Free Response Mode](tasks/2026-04-13-nosources-flag-feature.md)
+- [Stale / invalid Discord message IDs in source citations](tasks/2026-06-20-stale-discord-citation-links.md)
+- [Ottimizzazione latenza /api/chat (Quily) — Implementation Plan](tasks/2026-07-10-chat-latency-optimization.md)
+- [Publish Quily as a Farcaster / HyperSnap Mini App](tasks/2026-07-10-publish-farcaster-hypersnap-miniapp.md)
 - [Add Self-Review / Fact Check Button to Bot Replies](tasks/self-review-fact-check-button.md)
 - [Add Web Fetching Capability to Chatbot](tasks/web-fetching-capability.md)
 - [Cross-Reference Verification Against Source Docs](tasks/cross-reference-verification.md)
@@ -121,6 +125,7 @@ This is the main index for all documentation, bug reports, and task management.
 - [Research: Humanizing LLM Output for Social Media Content](reports/2026-03-30-humanizing-llm-output-research.md)
 - [Model Benchmark — DeepSeek V3.2 vs V4 Flash vs V4 Pro](reports/2026-06-03-model-benchmark-v3.2-vs-v4.md)
 - [Model Scout — OpenRouter LLM Discovery](reports/2026-06-03-model-scout-openrouter.md)
+- [Chat latency optimization — before/after report](reports/2026-07-10-chat-latency-optimization.md)
 
 ### Archived
 - [LLM Provider Pricing Research](reports/archived/2026-01-30_llm-provider-pricing-research.md)
@@ -137,4 +142,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-06-11 09:21:55
+**Last Updated**: 2026-07-10 09:58:58
