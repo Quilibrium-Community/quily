@@ -6,7 +6,10 @@
 
 const CLOUDFLARE_API_BASE = 'https://api.cloudflare.com/client/v4/accounts';
 const MODEL_ID = '@cf/baai/bge-reranker-base';
-const REQUEST_TIMEOUT_MS = 10000;
+// Default rerank budget. Observed p50 is ~300-600ms; the old 10s ceiling let a slow Cloudflare
+// queue block the entire chat response. 1200ms trims only the pathological tail — the caller
+// (retriever.ts) already falls back to similarity ordering on abort, as it does on any error.
+const DEFAULT_RERANK_TIMEOUT_MS = 1200;
 
 interface CloudflareResponse {
   result: { response: Array<{ id: number; score: number }> };
@@ -24,7 +27,8 @@ export async function rerankWithCloudflare(
   documents: string[],
   topK: number,
   accountId: string,
-  apiToken: string
+  apiToken: string,
+  timeoutMs: number = DEFAULT_RERANK_TIMEOUT_MS
 ): Promise<RerankResult[]> {
   // Input validation
   if (!query.trim() || documents.length === 0) {
@@ -35,7 +39,7 @@ export async function rerankWithCloudflare(
   const url = `${CLOUDFLARE_API_BASE}/${accountId}/ai/run/${MODEL_ID}`;
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(url, {

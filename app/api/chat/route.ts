@@ -632,6 +632,11 @@ export async function POST(request: Request) {
     // Normalize query for RAG retrieval (handles "Q" → "Quilibrium", misspellings, etc.)
     const userQuery = normalizeQuery(rawUserQuery);
 
+    // Per-phase timing: one `[chat] timing ...` line logged at first token (visible in Vercel
+    // runtime logs). No user text, only milliseconds. Helps spot which stage regresses in prod.
+    const tStart = Date.now();
+    const phases: Record<string, number> = {};
+
     // Stats shortcut: fetch live stats and stream them back, skip RAG entirely
     if (statsRequested) {
       const stream = createUIMessageStream({
@@ -814,6 +819,16 @@ export async function POST(request: Request) {
       writer.write({ type: 'data-error' as const, data: { source, message } });
     };
 
+    // Log per-phase timing once, at the first streamed token. Shared by both the OpenRouter
+    // and Chutes paths so `first_token` reflects real TTFT regardless of provider.
+    let loggedTiming = false;
+    const logTiming = () => {
+      if (loggedTiming) return;
+      loggedTiming = true;
+      const parts = Object.entries(phases).map(([k, v]) => `${k}=${v}ms`).join(' ');
+      console.log(`[chat] timing ${parts} first_token=${Date.now() - tStart}ms`);
+    };
+
     const stream = createUIMessageStream({
       execute: async ({ writer }) => {
         // Debug snapshot: env + request shape, before any work
@@ -847,6 +862,7 @@ export async function POST(request: Request) {
           if (embeddingProvider === 'openrouter' && !openrouterKey) {
             console.warn('Skipping RAG retrieval: OpenRouter API key missing for embeddings.');
           } else {
+            const tRag = Date.now();
             const prepared = await prepareQuery({
               query: userQuery,
               conversationHistory: [],
@@ -857,6 +873,7 @@ export async function POST(request: Request) {
               cohereApiKey: process.env.COHERE_API_KEY,
               priorityDocIds,
             });
+            phases.rag = Date.now() - tRag;
 
             ({ systemPrompt, retrievedChunks: chunks, ragQuality, sources: formattedSources } = prepared);
             const maxSim = chunks.length > 0 ? Math.max(...chunks.map(c => c.similarity)).toFixed(3) : '0';
@@ -979,6 +996,7 @@ export async function POST(request: Request) {
             let isFirstChunk = true;
             for await (const chunk of streamResult.textStream) {
               if (chunk) {
+                logTiming();
                 localReceivedContent = true;
                 receivedAnyContent = true;
                 fullResponseText += chunk;
@@ -1212,11 +1230,27 @@ export async function POST(request: Request) {
         } // end normal (non-correction) flow
       } else {
         // OpenRouter and other providers: use standard toUIMessageStream()
+        // Provider routing for latency: OpenRouter's default load-balancing can land on a slow
+        // provider (measured TTFT p50 ~4.4s, worst run ~11s). `sort: 'latency'` cuts p50 to ~1.5s
+        // and removes the slow tail. The quantization allowlist excludes fp4 (DeepInfra/AtlasCloud
+        // serve deepseek-v4-flash at fp4 = degraded quality) so the latency sort can't trade
+        // quality for speed. Toggle: OPENROUTER_SORT="" disables the sort via env.
+        const providerSort = process.env.OPENROUTER_SORT ?? 'latency';
+        const openrouterModel =
+          provider === 'openrouter' && providerSort
+            ? (modelProvider as ReturnType<typeof createOpenRouter>)(model, {
+                provider: {
+                  sort: providerSort as 'latency',
+                  quantizations: ['fp8', 'fp16', 'bf16', 'fp32', 'int8', 'unknown'],
+                },
+              })
+            : modelProvider(model);
         const result = streamText({
-          model: modelProvider(model) as Parameters<typeof streamText>[0]['model'],
+          model: openrouterModel as Parameters<typeof streamText>[0]['model'],
           system: systemPrompt,
           messages: llmMessages,
           tools: ragTools,
+          onChunk: () => logTiming(),
           onError: (error) => {
             const msg = error.error instanceof Error ? error.error.message : String(error.error);
             console.error('LLM streaming error:', msg);

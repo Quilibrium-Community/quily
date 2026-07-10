@@ -11,6 +11,11 @@ import { rerankWithCloudflare } from './cloudflare-reranker';
 const UNIFIED_EMBEDDING_MODEL = 'baai/bge-m3';
 const CHUTES_EMBEDDING_MODEL_SLUG = 'chutes-baai-bge-m3';
 
+// Rerank budget shared by both providers. Reranking is a fail-safe refinement, not a hard
+// dependency: on timeout the code below falls back to similarity ordering (same as on error).
+// Cohere's SDK exposes no timeout, so it's wrapped in a Promise.race; Cloudflare takes it as a param.
+const RERANK_TIMEOUT_MS = 1200;
+
 // Temporal keywords that indicate the user wants recent content
 // Includes translations for major languages to support multilingual queries
 const TEMPORAL_KEYWORDS = [
@@ -308,10 +313,18 @@ async function generateEmbedding(
     return getChutesEmbedding(text, accessToken);
   }
   if (!apiKey) throw new Error('OpenRouter API key is required for embeddings');
+  // Provider pinning on the query embedding: bge-m3 is deterministic, so the vectors stay
+  // compatible with the index (verified via retrieval-parity, task 2026-07-10). This prevents
+  // OpenRouter from routing to a slow provider — the query embed was measured at ~870ms median
+  // with high variance (a known DeepInfra failure mode on kaya showed 13-80s tails).
+  // Toggle: OPENROUTER_EMBED_ORDER="" disables pinning without touching code.
+  const embedOrder = (process.env.OPENROUTER_EMBED_ORDER ?? 'SiliconFlow,DeepInfra')
+    .split(',').map((s) => s.trim()).filter(Boolean);
   const openrouter = createOpenRouter({ apiKey });
   const result = await embed({
     model: openrouter.textEmbeddingModel(
-      model || process.env.OPENROUTER_EMBEDDING_MODEL || UNIFIED_EMBEDDING_MODEL
+      model || process.env.OPENROUTER_EMBEDDING_MODEL || UNIFIED_EMBEDDING_MODEL,
+      embedOrder.length > 0 ? { provider: { order: embedOrder } } : undefined
     ),
     value: text,
   });
@@ -677,12 +690,17 @@ export async function retrieveWithReranking(
   if (resolvedCohereKey) {
     try {
       const cohereProvider = createCohere({ apiKey: resolvedCohereKey });
-      const { ranking } = await rerank({
-        model: cohereProvider.reranking('rerank-v3.5'),
-        query,
-        documents: candidates.map((c: { content: string }) => c.content),
-        topN: rerankTopN,
-      });
+      const { ranking } = await Promise.race([
+        rerank({
+          model: cohereProvider.reranking('rerank-v3.5'),
+          query,
+          documents: candidates.map((c: { content: string }) => c.content),
+          topN: rerankTopN,
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Cohere rerank timeout')), RERANK_TIMEOUT_MS)
+        ),
+      ]);
       return mergeWithReserved(mapRankedToChunks(ranking));
     } catch (cohereError) {
       console.warn('Cohere reranking failed, trying Cloudflare:', cohereError);
@@ -701,7 +719,8 @@ export async function retrieveWithReranking(
         candidates.map((c: { content: string }) => c.content),
         rerankTopN,
         cloudflareAccountId,
-        cloudflareApiToken
+        cloudflareApiToken,
+        RERANK_TIMEOUT_MS
       );
       if (ranking.length > 0) {
         return mergeWithReserved(mapRankedToChunks(
