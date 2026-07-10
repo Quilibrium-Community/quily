@@ -18,7 +18,7 @@
   /* ==========================================================================
      BACKGROUNDS
      ========================================================================== */
-  --color-bg-base: #ffffff;           /* Main content area */
+  --color-bg-base: #fcfcfc;           /* Main content area (near-white, lets white input pop) */
   --color-bg-muted: #f3f4f6;          /* Sidebar, secondary areas (gray-100) */
   --color-bg-subtle: #f9fafb;         /* Hover states, highlights (gray-50) */
   --color-bg-elevated: #ffffff;       /* Modals, popovers, dropdowns */
@@ -33,6 +33,13 @@
   --color-border-strong: #d1d5db;     /* Emphasized borders (gray-300) */
   --color-border-focus: #9ca3af;      /* Focus state borders (gray-400) */
   --color-input-focus: #19336B; /* Input focus ring (matches button gradient) */
+
+  /* Chat input surface + elevation (light theme).
+     Page is #fcfcfc off-white, so the input is pure white + border to read as a distinct raised surface. */
+  --color-input-bg: #ffffff;          /* pure white — pops against off-white page */
+  --color-input-bg-focus: #ffffff;    /* stays white when focused (shadow + border carry the state) */
+  --shadow-input: 0 2px 8px -2px rgba(17, 24, 39, 0.08), 0 1px 3px -1px rgba(17, 24, 39, 0.05);
+  --shadow-input-focus: 0 3px 10px -2px rgba(17, 24, 39, 0.10), 0 1px 4px -1px rgba(17, 24, 39, 0.06);
 
   /* ==========================================================================
      TEXT
@@ -153,6 +160,13 @@
   --color-border-focus: #6b7280;      /* Focus state borders (gray-500) */
   --color-input-focus: #3B5998; /* Input focus ring (matches button gradient) */
 
+  /* Chat input surface + elevation (dark theme).
+     Base is #1a1f2e, so the input goes lighter to lift off the page; deep black shadow adds depth. */
+  --color-input-bg: #262d3d;          /* clearly lighter than base */
+  --color-input-bg-focus: #2d3547;    /* brightens further when focused */
+  --shadow-input: 0 1px 4px -2px rgba(0, 0, 0, 0.12);
+  --shadow-input-focus: 0 1px 5px -2px rgba(0, 0, 0, 0.14);
+
   /* ==========================================================================
      TEXT
      ========================================================================== */
@@ -267,6 +281,12 @@
   --color-border-strong: var(--color-border-strong);
   --color-border-focus: var(--color-border-focus);
   --color-input-focus: var(--color-input-focus);
+
+  /* Chat input surface + elevation */
+  --color-input-bg: var(--color-input-bg);
+  --color-input-bg-focus: var(--color-input-bg-focus);
+  --shadow-input: var(--shadow-input);
+  --shadow-input-focus: var(--shadow-input-focus);
 
   /* Text */
   --color-text-base: var(--color-text-base);

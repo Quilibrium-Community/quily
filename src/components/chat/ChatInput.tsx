@@ -96,8 +96,10 @@ export function ChatInput({
   const textareaSize = embedded ? 'py-4 min-h-14' : 'py-3 min-h-12';
 
   const inputField = (
-    <div className={`relative flex items-end rounded-xl border bg-bg-muted transition-colors
-                    ${disabled ? 'border-border-muted bg-bg-subtle' : 'border-border focus-within:border-input-focus'}`}>
+    <div className={`relative flex items-end rounded-xl border bg-input-bg shadow-input transition-all
+                    ${disabled
+                      ? 'border-border-strong'
+                      : 'border-border-strong focus-within:bg-input-bg-focus focus-within:border-border-focus focus-within:shadow-input-focus'}`}>
       <textarea
         ref={textareaRef}
         value={input}
@@ -111,7 +113,7 @@ export function ChatInput({
         className={`flex-1 resize-none bg-transparent pl-3 sm:pl-4 pr-2 text-text-base
                    placeholder-text-subtle
                    focus:outline-none
-                   disabled:cursor-not-allowed disabled:opacity-50
+                   disabled:cursor-not-allowed
                    max-h-48 overflow-hidden input-scrollbar
                    scroll-mb-16 ${textareaSize}`}
       />
@@ -186,7 +188,7 @@ export function ChatInput({
   }
 
   return (
-    <div className="bg-bg-base p-2 sm:p-4">
+    <div className="bg-bg-base px-2 pt-2 pb-4 sm:px-4 sm:pt-4 sm:pb-10">
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
         {inputField}
         {charCounter}
