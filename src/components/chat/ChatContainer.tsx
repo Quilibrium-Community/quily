@@ -92,17 +92,25 @@ export function ChatContainer({
 
   // Effective conversation id. Seeded from the prop, but when the user sends the
   // first message from the empty state (prop is null) we create the conversation
-  // lazily here and hold its id in this ref. Using a ref keeps it readable by the
-  // persistence effect and stable across the same-mount null -> id transition
-  // (page.tsx keeps the remount key stable for exactly this transition, so the
-  // in-flight send is not lost).
+  // lazily and adopt its id here. It's kept in BOTH a ref and state:
+  // - the ref is read synchronously in handleSubmit (to avoid creating twice and
+  //   to have the id available before the first render commits);
+  // - the state is a dependency of the persistence effect, so that effect
+  //   deterministically re-runs once the id is born and saves the messages.
+  //   (A ref alone doesn't trigger the effect, which caused an intermittent
+  //   "first chat not saved" race.)
   const effectiveIdRef = useRef<string | null>(conversationId);
-  // Keep the ref in sync when the prop changes for reasons other than our own
-  // lazy creation (e.g. switching conversations remounts, but a same-mount prop
-  // update from setActive should adopt the new id too).
+  const [effectiveId, setEffectiveId] = useState<string | null>(conversationId);
+  // Keep both in sync when the prop changes for reasons other than our own lazy
+  // creation (e.g. a same-mount prop update from setActive should be adopted).
   if (conversationId && conversationId !== effectiveIdRef.current) {
     effectiveIdRef.current = conversationId;
   }
+  useEffect(() => {
+    if (conversationId && conversationId !== effectiveId) {
+      setEffectiveId(conversationId);
+    }
+  }, [conversationId, effectiveId]);
   const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
   const { isSignedIn: isChutesSignedIn, loading: chutesLoading, authMethod } = useChutesSession();
   const [chutesEmbeddingModel] = useLocalStorage<string>('chutes-embedding-model', '');
@@ -364,6 +372,7 @@ export function ChatContainer({
       if (!effectiveIdRef.current) {
         const newId = addConversation();
         effectiveIdRef.current = newId;
+        setEffectiveId(newId);
         setActive(newId);
       }
 
@@ -411,7 +420,7 @@ export function ChatContainer({
   useEffect(() => {
     // Use the effective id (may have just been created lazily on first message)
     // rather than the prop, which can still be null for a fresh session.
-    const persistId = effectiveIdRef.current;
+    const persistId = effectiveId ?? effectiveIdRef.current;
     if (!persistId || messages.length === 0) return;
 
     const doUpdate = () => {
@@ -474,7 +483,7 @@ export function ChatContainer({
       }
       doUpdate();
     }
-  }, [conversationId, messages, updateMessages, isStreaming, ragQuality]);
+  }, [conversationId, effectiveId, messages, updateMessages, isStreaming, ragQuality]);
 
   // Show skeleton while Chutes session is loading to prevent flash of ProviderSetup
   if (providerId === 'chutes' && chutesLoading) {
