@@ -84,7 +84,7 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile header bar - only on smaller screens */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-bg-muted flex items-center px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-[calc(3.5rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] bg-bg-muted flex items-center px-4">
         <button
           onClick={toggleSidebar}
           className="p-2 cursor-pointer text-text-primary rounded-lg hover:bg-surface/10 dark:hover:bg-surface/15 transition-colors"
@@ -216,6 +216,7 @@ export function Sidebar() {
         className={`
           fixed inset-y-0 left-0 z-40
           w-[80vw] sm:w-72 h-screen-safe
+          pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)]
           bg-bg-muted
           flex flex-col
           overflow-hidden
@@ -363,7 +364,7 @@ export function Sidebar() {
         />
 
         {/* Settings at bottom - fixed */}
-        <div className="p-4">
+        <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <Link
             href="/settings"
             onClick={() => {

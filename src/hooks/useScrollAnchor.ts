@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 /**
@@ -45,6 +45,33 @@ export function useScrollAnchor() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
+  }, []);
+
+  // When the mobile keyboard opens/closes the scroll container changes height.
+  // If we were (nearly) at the bottom, stay pinned to the last message instead
+  // of leaving a gap or floating mid-conversation.
+  useEffect(() => {
+    const container = scrollRef.current;
+    const vv = window.visualViewport;
+    if (!container || !vv) return;
+
+    let wasNearBottom = true;
+    const trackPosition = () => {
+      wasNearBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight < 120;
+    };
+    const onViewportResize = () => {
+      if (wasNearBottom) {
+        container.scrollTop = container.scrollHeight;
+      }
+    };
+
+    container.addEventListener('scroll', trackPosition, { passive: true });
+    vv.addEventListener('resize', onViewportResize);
+    return () => {
+      container.removeEventListener('scroll', trackPosition);
+      vv.removeEventListener('resize', onViewportResize);
+    };
   }, []);
 
   return {

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Poppins } from 'next/font/google';
 import localFont from 'next/font/local';
 import { ThemeProvider } from '@/src/components/providers/ThemeProvider';
@@ -23,6 +23,18 @@ const geistMono = localFont({
   display: 'swap',
   variable: '--font-geist-mono',
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  // Extends the layout under the notch / home bar; safe-area padding is handled
+  // per-component.
+  viewportFit: 'cover',
+  // Android Chrome 108+: when the keyboard appears the layout viewport shrinks,
+  // so the chat input stays visible above it. iOS ignores this directive, where
+  // useVisualViewportSync takes over instead.
+  interactiveWidget: 'resizes-content',
+};
 
 export const metadata: Metadata = {
   title: 'Quily Chat',

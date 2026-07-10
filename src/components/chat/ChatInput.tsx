@@ -32,7 +32,18 @@ export function ChatInput({
   embedded = false,
 }: ChatInputProps) {
   const [input, setInput] = useState('');
+  // On touch screens Enter inserts a newline (sending goes through the button,
+  // like messaging apps); on desktop Enter sends.
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(pointer: coarse)');
+    setIsCoarsePointer(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsCoarsePointer(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
 
   // Auto-resize textarea based on content
   useEffect(() => {
@@ -68,9 +79,10 @@ export function ChatInput({
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    // Submit on Enter (without Shift) OR Ctrl/Cmd+Enter
+    // Submit on Enter (without Shift) OR Ctrl/Cmd+Enter.
+    // On touch devices plain Enter inserts a newline instead.
     const isModifierEnter = (e.ctrlKey || e.metaKey) && e.key === 'Enter';
-    const isPlainEnter = e.key === 'Enter' && !e.shiftKey;
+    const isPlainEnter = e.key === 'Enter' && !e.shiftKey && !isCoarsePointer;
 
     if (isModifierEnter || isPlainEnter) {
       e.preventDefault();
@@ -90,10 +102,13 @@ export function ChatInput({
   const showCounter = charCount >= MAX_LENGTH * 0.8;
   const isWarning = charCount >= MAX_LENGTH * 0.9;
 
-  // Sizes - larger when embedded in welcome screen, original size in normal chat
-  const buttonSize = embedded ? 'h-10 w-10 p-2.5' : 'h-8 w-8 p-2';
-  const iconSize = embedded ? 'w-5 h-5' : 'w-4 h-4';
-  const textareaSize = embedded ? 'py-4 min-h-14' : 'py-3 min-h-12';
+  // Sizes - larger when embedded in welcome screen, original size in normal chat.
+  // On mobile the send button is always >= 44px (touch target), shrinking to the
+  // original size from sm: upward so desktop is unchanged.
+  const buttonSize = embedded ? 'h-11 w-11 p-2.5 sm:h-10 sm:w-10' : 'h-11 w-11 p-2.5 sm:h-8 sm:w-8 sm:p-2';
+  const buttonWrapPad = embedded ? 'p-1.5 sm:p-2' : 'p-1 sm:p-2';
+  const iconSize = embedded ? 'w-5 h-5' : 'w-5 h-5 sm:w-4 sm:h-4';
+  const textareaSize = embedded ? 'py-4 min-h-14' : 'py-3.5 sm:py-3 min-h-13 sm:min-h-12';
 
   const inputField = (
     <div className={`relative flex items-end rounded-xl border bg-input-bg shadow-input transition-all
@@ -110,7 +125,7 @@ export function ChatInput({
         maxLength={MAX_LENGTH}
         disabled={disabled || isStreaming}
         rows={1}
-        className={`flex-1 resize-none bg-transparent pl-3 sm:pl-4 pr-2 text-text-base
+        className={`flex-1 resize-none bg-transparent pl-3 sm:pl-4 pr-2 text-base text-text-base
                    placeholder-text-subtle
                    focus:outline-none
                    disabled:cursor-not-allowed
@@ -118,12 +133,12 @@ export function ChatInput({
                    scroll-mb-16 ${textareaSize}`}
       />
 
-      <div className="shrink-0 p-2 self-end">
+      <div className={`shrink-0 ${buttonWrapPad} self-end`}>
         {isStreaming ? (
           <button
             type="button"
             onClick={onStop}
-            className="px-3 py-1.5 h-8 rounded-lg
+            className="px-4 sm:px-3 py-1.5 min-h-11 sm:min-h-0 sm:h-8 rounded-lg
                        bg-btn-danger hover:bg-btn-danger-hover cursor-pointer
                        text-white text-sm font-medium transition-colors
                        focus:outline-none focus:ring-2 focus:ring-error focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-gray-900
@@ -188,7 +203,7 @@ export function ChatInput({
   }
 
   return (
-    <div className="bg-bg-base px-2 pt-2 pb-4 sm:px-4 sm:pt-4 sm:pb-10">
+    <div className="bg-bg-base px-2 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-4 sm:pt-4 sm:pb-10">
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
         {inputField}
         {charCounter}

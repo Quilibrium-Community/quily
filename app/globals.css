@@ -550,6 +550,8 @@ a.link-muted:hover {
 .chat-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: var(--color-scrollbar) transparent;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 /* Input textarea scrollbar - minimal and subtle */
@@ -611,11 +613,14 @@ a.link-muted:hover {
    100vh. Using dvh (dynamic viewport height) ensures the layout accounts for
    the keyboard, keeping the input field visible.
 
-   Fallback chain: dvh -> svh -> vh for browser compatibility
+   Fallback chain: --app-height (kept in sync by useVisualViewportSync, keyboard
+   included) -> dvh -> vh for browser compatibility. Without JS or without
+   visualViewport support the var falls back to 100dvh.
    ============================================================================ */
 .h-screen-safe {
   height: 100vh;
   height: 100dvh;
+  height: var(--app-height, 100dvh);
 }
 
 /* Ensure the body and html also respect the safe height on mobile */
