@@ -71,6 +71,18 @@ export function MessageList({ messages, status, error, streamError, rateLimitErr
 
   const isStreaming = status === 'streaming' || status === 'submitted';
 
+  // The assistant message object is added to `messages` as soon as the first stream part
+  // arrives (sources, text-start, data-* parts), which can be seconds before the first
+  // actual text token. Track whether the last assistant message has produced any visible
+  // text yet, so the thinking indicator stays on screen until the first token paints
+  // instead of vanishing into an empty bubble during that gap.
+  const lastMessage = messages[messages.length - 1];
+  const lastAssistantHasText =
+    lastMessage?.role === 'assistant' &&
+    (lastMessage.parts ?? []).some(
+      (part) => part.type === 'text' && part.text.trim().length > 0
+    );
+
   // Throttle refs for scroll during streaming
   const lastScrollTime = useRef<number>(0);
   const scrollThrottleRef = useRef<NodeJS.Timeout | null>(null);
@@ -199,9 +211,14 @@ export function MessageList({ messages, status, error, streamError, rateLimitErr
           );
         })}
 
-        {/* Thinking process indicator during streaming (shows before assistant message appears) */}
+        {/* Thinking indicator during streaming. Shows while the last message is still the
+            user's, AND continues while the assistant message exists but hasn't emitted any
+            text yet — closing the visible gap between the placeholder disappearing and the
+            first token painting (RAG done, LLM still processing). */}
         {isStreaming && (
-          messages.length === 0 || messages[messages.length - 1].role === 'user'
+          messages.length === 0 ||
+          lastMessage?.role === 'user' ||
+          !lastAssistantHasText
         ) && (
           <ThinkingProcess steps={thinkingSteps} isVisible={true} />
         )}

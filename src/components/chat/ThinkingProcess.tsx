@@ -15,21 +15,32 @@ interface ThinkingProcessProps {
   isVisible: boolean;
 }
 
+/** Shown before any status step arrives (initial submit). */
+const THINKING_LABEL = 'Thinking';
+/** Shown once retrieval finishes but the LLM hasn't streamed its first token yet. */
+const GENERATING_LABEL = 'Writing the answer';
+
 /**
  * Simple thinking process indicator showing current status.
- * Displays the active step with an animated spinner.
+ * Displays the active step with an animated spinner. When no step is active it still
+ * renders — "Thinking" before any status arrives, "Writing the answer" once retrieval
+ * has completed — so the indicator never blinks out into an empty bubble during the
+ * RAG→first-token gap.
  */
 export function ThinkingProcess({ steps, isVisible }: ThinkingProcessProps) {
-  if (!isVisible || steps.length === 0) {
+  if (!isVisible) {
     return null;
   }
 
   const activeStep = steps.find(s => s.status === 'active');
-
-  // If no active step, don't show anything (all done or not started)
-  if (!activeStep) {
-    return null;
-  }
+  // No active step: either nothing has started yet (no steps) → "Thinking", or all
+  // retrieval steps are done and we're waiting on the first token → "Writing the answer".
+  const label = activeStep
+    ? activeStep.label
+    : steps.length === 0
+      ? THINKING_LABEL
+      : GENERATING_LABEL;
+  const description = activeStep?.description;
 
   return (
     <div className="flex justify-start mb-4">
@@ -40,10 +51,10 @@ export function ThinkingProcess({ steps, isVisible }: ThinkingProcessProps) {
 
           {/* Status label and description */}
           <div className="min-w-0">
-            <span className="text-sm text-text-primary">{activeStep.label}</span>
-            {activeStep.description && (
+            <span className="text-sm text-text-primary">{label}</span>
+            {description && (
               <span className="text-sm text-text-muted ml-2">
-                — {activeStep.description}
+                — {description}
               </span>
             )}
           </div>
