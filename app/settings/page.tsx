@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTheme } from 'next-themes';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Icon } from '@/src/components/ui/Icon';
+import { getAvatarUrl } from '@/src/lib/avatar';
 import { useLocalStorage } from '@/src/hooks/useLocalStorage';
 import { getRecommendedModels, DEFAULT_MODEL_ID, FREE_MODE_DEFAULT_MODEL_ID, ModelMetadata } from '@/src/lib/openrouter';
 import { getProvider, getActiveProviders, getDefaultProvider } from '@/src/lib/providers';
@@ -266,28 +267,46 @@ export default function SettingsPage() {
                 Your Profile
               </h2>
 
-              <div className="space-y-3">
-                <div>
-                  <label htmlFor="profile-name" className="block text-sm font-medium text-text-primary mb-2">
-                    Display Name
-                  </label>
-                  <input
-                    id="profile-name"
-                    type="text"
-                    value={profileName}
-                    onChange={(e) => {
-                      setProfileName(e.target.value);
-                      setProfileCustomSet(true);
-                    }}
-                    placeholder="You"
-                    className="w-full px-3 py-2 text-sm rounded-lg border
-                      bg-surface/5 dark:bg-surface/10
-                      text-text-primary
-                      placeholder-gray-400 dark:placeholder-gray-500
-                      border-gray-300 dark:border-gray-600
-                      focus:outline-none focus:border-secondary dark:focus:border-gray-400
-                      transition-colors"
+              <div className="flex items-start gap-4 sm:gap-5">
+                {/* Avatar preview - auto-generated from the display name */}
+                <div className="shrink-0 flex flex-col items-center gap-1.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={getAvatarUrl(profileName)}
+                    alt="Your avatar"
+                    width={64}
+                    height={64}
+                    className="w-16 h-16 rounded-full bg-surface/10 border border-gray-200 dark:border-gray-700 object-cover"
                   />
+                  <span className="text-[10px] text-gray-400 dark:text-gray-500">Auto-generated</span>
+                </div>
+
+                <div className="flex-1 min-w-0 space-y-3">
+                  <div>
+                    <label htmlFor="profile-name" className="block text-sm font-medium text-text-primary mb-2">
+                      Display Name
+                    </label>
+                    <input
+                      id="profile-name"
+                      type="text"
+                      value={profileName}
+                      onChange={(e) => {
+                        setProfileName(e.target.value);
+                        setProfileCustomSet(true);
+                      }}
+                      placeholder="You"
+                      className="w-full px-3 py-2 text-sm rounded-lg border
+                        bg-surface/5 dark:bg-surface/10
+                        text-text-primary
+                        placeholder-gray-400 dark:placeholder-gray-500
+                        border-gray-300 dark:border-gray-600
+                        focus:outline-none focus:border-secondary dark:focus:border-gray-400
+                        transition-colors"
+                    />
+                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      Your avatar updates automatically based on your display name.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

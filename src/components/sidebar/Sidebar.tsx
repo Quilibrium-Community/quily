@@ -13,6 +13,7 @@ import { useConversationStore } from '@/src/stores/conversationStore';
 import { useChutesSession } from '@/src/hooks/useChutesSession';
 import { useSearch } from '@/src/contexts/SearchContext';
 import { useSidebar } from '@/src/contexts/SidebarContext';
+import { getAvatarUrl } from '@/src/lib/avatar';
 
 /**
  * Main sidebar component containing navigation and conversation history.
@@ -35,7 +36,7 @@ export function Sidebar() {
   const [apiKey] = useLocalStorage<string>('openrouter-api-key', '');
   const [profileName] = useLocalStorage<string>('user-profile-name', 'You');
   const { isSignedIn: isChutesSignedIn } = useChutesSession();
-  const addConversation = useConversationStore((s) => s.addConversation);
+  const setActive = useConversationStore((s) => s.setActive);
   const activeId = useConversationStore((s) => s.activeId);
   const conversations = useConversationStore((s) => s.conversations);
   const { isSearchOpen, openSearch, closeSearch } = useSearch();
@@ -46,6 +47,10 @@ export function Sidebar() {
   // In free mode the connection status dot is meaningless (the server holds the
   // key), so hide it and show only the username. Otherwise show the dot too.
   const isFreeMode = process.env.NEXT_PUBLIC_FREE_MODE === 'true';
+
+  // Deterministic avatar generated from the username via DiceBear (free, no key).
+  // Same name always yields the same avatar.
+  const avatarUrl = getAvatarUrl(profileName);
 
   // Track when secondary nav items (About, Links) scroll out of view
   const [showNavSeparator, setShowNavSeparator] = useState(false);
@@ -65,7 +70,11 @@ export function Sidebar() {
   }, []);
 
   const handleNewChat = () => {
-    addConversation();
+    // Don't create a conversation yet: just clear the active one so the empty
+    // state shows. The conversation is created lazily on the first message
+    // (ChatContainer.handleSubmit), which avoids piling up empty conversations
+    // in the sidebar every time the user opens a fresh chat.
+    setActive(null);
     // Navigate to home if not already there
     if (pathname !== '/') {
       router.push('/');
@@ -379,9 +388,21 @@ export function Sidebar() {
               hover:bg-hover
               transition-colors text-left"
           >
-            {!isFreeMode && (
-              <span className={`w-2.5 sm:w-2 h-2.5 sm:h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-            )}
+            <span className="relative shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={avatarUrl}
+                alt=""
+                width={28}
+                height={28}
+                className="w-7 h-7 rounded-full bg-surface/15 object-cover"
+              />
+              {!isFreeMode && (
+                <span
+                  className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ring-2 ring-bg-muted ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+                />
+              )}
+            </span>
             <span className="flex-1 truncate">
               {profileName}
             </span>

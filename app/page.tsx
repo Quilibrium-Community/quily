@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { ChatContainer } from '@/src/components/chat/ChatContainer';
 import { Turnstile } from '@/src/components/Turnstile';
 import { useLocalStorage } from '@/src/hooks/useLocalStorage';
@@ -57,6 +57,24 @@ export default function HomePage() {
   // Active conversation from Zustand store
   const activeId = useConversationStore((state) => state.activeId);
   const hasHydrated = useConversationStore((state) => state._hasHydrated);
+
+  // Remount key for ChatContainer. It must change when the user switches to a
+  // *different existing* conversation (so useChat gets a clean state), but must
+  // NOT change when a brand-new conversation is born from the empty state on the
+  // first message — otherwise ChatContainer would remount mid-send and lose the
+  // in-flight message. So a null -> id transition (fresh session creating its
+  // first conversation) keeps the previous 'new-chat' key; every other switch
+  // uses the id.
+  const chatKeyRef = useRef<string>(activeId || 'new-chat');
+  const prevActiveIdRef = useRef<string | null>(activeId);
+  if (activeId !== prevActiveIdRef.current) {
+    const bornFromEmptyState = prevActiveIdRef.current === null && activeId !== null;
+    if (!bornFromEmptyState) {
+      chatKeyRef.current = activeId || 'new-chat';
+    }
+    prevActiveIdRef.current = activeId;
+  }
+  const chatKey = chatKeyRef.current;
 
   // Check if user already has a verified Turnstile session cookie.
   // The cookie is HttpOnly so the client can't read it directly.
@@ -149,7 +167,7 @@ export default function HomePage() {
       )}
 
       <ChatContainer
-        key={activeId || 'new-chat'}
+        key={chatKey}
         providerId={providerId}
         onProviderChange={setProviderId}
         apiKey={apiKey}

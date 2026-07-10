@@ -86,7 +86,23 @@ export function ChatContainer({
   turnstileToken,
 }: ChatContainerProps) {
   const updateMessages = useConversationStore((state) => state.updateMessages);
+  const addConversation = useConversationStore((state) => state.addConversation);
+  const setActive = useConversationStore((state) => state.setActive);
   const conversations = useConversationStore((state) => state.conversations);
+
+  // Effective conversation id. Seeded from the prop, but when the user sends the
+  // first message from the empty state (prop is null) we create the conversation
+  // lazily here and hold its id in this ref. Using a ref keeps it readable by the
+  // persistence effect and stable across the same-mount null -> id transition
+  // (page.tsx keeps the remount key stable for exactly this transition, so the
+  // in-flight send is not lost).
+  const effectiveIdRef = useRef<string | null>(conversationId);
+  // Keep the ref in sync when the prop changes for reasons other than our own
+  // lazy creation (e.g. switching conversations remounts, but a same-mount prop
+  // update from setActive should adopt the new id too).
+  if (conversationId && conversationId !== effectiveIdRef.current) {
+    effectiveIdRef.current = conversationId;
+  }
   const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
   const { isSignedIn: isChutesSignedIn, loading: chutesLoading, authMethod } = useChutesSession();
   const [chutesEmbeddingModel] = useLocalStorage<string>('chutes-embedding-model', '');
@@ -254,9 +270,16 @@ export function ChatContainer({
     [handleStatusUpdate]
   );
 
+  // Mount-stable id for useChat. Captured once so it does NOT change when we
+  // lazily create a conversation on the first message (that would switch useChat
+  // instances mid-send and drop the in-flight stream). The component remounts
+  // via key={chatKey} in page.tsx whenever the user switches to a different
+  // existing conversation, so capturing the initial value at mount is correct.
+  const chatIdRef = useRef<string>(conversationId || 'new-chat');
+
   // Configure useChat with the transport and data handler
   const { messages, status, error, stop, sendMessage, setMessages } = useChat({
-    id: conversationId || 'new-chat',
+    id: chatIdRef.current,
     transport,
     onData: handleData,
   });
@@ -333,6 +356,17 @@ export function ChatContainer({
     (text: string) => {
       if (!hasAccess) return;
 
+      // Lazily create the conversation on the first message so we don't litter
+      // the sidebar with empty conversations every time the user opens a fresh
+      // chat. The remount key in page.tsx stays stable across this null -> id
+      // transition, so useChat keeps its in-flight state and the message is not
+      // lost.
+      if (!effectiveIdRef.current) {
+        const newId = addConversation();
+        effectiveIdRef.current = newId;
+        setActive(newId);
+      }
+
       // Clear thinking steps, follow-up questions, correction URL, and RAG quality for new message
       setThinkingSteps([]);
       setFollowUpQuestions([]);
@@ -343,7 +377,7 @@ export function ChatContainer({
         text,
       });
     },
-    [hasAccess, sendMessage]
+    [hasAccess, sendMessage, addConversation, setActive]
   );
 
   // Handle stop generation
@@ -375,7 +409,10 @@ export function ChatContainer({
 
   // Sync messages to conversation store when they change (debounced during streaming)
   useEffect(() => {
-    if (!conversationId || messages.length === 0) return;
+    // Use the effective id (may have just been created lazily on first message)
+    // rather than the prop, which can still be null for a fresh session.
+    const persistId = effectiveIdRef.current;
+    if (!persistId || messages.length === 0) return;
 
     const doUpdate = () => {
       // Convert UIMessage to store Message format
@@ -420,7 +457,7 @@ export function ChatContainer({
         }
       }
 
-      updateMessages(conversationId, storeMessages);
+      updateMessages(persistId, storeMessages);
     };
 
     if (isStreaming) {
