@@ -44,6 +44,7 @@ This is the main index for all documentation, bug reports, and task management.
 - [Stale / invalid Discord message IDs in source citations](tasks/2026-06-20-stale-discord-citation-links.md)
 - [Ottimizzazione latenza /api/chat (Quily) — Implementation Plan](tasks/2026-07-10-chat-latency-optimization.md)
 - [Publish Quily as a Farcaster / HyperSnap Mini App](tasks/2026-07-10-publish-farcaster-hypersnap-miniapp.md)
+- [Chat latency round 2 — port the newer Kaya wins (2026-07-11)](tasks/2026-07-11-latency-round-2-from-kaya.md)
 - [Add Self-Review / Fact Check Button to Bot Replies](tasks/self-review-fact-check-button.md)
 - [Add Web Fetching Capability to Chatbot](tasks/web-fetching-capability.md)
 - [Cross-Reference Verification Against Source Docs](tasks/cross-reference-verification.md)
@@ -126,6 +127,7 @@ This is the main index for all documentation, bug reports, and task management.
 - [Model Benchmark — DeepSeek V3.2 vs V4 Flash vs V4 Pro](reports/2026-06-03-model-benchmark-v3.2-vs-v4.md)
 - [Model Scout — OpenRouter LLM Discovery](reports/2026-06-03-model-scout-openrouter.md)
 - [Chat latency optimization — before/after report](reports/2026-07-10-chat-latency-optimization.md)
+- [Reasoning A/B — reasoning ON vs OFF (2026-07-11)](reports/2026-07-11-reasoning-ab.md)
 
 ### Archived
 - [LLM Provider Pricing Research](reports/archived/2026-01-30_llm-provider-pricing-research.md)
@@ -142,4 +144,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-07-10 09:58:58
+**Last Updated**: 2026-07-11 15:05:12

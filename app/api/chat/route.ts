@@ -1237,8 +1237,21 @@ export async function POST(request: Request) {
         // serve deepseek-v4-flash at fp4 = degraded quality) so the latency sort can't trade
         // quality for speed. Toggle: OPENROUTER_SORT="" disables the sort via env.
         const providerSort = process.env.OPENROUTER_SORT ?? 'latency';
-        // Build OpenRouter routing (latency sort + quantization allowlist) and
-        // merge the env-driven ZDR flag on top. `withZdr` adds `zdr: true` when
+        // Tail-latency cap (seconds, per-percentile): `sort:'latency'` orders by MEDIAN and
+        // does NOT protect against a provider that accepts then stalls (OpenRouter only
+        // deprioritizes providers that ERROR in the last 30s, not slow ones). Kaya measured
+        // SiliconFlow TTFT up to 222s when pinned, so a p90 cap is pure upside. Toggle:
+        // OPENROUTER_MAX_LATENCY_P90="" disables it; a number overrides the 4s default.
+        const maxLatencyEnv = process.env.OPENROUTER_MAX_LATENCY_P90 ?? '4';
+        const maxLatencyP90 = maxLatencyEnv.trim() === '' ? undefined : Number(maxLatencyEnv);
+        // Chronic-trap providers to exclude outright (belt-and-suspenders over the p90 cap).
+        // Empty by default — the trap set must be RE-MEASURED for Quily's ZDR/quant filters
+        // (its allowlist includes int8, unlike Kaya's) before pinning a name here.
+        // Set e.g. OPENROUTER_IGNORE="siliconflow" once measured.
+        const ignoreProviders = (process.env.OPENROUTER_IGNORE ?? '')
+          .split(',').map((s) => s.trim()).filter(Boolean);
+        // Build OpenRouter routing (latency sort + quantization allowlist + tail cap + ignore)
+        // and merge the env-driven ZDR flag on top. `withZdr` adds `zdr: true` when
         // OPENROUTER_ZDR=true, else returns the base unchanged.
         const openrouterRouting =
           provider === 'openrouter'
@@ -1247,14 +1260,30 @@ export async function POST(request: Request) {
                   ? {
                       sort: providerSort as 'latency',
                       quantizations: ['fp8', 'fp16', 'bf16', 'fp32', 'int8', 'unknown'],
+                      ...(maxLatencyP90 !== undefined && Number.isFinite(maxLatencyP90)
+                        ? { preferred_max_latency: { p90: maxLatencyP90 } }
+                        : {}),
+                      ...(ignoreProviders.length > 0 ? { ignore: ignoreProviders } : {}),
                     }
                   : undefined
               )
             : undefined;
-        const openrouterModel = openrouterRouting
-          ? (modelProvider as ReturnType<typeof createOpenRouter>)(model, {
-              provider: openrouterRouting,
-            })
+        // Reasoning toggle. deepseek-v4-flash emits `delta.reasoning` before `delta.content`,
+        // so with reasoning ON the user stares at a blank screen for the whole reasoning phase
+        // (measured 3-4s of that gap in the A/B, see .agents/reports/*-reasoning-ab.md). Quily is
+        // a facts-from-RAG bot, not a math/code bot, so reasoning adds little precision here.
+        // Default OFF once the A/B confirmed no quality loss; OPENROUTER_REASONING="on"|"true"
+        // re-enables it. Passed as a raw setting because the SDK type requires max_tokens/effort
+        // even for the pure-disable case, which the OpenRouter API does not.
+        const reasoningEnabled = /^(on|true|1)$/i.test(process.env.OPENROUTER_REASONING ?? 'off');
+        const modelSettings: Record<string, unknown> = {};
+        if (openrouterRouting) modelSettings.provider = openrouterRouting;
+        if (!reasoningEnabled) modelSettings.reasoning = { enabled: false };
+        const openrouterModel = Object.keys(modelSettings).length > 0
+          ? (modelProvider as ReturnType<typeof createOpenRouter>)(
+              model,
+              modelSettings as Parameters<ReturnType<typeof createOpenRouter>>[1]
+            )
           : modelProvider(model);
         const result = streamText({
           model: openrouterModel as Parameters<typeof streamText>[0]['model'],

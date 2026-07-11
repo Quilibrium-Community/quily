@@ -20,6 +20,14 @@ export type OpenRouterProviderRouting = {
   quantizations?: string[];
   sort?: 'price' | 'throughput' | 'latency';
   zdr?: boolean;
+  /**
+   * Per-percentile latency cap in seconds. `sort:'latency'` orders providers by
+   * MEDIAN latency but does not protect against a provider that accepts the request
+   * then stalls (OpenRouter only deprioritizes providers that ERROR in the last 30s,
+   * not slow ones). This caps the acceptable tail so a provider whose p90 exceeds the
+   * limit is not routed to. Kaya measured SiliconFlow TTFT up to 222s without this cap.
+   */
+  preferred_max_latency?: { p50?: number; p90?: number; p99?: number };
 };
 
 /** True when Zero Data Retention routing is enabled via env. */
