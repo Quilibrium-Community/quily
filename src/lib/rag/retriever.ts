@@ -313,18 +313,29 @@ async function generateEmbedding(
     return getChutesEmbedding(text, accessToken);
   }
   if (!apiKey) throw new Error('OpenRouter API key is required for embeddings');
-  // Provider pinning on the query embedding: bge-m3 is deterministic, so the vectors stay
-  // compatible with the index (verified via retrieval-parity, task 2026-07-10). This prevents
-  // OpenRouter from routing to a slow provider — the query embed was measured at ~870ms median
-  // with high variance (a known DeepInfra failure mode on kaya showed 13-80s tails).
-  // Toggle: OPENROUTER_EMBED_ORDER="" disables pinning without touching code.
-  const embedOrder = (process.env.OPENROUTER_EMBED_ORDER ?? 'SiliconFlow,DeepInfra')
+  // Dynamic latency routing on the query embedding. bge-m3 is deterministic, so the vectors
+  // stay index-compatible regardless of which provider serves them (verified via retrieval-
+  // parity, task 2026-07-10). We previously PINNED a fixed order ['SiliconFlow','DeepInfra'],
+  // but a fixed order photographs one moment and rots: SiliconFlow later stopped serving
+  // bge-m3 on OpenRouter entirely (only DeepInfra + Parasail remain as of 2026-07-11), so the
+  // pin degenerated to DeepInfra-only. `sort:'latency'` self-corrects — it picks the fastest
+  // live provider each request instead of a stale name. The MODEL is fixed (index parity);
+  // only the PROVIDER floats. Toggle: OPENROUTER_EMBED_SORT="" disables routing; a fixed order
+  // can still be forced via OPENROUTER_EMBED_ORDER (takes precedence when set).
+  const embedOrder = (process.env.OPENROUTER_EMBED_ORDER ?? '')
     .split(',').map((s) => s.trim()).filter(Boolean);
+  const embedSort = process.env.OPENROUTER_EMBED_SORT ?? 'latency';
+  const embedRouting: { order?: string[]; sort?: 'latency' } | undefined =
+    embedOrder.length > 0
+      ? { order: embedOrder }
+      : embedSort
+        ? { sort: embedSort as 'latency' }
+        : undefined;
   const openrouter = createOpenRouter({ apiKey });
   const result = await embed({
     model: openrouter.textEmbeddingModel(
       model || process.env.OPENROUTER_EMBEDDING_MODEL || UNIFIED_EMBEDDING_MODEL,
-      embedOrder.length > 0 ? { provider: { order: embedOrder } } : undefined
+      embedRouting ? { provider: embedRouting } : undefined
     ),
     value: text,
   });

@@ -27,6 +27,8 @@
     "recap-general": "tsx scripts/sync-discord/recap.ts",
     "typecheck": "tsc --noEmit",
     "measure:latency": "tsx scripts/measure-latency.ts",
+    "embed:parity": "tsx scripts/embed-parity.ts",
+    "reasoning:ab": "tsx scripts/reasoning-ab.ts",
     "version:bump": "tsx scripts/version-bump.ts",
     "release": "tsx scripts/release/index.ts",
     "release:prepare": "tsx scripts/release/index.ts prepare",
