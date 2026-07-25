@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-07-24
+date: 2026-07-25
 type: release_notes
 topics:
   - release notes
@@ -16,63 +16,98 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** July 24, 2026
+**Last updated:** July 25, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
 ## v2.1.0.24 (version .24) *(auto-generated)*
-- fix transaction safety for hypergraph store writes, making sync atomic and lazy tree commit retry-safe
-- make compute_shard_root read-only to prevent writes outside a transaction
-- require rocksdb transactions for hypergraph store writes, removing silent direct-write fallback
+- fix race condition where initial sync failure left workers permanently idle
+- fix patch number sync with config
+- fix transaction safety for hypergraph store writes
+- make lazy tree commit retry-safe by deferring dirty-state clearing until transaction commit
+- make compute_shard_root read-only to prevent writes outside frame transactions
+- require RocksTxn for hypergraph store writes, removing silent direct-write fallback
 - handle leaving scenario with store wipe
-- reduce score differential basis for flagging leave-to-join opportunities, extend scoring-based leave window to a full cycle
+- reduce score differential basis for flagging leave-to-join opportunities
+- extend scoring-based leave window to a full cycle
 - adjust margins on decisions and thresholds for decides and joins
 - adjust snapshotting to use actual rocksdb snapshots
 - resolve unsynced leave issuance condition
-- reapply docker build optimizations to Dockerfile.source (consolidate gen stages, restore
+- reapply docker build optimizations to Dockerfile.source
+- add consensus catch-up for lagging archives by syncing proposals from peers
+
+## v2.1.0.23 (version .23) *(auto-generated)*
+- fix docker build and static linking issues
+- fix standalone worker connection string derivation
+- fix too many joins/leaves, invalid signature in qclient, standalone worker mode bugs, worker logging to separate files
+- fix domain separation bug causing invalid signatures
+- fix tokio thread issue with logging
+- fix leaving prover bug in worker allocator
+- fix worker storage location bug and reduce log noise
+- fix prover shard choice edge cases
+- fix TUI quirks for manual mode
+- adjust worker ring logic for available shards
+- prioritize halt risk shards as primary selection criterion
+- address bugs 1,2,3 from blackswan
+- fix stale 0 frame data response and adjust blossomsub parameters
+- refactor tree behavior to skip stale data effects
+- handle orphaned allocations and allocations on zero byte shards
+- fix bugs 1-6 reported by blackswan
+- fix autonat bug crashing worker threads
+- fix build for linux, force static link on libchannel
+- fix stream connection issue with kad-dht
+- fix delegate address edge case
+- support white spaces in genesis seed for testnets
+- fix propose skip on coverage halts
+- fix vdf link order for building
+- enable tests in CI
+- support archive endpoints configuration in Rust node
+- use sha3 for prover join vdf verifier
+- fix Rust node initialization
+- fix router validator test
+- refactor quil-node main into submodules (
 
 ## v2.1.0.22 (version .22) *(auto-generated)*
-- improved prover commands to show worker id
-- relaxed peerstore clearing interval
-- tuned component-level logging
-- added manual management tracking and worker-id-based joins to prover management TUI
-- optimized TUI performance (round 2)
-- fixed dbscan compiler error
-- logged shard allocation join confirm/reject and plan leave details
-- set default archive peer list
-- fixed prover eviction bug
-- improved prover visibility when leaving is implicitly accepted
-- fixed prover leaving status in event distributor
-- renamed "pending" to "joining"
-- fixed merge spend marker
-- fixed sorting/ring position issues in TUI
-- fixed render width for [M] marker
-- fixed timereel behavior to accept new head immediately
-- added timeout for global frame fetch
-- added lru cache to getglobalframe handler
-- adjusted estimation behavior for ring position and membership set calculation
-- fixed worker TUI reward calculation and logical shard count
-- reduced bandwidth on app worker
-- added auto-sized filters
-- optimized logging for plan/decide and confirm/reject for shard joins and leaves
-- fixed dynamic filter width
-- improved blossomsub with estimate/hard calc changes
-- added migration to resolve eviction issue
-- refactored global consensus engine into discrete components
-- adjusted rpc/worker ring display
+- improved prover commands, show worker id
+- relax peerstore clearing interval
+- component-level logger tuning
+- prover management TUI adds manual management tracking and specifies joins by worker id
+- optimize TUI
+- log shard allocation join confirm/reject + plan leave details
+- default archive peer list
+- fix prover eviction bug
+- small tweaks around prover visibility when leaving is implicitly accepted
+- fix prover leaving status in event distributor
+- rename pending to joining
+- fix merge spend marker
+- fix sorting/ring position issues in TUI
+- fix render width for [M] marker
+- timereel behavior should accept new head immediately
+- add timeout for global frame fetch
+- add lru cache to getglobalframe handler
+- adjust estimation behavior to properly calculate ring position and membership set
+- fix worker TUI reward calc/logical shard count, bandwidth reduction on app worker
+- auto-sized filters
+- optimize logging for plan/decide and confirm/reject for shard joins and leaves
+- fix dynamic filter width
+- blossomsub improvements, estimate/hard calc changes
+- fix migration + improved logging
+- new migration to resolve eviction issue
+- refactor global consensus engine into discrete components, update tests
+- adjust rpc/worker ring display
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - reconcile old and new config paths
 - fix formatting/precision on prover reward data
-- implement possible solution to peering issue
+- address potential peering issue
 - fix app shard lookups on mainnet
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
-- allow debug logging via `DEBUG` environment variable
-- fix pebble db constructor config parameter
-- fix high CPU overhead in initial worker behaviors and ongoing sync
-- add extra data to node info and allow querying metrics from command line
+- allow debug env var to be read
+- fix newPebbleDB constructor config param
+- fix high CPU overhead in initial worker behaviors/ongoing sync
+- add extra data to node info, and query metrics from command line
 - leave proposals for overcrowded shards
 - implement hub-and-spoke global message broadcasts
 - tweak cli output for join frames
