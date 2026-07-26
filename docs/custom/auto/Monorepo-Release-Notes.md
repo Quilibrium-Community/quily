@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-07-25
+date: 2026-07-26
 type: release_notes
 topics:
   - release notes
@@ -16,57 +16,60 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** July 25, 2026
+**Last updated:** July 26, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
 ## v2.1.0.24 (version .24) *(auto-generated)*
-- fix race condition where initial sync failure left workers permanently idle
 - fix patch number sync with config
-- fix transaction safety for hypergraph store writes
-- make lazy tree commit retry-safe by deferring dirty-state clearing until transaction commit
-- make compute_shard_root read-only to prevent writes outside frame transactions
-- require RocksTxn for hypergraph store writes, removing silent direct-write fallback
-- handle leaving scenario with store wipe
-- reduce score differential basis for flagging leave-to-join opportunities
-- extend scoring-based leave window to a full cycle
+- fix race condition where initial sync failure left workers permanently idle
+- fix transaction safety for hypergraph store writes by making save operations transaction-aware
+- make lazy tree commit retry-safe by deferring dirty-state clearing until transaction commit succeeds
+- make `compute_shard_root` read-only to prevent unintentional disk writes during root computation
+- enforce RocksTxn for hypergraph store writes, removing silent non-transactional fallback
+- handle store wipe during leave scenario
+- reduce score differential for flagging leave-to-join opportunities and extend scoring-based leave window to a full cycle
 - adjust margins on decisions and thresholds for decides and joins
-- adjust snapshotting to use actual rocksdb snapshots
+- adjust snapshotting to use actual RocksDB snapshots
 - resolve unsynced leave issuance condition
-- reapply docker build optimizations to Dockerfile.source
-- add consensus catch-up for lagging archives by syncing proposals from peers
+- reapply Docker build optimizations (consolidated gen-* stages, restored cargo
 
 ## v2.1.0.23 (version .23) *(auto-generated)*
-- fix docker build and static linking issues
-- fix standalone worker connection string derivation
-- fix too many joins/leaves, invalid signature in qclient, standalone worker mode bugs, worker logging to separate files
-- fix domain separation bug causing invalid signatures
-- fix tokio thread issue with logging
+- fix docker build issue with static linking
+- resolve standalone worker connection string derivation
+- fix too many joins, invalid signature in qclient, standalone worker mode bugs, workers not logging to own files
+- fix keys file handling, reduce excess joins/leaves
+- demote p2p loggers to debug
+- resolve domain separation bug for invalid signature
+- resolve tokio thread issue with logging
 - fix leaving prover bug in worker allocator
-- fix worker storage location bug and reduce log noise
-- fix prover shard choice edge cases
-- fix TUI quirks for manual mode
-- adjust worker ring logic for available shards
-- prioritize halt risk shards as primary selection criterion
-- address bugs 1,2,3 from blackswan
-- fix stale 0 frame data response and adjust blossomsub parameters
-- refactor tree behavior to skip stale data effects
+- resolve worker storage location bug and reduce log noise
+- fix shard store discrepancy
+- cache requests to prevent available shards from flashing
+- resolve stale 0 frame data response, adjust blossomsub parameters
+- refactor tree behaviors to skip stale data effects
 - handle orphaned allocations and allocations on zero byte shards
-- fix bugs 1-6 reported by blackswan
 - fix autonat bug crashing worker threads
 - fix build for linux, force static link on libchannel
-- fix stream connection issue with kad-dht
-- fix delegate address edge case
+- fix router validator tests and quil-engine unit tests
 - support white spaces in genesis seed for testnets
 - fix propose skip on coverage halts
-- fix vdf link order for building
-- enable tests in CI
-- support archive endpoints configuration in Rust node
+- fix vdf link order and enable tests in CI
+- support archive endpoints config in rust node
 - use sha3 for prover join vdf verifier
-- fix Rust node initialization
-- fix router validator test
-- refactor quil-node main into submodules (
+- fix rust node initialization
+- refactor quil-node main into submodules (storage, keys, engines, frame_pipeline, networking, runtime_state, peer_info_publisher, worker_manager, allocator_and_lifecycle, message_loop, archive_sync, grpc)
+- fix canonicalization bug for peer info
+- propagate errors from subsystems
+- reduce logging noise on connection events
+- increase duration between peer info and key registry publishes
+- fix OOM from unbounded stores, add memory profiling and allocator swap
+- fix proposal bug using joining count in halt risk calculation
+- handle 67% barrier for halt risk
+- fix TUI manage submission of messages
+- fix expired leaves not treated as confirmed leaves in proposal logic and worker allocator
+- resolve race condition where overlapping joins are submitted
 
 ## v2.1.0.22 (version .22) *(auto-generated)*
 - improved prover commands, show worker id
@@ -83,7 +86,7 @@ This document tracks changes in each Quilibrium node release.
 - fix merge spend marker
 - fix sorting/ring position issues in TUI
 - fix render width for [M] marker
-- timereel behavior should accept new head immediately
+- fix timereel behavior to accept new head immediately
 - add timeout for global frame fetch
 - add lru cache to getglobalframe handler
 - adjust estimation behavior to properly calculate ring position and membership set
@@ -91,7 +94,7 @@ This document tracks changes in each Quilibrium node release.
 - auto-sized filters
 - optimize logging for plan/decide and confirm/reject for shard joins and leaves
 - fix dynamic filter width
-- blossomsub improvements, estimate/hard calc changes
+- fix blossomsub improvements, estimate/hard calc changes
 - fix migration + improved logging
 - new migration to resolve eviction issue
 - refactor global consensus engine into discrete components, update tests
@@ -100,17 +103,8 @@ This document tracks changes in each Quilibrium node release.
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - reconcile old and new config paths
 - fix formatting/precision on prover reward data
-- address potential peering issue
+- possible solution to peering issue
 - fix app shard lookups on mainnet
-
-## v2.1.0.20 (version .20) *(auto-generated)*
-- allow debug env var to be read
-- fix newPebbleDB constructor config param
-- fix high CPU overhead in initial worker behaviors/ongoing sync
-- add extra data to node info, and query metrics from command line
-- leave proposals for overcrowded shards
-- implement hub-and-spoke global message broadcasts
-- tweak cli output for join frames
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
@@ -161,6 +155,9 @@ This document tracks changes in each Quilibrium node release.
 - Extends ProverConfirm and ProverReject to have multiple filters per message
 - Adds snapshot integration to allow hypersync to occur concurrently with writes
 - Resolved infinitessimal rings divide-by-zero error
+
+## v2.1.0.11 (version .11) *(auto-generated)*
+- No commit messages were provided to extract changes.
 
 ---
 
