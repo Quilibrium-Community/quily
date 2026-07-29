@@ -47,6 +47,7 @@ This is the main index for all documentation, bug reports, and task management.
 - [Publish Quily as a Farcaster / HyperSnap Mini App](tasks/2026-07-10-publish-farcaster-hypersnap-miniapp.md)
 - [Chat latency round 2 — port the newer Kaya wins (2026-07-11)](tasks/2026-07-11-latency-round-2-from-kaya.md)
 - [Harden sync-docs against silent local doc loss](tasks/2026-07-29-harden-sync-docs-drift-detection.md)
+- [Two-axis prompt rework: stop refusing adjacent questions](tasks/2026-07-29-quily-two-axis-prompt-rework.md)
 - [Add Self-Review / Fact Check Button to Bot Replies](tasks/self-review-fact-check-button.md)
 - [Add Web Fetching Capability to Chatbot](tasks/web-fetching-capability.md)
 - [Cross-Reference Verification Against Source Docs](tasks/cross-reference-verification.md)
@@ -146,4 +147,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-07-29 10:30:19
+**Last Updated**: 2026-07-29 10:51:16
