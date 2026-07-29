@@ -2,6 +2,7 @@
 
 import { memo, useMemo } from 'react';
 import { parseFollowUpQuestions } from '@/src/lib/rag/followUpParser';
+import { getCitedIndices } from '@/src/lib/rag/utils';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { SourcesCitation } from './SourcesCitation';
 import { FollowUpQuestions } from './FollowUpQuestions';
@@ -84,18 +85,33 @@ function getTextContent(message: UIMessage, isStreaming: boolean = false): strin
 /**
  * Extract source-url parts from UIMessage.
  */
-function getSources(message: UIMessage): Array<{ sourceId: string; url: string; title?: string }> {
+function getSources(
+  message: UIMessage,
+  responseText: string
+): Array<{ sourceId: string; url: string; title?: string }> {
   if (!message.parts) return [];
+
+  // Show only sources whose citation index actually appears in the response text.
+  // Retrieval runs on every message, so chunks are present even when the answer
+  // didn't come from them (general-knowledge answers, banter). Listing them anyway
+  // implies an attribution that isn't there. Mirrors bot/src/formatter.ts.
+  const citedIndices = getCitedIndices(responseText);
+  if (citedIndices.size === 0) return [];
 
   return message.parts
     .filter((part): part is { type: 'source-url'; sourceId: string; url: string; title?: string } =>
       part.type === 'source-url'
     )
     .map((part) => ({
+      // sourceId is written as `source-${index}-${id}` in app/api/chat/route.ts
+      index: Number(part.sourceId.match(/^source-(\d+)-/)?.[1] ?? NaN),
       sourceId: part.sourceId,
       url: part.url,
       title: part.title,
-    }));
+    }))
+    .filter((s) => citedIndices.has(s.index))
+    .sort((a, b) => a.index - b.index)
+    .map(({ index: _index, ...source }) => source);
 }
 
 /**
@@ -118,7 +134,7 @@ export const MessageBubble = memo(function MessageBubble({
 
   // Memoize text extraction to avoid recalculating on every render
   const textContent = useMemo(() => getTextContent(message, isStreaming), [message.parts, isStreaming]);
-  const sources = useMemo(() => getSources(message), [message.parts]);
+  const sources = useMemo(() => getSources(message, textContent), [message.parts, textContent]);
 
   // Determine if confidence warning should show:
   // Only for 'low' quality (chunks retrieved but weak match).
