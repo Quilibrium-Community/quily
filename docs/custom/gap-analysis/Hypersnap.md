@@ -177,7 +177,7 @@ A web-based console is under development with planned features:
 
 ## Source
 
-- **Repository**: [QuilibriumNetwork/hypersnap](https://github.com/QuilibriumNetwork/hypersnap)
+- **Repository**: [farcasterorg/hypersnap](https://github.com/farcasterorg/hypersnap) (the repo moved out of the QuilibriumNetwork org; the old `QuilibriumNetwork/hypersnap` URL only works via a GitHub redirect)
 - **Language**: Rust
 - **License**: Open source
 - **Latest Version**: v0.11.2 (January 2026)
