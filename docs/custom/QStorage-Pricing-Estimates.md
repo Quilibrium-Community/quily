@@ -171,19 +171,27 @@ applications F(x) execution time, not storage, is the number to watch.
 
 ## Caveats
 
-- **Billing model.** The QConsole pricing calculator bills QStorage per GB **uploaded** with a
-  single blended API rate. The QStorage user manual describes the model slightly differently, as
-  per-GB stored with separate rates for PUT/COPY/POST/LIST versus GET requests, and mentions
-  possible data transfer charges. Where the two differ, check the live pricing on
-  [quilibrium.com](https://quilibrium.com), which reflects what actually bills you.
+- **Storage is billed on what you store, and it recurs.** The pricing page labels the QStorage GB
+  unit "Upload", which reads like a one-time charge, but QConsole meters it as stored volume and
+  bills on a recurring cycle with a defined start and end date, a running spend total, and a
+  projected spend for the period. So the monthly framing used above is the right way to read it: you
+  keep paying for what you keep stored, not once at upload time.
+- **QKMS operations are metered individually.** QConsole tracks encrypt, decrypt, sign, and verify
+  operations as separate usage types rather than as one blended "API call". The multi-service
+  example above uses the single blended rate from the public rate card, which is fine for a rough
+  estimate but will not match a QConsole invoice line for line.
 - **These examples subtract the free tier, the on-site calculator does not.** The calculator on the
   pricing page multiplies usage by rate with no free-tier deduction, so entering the same numbers
-  there will show a slightly higher figure than the totals above. The 5 GB allowance is real (it is
-  stated as 5 GB of storage free "with no time limit"), it is simply not modelled in that calculator.
+  there will show a slightly higher figure than the totals above. The free allowance is real and is
+  applied when you are actually billed: QConsole tracks a free allowance per usage type, along with
+  how much of it remains and how far past it you have gone, and marks each metric as free, paid, or
+  at its limit. It is simply not modelled in the marketing calculator.
 - **The free tier is applied to Quilibrium but not to AWS** in the rate card comparison. This is
   disclosed above and is the convention the official pricing page uses.
-- **Data transfer** is not a line item in the public rate card. If your workload moves large volumes
-  out of QStorage, confirm whether transfer is billed separately before budgeting for it.
+- **Bandwidth is metered, but has no published rate.** QConsole tracks bandwidth as its own billable
+  usage type, yet it does not appear on the public rate card, so the estimates above do not include
+  it. For a high-traffic or media-heavy site this could be a meaningful additional cost. Check your
+  usage and rates in QConsole rather than assuming transfer is free.
 - **Request counts are the hard part to estimate**, and the examples above simplify them in two
   opposing directions. They assume one page view per visit, which understates multi-page sessions
   typical of ecommerce and corporate sites, and they assume no caching, which overstates repeat
