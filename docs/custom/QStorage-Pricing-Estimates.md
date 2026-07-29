@@ -17,7 +17,8 @@ a website on QStorage.
 
 ## Free Tier
 
-**5 GB free.** No surprise fees. You can pay in fiat or crypto ($QUIL, $wQUIL, or $USDC, with USDC
+**5 GB of storage free, with no time limit.** You can store, serve, and back up data without charge
+up to that threshold. Above it, pricing is usage-based. No surprise fees. You can pay in fiat or crypto ($QUIL, $wQUIL, or $USDC, with USDC
 converted to the network's $QUIL). All pricing is denominated in USD, with crypto conversion at the
 market rate at time of billing.
 
@@ -42,11 +43,15 @@ Notes:
 
 ## How to Calculate a Cost Estimate
 
-The cost is simply the sum of each unit of usage multiplied by its rate:
+The cost is simply the sum of each unit of usage multiplied by its rate, across every service you
+use. For QStorage alone that is:
 
 ```
 total = (billable GB x $0.02) + (thousands of API calls x $0.0005)
 ```
+
+The same method applies to QKMS, Relational, and F(x): take each unit from the rate card, multiply
+by your usage, and add the subtotals together. See the multi-service example below.
 
 For website hosting on QStorage, the two inputs that matter are:
 
@@ -57,9 +62,17 @@ For website hosting on QStorage, the two inputs that matter are:
 
 ## Worked Examples
 
-The three examples below use the method above. Substitute your own numbers to estimate any site.
+The examples below use the method above. Substitute your own numbers to estimate any site.
 Traffic assumptions are illustrative, and real request counts vary a lot with caching and page
 design.
+
+> **Why these examples do not quote savings against AWS.** The AWS column in the rate card above is
+> a general comparison at base tier for the most equivalent offering, which is how the official
+> pricing page presents it. It is not workload-specific. Website hosting traffic is overwhelmingly
+> read requests, and AWS prices reads and writes very differently, so applying a general blended
+> figure to a read-heavy workload would produce a savings percentage the rate card does not support.
+> These examples therefore estimate what a site costs on Quilibrium, and leave the general
+> comparison to the table above.
 
 ### Personal site or blog
 
@@ -74,8 +87,7 @@ Small static site, light traffic.
 - Upload: 1 GB is inside the 5 GB free tier, so **$0.00**
 - API calls: 5,000 x 25 = 125,000 calls = 125 units of 1k, so 125 x $0.0005 = **$0.06**
 
-**Estimated total: about $0.06 per month.** The same usage on AWS would be roughly $0.65, so about
-90% less.
+**Estimated total: about $0.06 per month.**
 
 ### Business or corporate site
 
@@ -90,8 +102,7 @@ Larger marketing site with images, PDFs, and some video.
 - Upload: 20 GB minus 5 GB free = 15 GB billable, so 15 x $0.02 = **$0.30**
 - API calls: 50,000 x 30 = 1,500,000 calls = 1,500 units of 1k, so 1,500 x $0.0005 = **$0.75**
 
-**Estimated total: about $1.05 per month.** The same usage on AWS would be roughly $7.96, so about
-87% less.
+**Estimated total: about $1.05 per month.**
 
 ### Ecommerce site
 
@@ -106,8 +117,57 @@ Media-heavy catalogue with high traffic.
 - Upload: 100 GB minus 5 GB free = 95 GB billable, so 95 x $0.02 = **$1.90**
 - API calls: 200,000 x 40 = 8,000,000 calls = 8,000 units of 1k, so 8,000 x $0.0005 = **$4.00**
 
-**Estimated total: about $5.90 per month.** The same usage on AWS would be roughly $42.30, so about
-86% less.
+**Estimated total: about $5.90 per month.**
+
+### Large application using multiple services
+
+Everything above is QStorage only. A real application usually spans several QConsole services, so
+this example covers a large end-to-end encrypted SaaS platform that uses all four: QStorage for user
+files, QKMS for per-user encryption keys, Relational for the application database, and F(x) for
+confidential server-side processing.
+
+| Input | Assumption |
+|---|---|
+| Stored files and assets | 500 GB |
+| Monthly visits | 1,000,000 |
+| Requests per page | 35 |
+| Users (one key each) | 20,000 |
+| Key operations per user per month | 100 |
+| Database size | 200 GB |
+| Database requests | 100 million |
+| Confidential compute | 5,000,000 GB·s |
+
+**QStorage**
+
+- Upload: 500 GB minus 5 GB free = 495 GB billable, so 495 x $0.02 = **$9.90**
+- API calls: 1,000,000 x 35 = 35,000,000 calls = 35,000 units of 1k, so 35,000 x $0.0005 = **$17.50**
+- Subtotal: **$27.40**
+
+**QKMS**
+
+- Keys: 20,000 keys at no charge = **$0.00**
+- API calls: 20,000 users x 100 operations = 2,000,000 calls = 2,000 units of 1k, so
+  2,000 x $0.02 = **$40.00**
+- Subtotal: **$40.00**
+
+**Relational**
+
+- Storage: 200 x $0.05 = **$10.00**
+- Requests: 100 million x $0.05 per million = **$5.00**
+- Subtotal: **$15.00**
+
+**F(x)**
+
+- Execution: 5,000,000 GB·s x $0.00001 = **$50.00**
+- Requests: no charge = **$0.00**
+- Subtotal: **$50.00**
+
+**Estimated total: about $132.40 per month.**
+
+Two things worth noticing in this profile. QKMS keys are free, so the cost scales with how often you
+use keys, not how many users you have: 20,000 keys cost nothing, while the 2 million key operations
+cost $40. And confidential compute is the largest single line item at $50, so for compute-heavy
+applications F(x) execution time, not storage, is the number to watch.
 
 ## Caveats
 
@@ -116,10 +176,19 @@ Media-heavy catalogue with high traffic.
   per-GB stored with separate rates for PUT/COPY/POST/LIST versus GET requests, and mentions
   possible data transfer charges. Where the two differ, check the live pricing on
   [quilibrium.com](https://quilibrium.com), which reflects what actually bills you.
+- **These examples subtract the free tier, the on-site calculator does not.** The calculator on the
+  pricing page multiplies usage by rate with no free-tier deduction, so entering the same numbers
+  there will show a slightly higher figure than the totals above. The 5 GB allowance is real (it is
+  stated as 5 GB of storage free "with no time limit"), it is simply not modelled in that calculator.
+- **The free tier is applied to Quilibrium but not to AWS** in the rate card comparison. This is
+  disclosed above and is the convention the official pricing page uses.
 - **Data transfer** is not a line item in the public rate card. If your workload moves large volumes
   out of QStorage, confirm whether transfer is billed separately before budgeting for it.
-- **Request counts are the hard part to estimate.** Storage size is easy to measure; request volume
-  depends on traffic, caching, and how many assets each page loads. When in doubt, estimate high.
+- **Request counts are the hard part to estimate**, and the examples above simplify them in two
+  opposing directions. They assume one page view per visit, which understates multi-page sessions
+  typical of ecommerce and corporate sites, and they assume no caching, which overstates repeat
+  visits since browsers and CDNs serve cached assets without hitting storage. Storage size is easy
+  to measure; request volume is not. When in doubt, estimate high.
 
 ## Cost Management Tips
 
