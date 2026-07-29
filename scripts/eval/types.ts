@@ -14,6 +14,7 @@ export const TestCategory = z.enum([
   'hallucination',
   'citation',
   'off_topic',
+  'orbit',
   'adversarial',
   'personality',
   'command',
