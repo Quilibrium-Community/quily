@@ -28,6 +28,7 @@ This is the main index for all documentation, bug reports, and task management.
 
 ### Active Issues
 - [Bot behavior bugs from Discord thread (issues #83, #84)](bugs/2026-06-03-bot-behavior-url-false-positive-and-issue-refusal.md)
+- [sync-docs: locally deleted docs are never detected or restored](bugs/2026-07-29-sync-docs-silent-file-loss.md)
 
 ### Solved Issues
 - [RAG retrieval surfaces outdated sharding/milestone info despite recency improvements](bugs/.solved/2026-03-21-rag-outdated-sharding-sources.md)
@@ -45,6 +46,7 @@ This is the main index for all documentation, bug reports, and task management.
 - [Ottimizzazione latenza /api/chat (Quily) — Implementation Plan](tasks/2026-07-10-chat-latency-optimization.md)
 - [Publish Quily as a Farcaster / HyperSnap Mini App](tasks/2026-07-10-publish-farcaster-hypersnap-miniapp.md)
 - [Chat latency round 2 — port the newer Kaya wins (2026-07-11)](tasks/2026-07-11-latency-round-2-from-kaya.md)
+- [Harden sync-docs against silent local doc loss](tasks/2026-07-29-harden-sync-docs-drift-detection.md)
 - [Add Self-Review / Fact Check Button to Bot Replies](tasks/self-review-fact-check-button.md)
 - [Add Web Fetching Capability to Chatbot](tasks/web-fetching-capability.md)
 - [Cross-Reference Verification Against Source Docs](tasks/cross-reference-verification.md)
@@ -144,4 +146,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-07-11 15:05:12
+**Last Updated**: 2026-07-29 10:30:19
