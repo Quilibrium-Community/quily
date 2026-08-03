@@ -8,7 +8,7 @@ reviewed_by: null
 created: 2026-02-06
 updated: 2026-02-06
 related_docs:
-  - "bugs/.solved/turnstile-token-reuse-verification-failure.md"
+  - "issues/.done/turnstile-token-reuse-verification-failure.md"
 related_tasks: []
 ---
 
@@ -210,7 +210,7 @@ These issues were discovered during implementation and are not prominently docum
 
 ## Related Documentation
 
-- [Turnstile Token Reuse Bug Report (Solved)](../bugs/.solved/turnstile-token-reuse-verification-failure.md)
+- [Turnstile Token Reuse Bug Report (Solved)](../issues/.done/turnstile-token-reuse-verification-failure.md)
 - [Cloudflare Turnstile Docs — Server-Side Validation](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/)
 - [Cloudflare Turnstile Docs — Widget Configurations](https://developers.cloudflare.com/turnstile/get-started/client-side-rendering/widget-configurations/)
 

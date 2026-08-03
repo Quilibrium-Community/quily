@@ -1,3 +1,10 @@
+---
+type: task
+title: "Writer Mode - Design Spec"
+status: in-progress
+created: 2026-03-30
+---
+
 # Writer Mode - Design Spec
 
 **Date:** 2026-03-30

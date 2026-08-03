@@ -102,7 +102,7 @@ Uses the `alert-triangle` Feather icon (via the `Icon` component), not an emoji.
 
 ## Related Documentation
 
-- [Self-Improvement Roadmap](../../tasks/2026-03-22-rag-confidence-indicator.md) — task spec for this feature
+- [Self-Improvement Roadmap](../../issues/.done/2026-03-22-rag-confidence-indicator.md) — task spec for this feature
 - Confidence scoring is feature #1 in the bot self-improvement roadmap, feeding into query-failure logging (#2)
 
 ---

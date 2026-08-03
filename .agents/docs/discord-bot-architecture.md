@@ -7,10 +7,10 @@ ai_generated: true
 created: 2026-03-18
 updated: 2026-03-18
 related_docs:
-  - .agents/tasks/2026-03-17-discord-bot-design.md
+  - .agents/issues/.done/2026-03-17-discord-bot-design.md
   - .agents/docs/rag-knowledge-base-workflow.md
 related_tasks:
-  - .agents/tasks/2026-03-17-discord-bot-plan.md
+  - .agents/issues/.done/2026-03-17-discord-bot-plan.md
 ---
 
 # Discord Bot Architecture
@@ -172,5 +172,5 @@ ssh quily-vps 'cd /home/quily/quily-chatbot && git pull && cd bot && npm install
 ## Related Documentation
 
 - [RAG Knowledge Base Workflow](.agents/docs/rag-knowledge-base-workflow.md) — How the shared retrieval pipeline works
-- [Discord Bot Design Spec](.agents/tasks/2026-03-17-discord-bot-design.md) — Original design decisions
+- [Discord Bot Design Spec](.agents/issues/.done/2026-03-17-discord-bot-design.md) — Original design decisions
 - [VPS Runbook](.vps/runbook.md) — Deployment and operations guide

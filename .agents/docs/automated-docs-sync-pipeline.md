@@ -383,8 +383,8 @@ It performs a `git pull --rebase origin main` before pushing to avoid conflicts 
 
 - [RAG Knowledge Base Workflow](rag-knowledge-base-workflow.md) — Full RAG pipeline including ingestion, retrieval, and runtime query flow
 - [Discord Bot Architecture](discord-bot-architecture.md) — The live Discord bot that uses the same RAG pipeline
-- [Task: Automated Weekly Docs Sync](../tasks/.done/automated-weekly-docs-sync.md) — Original docs sync implementation task
-- [Task: Discord Announcements Scraper](../tasks/2026-03-18-discord-announcements-scraper.md) — Discord scraper implementation plan
+- [Task: Automated Weekly Docs Sync](../issues/.done/automated-weekly-docs-sync.md) — Original docs sync implementation task
+- [Task: Discord Announcements Scraper](../issues/.done/2026-03-18-discord-announcements-scraper.md) — Discord scraper implementation plan
 
 ---
 

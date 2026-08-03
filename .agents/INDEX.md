@@ -5,112 +5,112 @@ This is the main index for all documentation, bug reports, and task management.
 ## 📖 Documentation
 
 - [Daily Recap Posting](docs/2026-03-24-daily-recap-posting.md)
-- [Automated Documentation Sync Pipeline](docs/automated-docs-sync-pipeline.md) — Daily GitHub Actions pipeline that syncs official docs, scrapes Discord announcements, and generates general channel recaps into the RAG knowledge base
-- [Automated Versioning and Release System](docs/versioning-release-system.md) — Semantic versioning with conventional commit analysis, changelog generation, git tagging, and /release skill integration
-- [Chat latency pipeline](docs/chat-latency-pipeline.md) — How /api/chat keeps first-token latency low: LLM provider pinning by latency, embedding provider pinning, aggressive rerank timeouts with similarity fallback, per-phase timing logs, and the tools to measure regressions.
-- [Cloudflare Turnstile Bot Protection](docs/cloudflare-turnstile-bot-protection.md) — Invisible bot verification using Cloudflare Turnstile with session cookies, fail-open design, and client/server integration
-- [Cloudflare Workers AI Reranker](docs/cloudflare-workers-ai-reranker.md) — Free semantic reranking via Cloudflare's BGE-reranker-base model, used as fallback when Cohere is unavailable
-- [Daily General Channel Recap](docs/daily-general-recap.md) — Automated daily summaries of Discord #general discussion via LLM, with noise filtering and @Quily recap command
-- [Discord Bot Architecture](docs/discord-bot-architecture.md) — Discord bot design: @mention handler, shared RAG service, rate limiting, conversation memory, and VPS deployment via pm2
-- [Knowledge Update Pipeline — Processing GitHub Issues into Docs](docs/knowledge-update-pipeline.md) — Auto-correction flow (Discord & web chat), deterministic issue creation, and the /process-issues skill for applying changes to docs
-- [Model-Specific Instruction Handling](docs/model-specific-instruction-handling.md) — How frontier models (Claude/GPT/Gemini) vs open-source models are handled differently on low-relevance RAG results to prevent hallucination
-- [Production Debug Pipeline](docs/production-debug-pipeline.md) — Two-layer pipeline for debugging the live chatbot in production: yarn prod-logs (Vercel CLI wrapper) and ?debug=<token> bypass on /api/chat that streams diagnostics as data-debug SSE events.
-- [QA Evaluation Harness](docs/qa-evaluation-harness.md) — CLI testing suite with 34 test cases across 10 categories, using deterministic checks and LLM-as-judge to evaluate chatbot response quality
-- [RAG Knowledge Base Workflow](docs/rag-knowledge-base-workflow.md) — End-to-end RAG pipeline: document ingestion, BGE-M3 embeddings, Supabase pgvector storage, two-stage retrieval with reranking, and runtime query flow
-- [RAG Query Decomposition](docs/rag-query-decomposition.md) — Multi-entity query splitting into per-product sub-queries with Reciprocal Rank Fusion for broad or multi-topic retrieval
-- [System Prompt & Anti-Hallucination Strategy](docs/system-prompt-anti-hallucination.md) — Four-layer defense against hallucination: retrieval thresholds, system prompt rules 1-12, personality override, and knowledge scope guards
-- [Update News Skill — Obsolescence Management](docs/update-news-skill.md) — The /update-news skill that finds and annotates outdated information in community docs, Discord scrapes, and transcripts
+- [Automated Documentation Sync Pipeline](docs/automated-docs-sync-pipeline.md)
+- [Automated Versioning and Release System](docs/versioning-release-system.md)
+- [Chat latency pipeline](docs/chat-latency-pipeline.md)
+- [Cloudflare Turnstile Bot Protection](docs/cloudflare-turnstile-bot-protection.md)
+- [Cloudflare Workers AI Reranker](docs/cloudflare-workers-ai-reranker.md)
+- [Daily General Channel Recap](docs/daily-general-recap.md)
+- [Discord Bot Architecture](docs/discord-bot-architecture.md)
+- [Knowledge Update Pipeline — Processing GitHub Issues into Docs](docs/knowledge-update-pipeline.md)
+- [Model-Specific Instruction Handling](docs/model-specific-instruction-handling.md)
+- [Production Debug Pipeline](docs/production-debug-pipeline.md)
+- [QA Evaluation Harness](docs/qa-evaluation-harness.md)
+- [RAG Knowledge Base Workflow](docs/rag-knowledge-base-workflow.md)
+- [RAG Query Decomposition](docs/rag-query-decomposition.md)
+- [System Prompt & Anti-Hallucination Strategy](docs/system-prompt-anti-hallucination.md)
+- [Update News Skill — Obsolescence Management](docs/update-news-skill.md)
 
 ### Features
 - [RAG Confidence Indicator](docs/features/rag-confidence-indicator.md)
 
-## 🐛 Bug Reports
+## 🐛📋 Issues
 
-### Active Issues
-- [Bot behavior bugs from Discord thread (issues #83, #84)](bugs/2026-06-03-bot-behavior-url-false-positive-and-issue-refusal.md)
-- [sync-docs: locally deleted docs are never detected or restored](bugs/2026-07-29-sync-docs-silent-file-loss.md)
+🐛 bug &nbsp;&nbsp; 📋 task
 
-### Solved Issues
-- [RAG retrieval surfaces outdated sharding/milestone info despite recency improvements](bugs/.solved/2026-03-21-rag-outdated-sharding-sources.md)
-- [Sidebar Scroll Snaps Back When Collapsible Nav Items Change Height](bugs/.solved/sidebar-scroll-snapback-collapsible-nav.md)
-- [Turnstile Token Reuse Causes Verification Failure](bugs/.solved/turnstile-token-reuse-verification-failure.md)
+### In Progress
 
-## 📋 Tasks
+- 📋 [Writer Mode - Design Spec](issues/2026-03-30-writer-mode-design.md)
+- 📋 [Writer Mode Implementation Plan](issues/2026-03-30-writer-mode-plan.md)
+- 📋 [Feature Request: Citation-Free Response Mode](issues/2026-04-13-nosources-flag-feature.md)
+- 📋 [Stale / invalid Discord message IDs in source citations](issues/2026-06-20-stale-discord-citation-links.md)
+- 📋 [Ottimizzazione latenza /api/chat (Quily) — Implementation Plan](issues/2026-07-10-chat-latency-optimization.md)
+- 📋 [Publish Quily as a Farcaster / HyperSnap Mini App](issues/2026-07-10-publish-farcaster-hypersnap-miniapp.md)
+- 📋 [Chat latency round 2 — port the newer Kaya wins (2026-07-11)](issues/2026-07-11-latency-round-2-from-kaya.md)
+- 📋 [Harden sync-docs against silent local doc loss](issues/2026-07-29-harden-sync-docs-drift-detection.md)
+- 📋 [Two-axis prompt rework: stop refusing adjacent questions](issues/2026-07-29-quily-two-axis-prompt-rework.md)
+- 📋 [Add Self-Review / Fact Check Button to Bot Replies](issues/self-review-fact-check-button.md)
+- 📋 [Add Web Fetching Capability to Chatbot](issues/web-fetching-capability.md)
+- 📋 [Cross-Reference Verification Against Source Docs](issues/cross-reference-verification.md)
+- 📋 [Discord Follow-Up Questions Dropdown](issues/discord-followup-dropdown.md)
+- 📋 [Implement AI-Powered Chat Renaming Feature](issues/ai-chat-renaming-feature.md)
+- 📋 [Implement Data Export/Import Feature](issues/data-export-import-feature.md)
+- 📋 [Implement File Upload & Chat Attachments](issues/file-upload-chat-attachments.md)
+- 📋 [Implement Image Support in RAG Responses](issues/rag-image-support.md)
+- 📋 [Query-Failure Logging → Automatic Doc Gap Detection](issues/query-failure-logging.md)
+- 📋 [User Profile Avatar Upload](issues/user-profile-avatar.md)
 
-### Pending Tasks
+### Open
 
-- [Writer Mode - Design Spec](tasks/2026-03-30-writer-mode-design.md)
-- [Writer Mode Implementation Plan](tasks/2026-03-30-writer-mode-plan.md)
-- [Feature Request: Citation-Free Response Mode](tasks/2026-04-13-nosources-flag-feature.md)
-- [Stale / invalid Discord message IDs in source citations](tasks/2026-06-20-stale-discord-citation-links.md)
-- [Ottimizzazione latenza /api/chat (Quily) — Implementation Plan](tasks/2026-07-10-chat-latency-optimization.md)
-- [Publish Quily as a Farcaster / HyperSnap Mini App](tasks/2026-07-10-publish-farcaster-hypersnap-miniapp.md)
-- [Chat latency round 2 — port the newer Kaya wins (2026-07-11)](tasks/2026-07-11-latency-round-2-from-kaya.md)
-- [Harden sync-docs against silent local doc loss](tasks/2026-07-29-harden-sync-docs-drift-detection.md)
-- [Two-axis prompt rework: stop refusing adjacent questions](tasks/2026-07-29-quily-two-axis-prompt-rework.md)
-- [Add Self-Review / Fact Check Button to Bot Replies](tasks/self-review-fact-check-button.md)
-- [Add Web Fetching Capability to Chatbot](tasks/web-fetching-capability.md)
-- [Cross-Reference Verification Against Source Docs](tasks/cross-reference-verification.md)
-- [Discord Follow-Up Questions Dropdown](tasks/discord-followup-dropdown.md)
-- [Implement AI-Powered Chat Renaming Feature](tasks/ai-chat-renaming-feature.md)
-- [Implement Data Export/Import Feature](tasks/data-export-import-feature.md)
-- [Implement File Upload & Chat Attachments](tasks/file-upload-chat-attachments.md)
-- [Implement Image Support in RAG Responses](tasks/rag-image-support.md)
-- [Query-Failure Logging → Automatic Doc Gap Detection](tasks/query-failure-logging.md)
-- [User Profile Avatar Upload](tasks/user-profile-avatar.md)
+- 🐛 [Bot behavior bugs from Discord thread (issues #83, #84)](issues/.open/2026-06-03-bot-behavior-url-false-positive-and-issue-refusal.md)
+- 🐛 [sync-docs: locally deleted docs are never detected or restored](issues/.open/2026-07-29-sync-docs-silent-file-loss.md)
 
-### .Archived
-- [Improve Humor and Sarcasm Handling in Bot Responses](tasks/.archived/2026-04-13-improve-humor-sarcasm-handling.md)
-- [Implement Jina Reranker as Free Alternative to Cohere](tasks/.archived/implement-jina-reranker.md)
+## ✅ Completed Issues
 
-## 📋 Completed Tasks
+- 🐛 [RAG retrieval surfaces outdated sharding/milestone info despite recency improvements](issues/.done/2026-03-21-rag-outdated-sharding-sources.md)
+- 🐛 [Sidebar Scroll Snaps Back When Collapsible Nav Items Change Height](issues/.done/sidebar-scroll-snapback-collapsible-nav.md)
+- 🐛 [Turnstile Token Reuse Causes Verification Failure](issues/.done/turnstile-token-reuse-verification-failure.md)
+- 📋 [Design: Discord Bot Integration for Quily](issues/.done/2026-03-17-discord-bot-design.md)
+- 📋 [Discord Bot Integration — Implementation Plan](issues/.done/2026-03-17-discord-bot-plan.md)
+- 📋 [Discord Announcements Scraper Implementation Plan](issues/.done/2026-03-18-discord-announcements-scraper.md)
+- 📋 [Add discord_announcement to RAG temporal query logic](issues/.done/2026-03-18-retriever-discord-announcement-support.md)
+- 📋 [Auto-Correction GitHub Issues — Implementation Plan](issues/.done/2026-03-19-auto-correction-issues-plan.md)
+- 📋 [Auto-Correction GitHub Issues — Design Spec](issues/.done/2026-03-19-auto-correction-issues.md)
+- 📋 [Daily General Channel Recap — Implementation Plan](issues/.done/2026-03-19-daily-general-recap-plan.md)
+- 📋 [Daily General Channel Recap](issues/.done/2026-03-19-daily-general-recap.md)
+- 📋 [Issue-to-Knowledge Pipeline Implementation Plan](issues/.done/2026-03-19-issue-to-knowledge-pipeline-plan.md)
+- 📋 [Automated Issue-to-Knowledge Pipeline](issues/.done/2026-03-19-issue-to-knowledge-pipeline.md)
+- 📋 [Process Issues Skill](issues/.done/2026-03-19-process-issues-skill.md)
+- 📋 [Repo Transfer: lamat1111 → Quilibrium-Community](issues/.done/2026-03-20-repo-transfer-to-org.md)
+- 📋 [RAG Confidence Indicator — Implementation Plan](issues/.done/2026-03-22-rag-confidence-indicator-plan.md)
+- 📋 [RAG Confidence Indicator](issues/.done/2026-03-22-rag-confidence-indicator.md)
+- 📋 [Monorepo Integration for Release Context](issues/.done/2026-03-23-monorepo-integration.md)
+- 📋 [Monorepo Release Sync — Design Spec](issues/.done/2026-03-23-monorepo-release-sync-design.md)
+- 📋 [Monorepo Release Sync — Implementation Plan](issues/.done/2026-03-23-monorepo-release-sync-plan.md)
+- 📋 [Real-time Network Health Data Storage](issues/.done/2026-03-23-network-health-data-storage.md)
+- 📋 [Daily Recap Posting — Implementation Plan](issues/.done/2026-03-24-daily-recap-posting-plan.md)
+- 📋 [Design Spec: Automated Daily Recap Posting](issues/.done/2026-03-24-daily-recap-posting.md)
+- 📋 [Task: Deduplicate Source Citations in Bot Responses](issues/.done/2026-03-24-deduplicate-source-citations.md)
+- 📋 [Design Spec: Multi-Channel Daily Digest](issues/.done/2026-03-28-multi-channel-digest-design.md)
+- 📋 [Multi-Channel Daily Digest Implementation Plan](issues/.done/2026-03-28-multi-channel-digest-plan.md)
+- 📋 [Writer Mode - Design Spec](issues/.done/2026-03-30-writer-mode-design.md)
+- 📋 [Writer Mode Implementation Plan](issues/.done/2026-03-30-writer-mode-plan.md)
+- 📋 [Writer Mode Refinement](issues/.done/2026-03-30-writer-mode-refinement.md)
+- 📋 [Tighten "Open GitHub Issue" Trigger in Bot System Prompt](issues/.done/2026-05-31-tighten-issue-reporting-trigger.md)
+- 📋 [Design Spec: Bug Reports Daily Digest](issues/.done/2026-06-07-bug-reports-digest.md)
+- 📋 [Ecosystem Projects → RAG Sync](issues/.done/2026-06-11-ecosystem-projects-rag-sync.md)
+- 📋 [Add Conversational Context to RAG Retrieval](issues/.done/rag-conversational-context-memory.md)
+- 📋 [Add External Chutes API Key Option](issues/.done/external-chutes-api-key-option.md)
+- 📋 [Convert Settings Modal to Standalone Settings Page](issues/.done/convert-settings-modal-to-page.md)
+- 📋 [Discord Announcements Scraper with Automated RAG Ingestion](issues/.done/discord-announcements-scraper.md)
+- 📋 [Discord Bot — Remaining Manual Steps](issues/.done/discord-bot-remaining-steps.md)
+- 📋 [Harden /process-issues Skill](issues/.done/automated-process-issues-cron.md)
+- 📋 [Implement Automated Daily Documentation Sync via GitHub Actions](issues/.done/automated-weekly-docs-sync.md)
+- 📋 [Implement Cloudflare Workers AI Reranker](issues/.done/implement-cloudflare-reranker.md)
+- 📋 [Implement Conversation Search Modal](issues/.done/conversation-search-modal.md)
+- 📋 [Implement Dual Embedding Storage for OpenRouter and Chutes Providers](issues/.done/dual-embedding-storage-openrouter-chutes.md)
+- 📋 [Implement Follow-Up Question Suggestions](issues/.done/follow-up-question-suggestions.md)
+- 📋 [Implement Insufficient Credits Detection for Chutes and OpenRouter](issues/.done/insufficient-credits-detection.md)
+- 📋 [Implement Query Decomposition for Broad RAG Queries](issues/.done/rag-query-decomposition.md)
+- 📋 [PRD: Discord Bot Integration for Quily](issues/.done/prd-discord-bot-integration.md)
+- 📋 [Research: Consolidate to Single BGE-M3 Embedding Model](issues/.done/research-unified-bge-m3-embedding.md)
+- 📋 [Starred Chats and Chat Management UI](issues/.done/starred-chats-management-ui.md)
+- 📋 [User Profile Customization (Username)](issues/.done/user-profile-customization.md)
 
-- [Design: Discord Bot Integration for Quily](tasks/.done/2026-03-17-discord-bot-design.md)
-- [Discord Bot Integration — Implementation Plan](tasks/.done/2026-03-17-discord-bot-plan.md)
-- [Discord Announcements Scraper Implementation Plan](tasks/.done/2026-03-18-discord-announcements-scraper.md)
-- [Add discord_announcement to RAG temporal query logic](tasks/.done/2026-03-18-retriever-discord-announcement-support.md)
-- [Auto-Correction GitHub Issues — Implementation Plan](tasks/.done/2026-03-19-auto-correction-issues-plan.md)
-- [Auto-Correction GitHub Issues — Design Spec](tasks/.done/2026-03-19-auto-correction-issues.md)
-- [Daily General Channel Recap — Implementation Plan](tasks/.done/2026-03-19-daily-general-recap-plan.md)
-- [Daily General Channel Recap](tasks/.done/2026-03-19-daily-general-recap.md)
-- [Issue-to-Knowledge Pipeline Implementation Plan](tasks/.done/2026-03-19-issue-to-knowledge-pipeline-plan.md)
-- [Automated Issue-to-Knowledge Pipeline](tasks/.done/2026-03-19-issue-to-knowledge-pipeline.md)
-- [Process Issues Skill](tasks/.done/2026-03-19-process-issues-skill.md)
-- [Repo Transfer: lamat1111 → Quilibrium-Community](tasks/.done/2026-03-20-repo-transfer-to-org.md)
-- [RAG Confidence Indicator — Implementation Plan](tasks/.done/2026-03-22-rag-confidence-indicator-plan.md)
-- [RAG Confidence Indicator](tasks/.done/2026-03-22-rag-confidence-indicator.md)
-- [Monorepo Integration for Release Context](tasks/.done/2026-03-23-monorepo-integration.md)
-- [Monorepo Release Sync — Design Spec](tasks/.done/2026-03-23-monorepo-release-sync-design.md)
-- [Monorepo Release Sync — Implementation Plan](tasks/.done/2026-03-23-monorepo-release-sync-plan.md)
-- [Real-time Network Health Data Storage](tasks/.done/2026-03-23-network-health-data-storage.md)
-- [Daily Recap Posting — Implementation Plan](tasks/.done/2026-03-24-daily-recap-posting-plan.md)
-- [Design Spec: Automated Daily Recap Posting](tasks/.done/2026-03-24-daily-recap-posting.md)
-- [Task: Deduplicate Source Citations in Bot Responses](tasks/.done/2026-03-24-deduplicate-source-citations.md)
-- [Design Spec: Multi-Channel Daily Digest](tasks/.done/2026-03-28-multi-channel-digest-design.md)
-- [Multi-Channel Daily Digest Implementation Plan](tasks/.done/2026-03-28-multi-channel-digest-plan.md)
-- [Writer Mode - Design Spec](tasks/.done/2026-03-30-writer-mode-design.md)
-- [Writer Mode Implementation Plan](tasks/.done/2026-03-30-writer-mode-plan.md)
-- [Writer Mode Refinement](tasks/.done/2026-03-30-writer-mode-refinement.md)
-- [Tighten "Open GitHub Issue" Trigger in Bot System Prompt](tasks/.done/2026-05-31-tighten-issue-reporting-trigger.md)
-- [Design Spec: Bug Reports Daily Digest](tasks/.done/2026-06-07-bug-reports-digest.md)
-- [Ecosystem Projects → RAG Sync](tasks/.done/2026-06-11-ecosystem-projects-rag-sync.md)
-- [Add Conversational Context to RAG Retrieval](tasks/.done/rag-conversational-context-memory.md)
-- [Add External Chutes API Key Option](tasks/.done/external-chutes-api-key-option.md)
-- [Convert Settings Modal to Standalone Settings Page](tasks/.done/convert-settings-modal-to-page.md)
-- [Discord Announcements Scraper with Automated RAG Ingestion](tasks/.done/discord-announcements-scraper.md)
-- [Discord Bot — Remaining Manual Steps](tasks/.done/discord-bot-remaining-steps.md)
-- [Harden /process-issues Skill](tasks/.done/automated-process-issues-cron.md)
-- [Implement Automated Daily Documentation Sync via GitHub Actions](tasks/.done/automated-weekly-docs-sync.md)
-- [Implement Cloudflare Workers AI Reranker](tasks/.done/implement-cloudflare-reranker.md)
-- [Implement Conversation Search Modal](tasks/.done/conversation-search-modal.md)
-- [Implement Dual Embedding Storage for OpenRouter and Chutes Providers](tasks/.done/dual-embedding-storage-openrouter-chutes.md)
-- [Implement Follow-Up Question Suggestions](tasks/.done/follow-up-question-suggestions.md)
-- [Implement Insufficient Credits Detection for Chutes and OpenRouter](tasks/.done/insufficient-credits-detection.md)
-- [Implement Query Decomposition for Broad RAG Queries](tasks/.done/rag-query-decomposition.md)
-- [PRD: Discord Bot Integration for Quily](tasks/.done/prd-discord-bot-integration.md)
-- [Research: Consolidate to Single BGE-M3 Embedding Model](tasks/.done/research-unified-bge-m3-embedding.md)
-- [Starred Chats and Chat Management UI](tasks/.done/starred-chats-management-ui.md)
-- [User Profile Customization (Username)](tasks/.done/user-profile-customization.md)
+## 🗃️ Archived Issues
+
+- 📋 [Improve Humor and Sarcasm Handling in Bot Responses](issues/.archived/2026-04-13-improve-humor-sarcasm-handling.md)
+- 📋 [Implement Jina Reranker as Free Alternative to Cohere](issues/.archived/implement-jina-reranker.md)
 
 ## 📊 Reports
 
@@ -147,4 +147,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-07-29 10:51:16
+**Last Updated**: 2026-08-03 08:48:38

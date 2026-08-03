@@ -11,7 +11,7 @@ related_docs:
   - "rag-knowledge-base-workflow.md"
   - "system-prompt-anti-hallucination.md"
 related_tasks:
-  - "tasks/rag-query-decomposition.md"
+  - "issues/.done/rag-query-decomposition.md"
 ---
 
 # RAG Query Decomposition
