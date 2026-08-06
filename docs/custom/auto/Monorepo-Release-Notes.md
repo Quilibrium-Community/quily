@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-08-05
+date: 2026-08-06
 type: release_notes
 topics:
   - release notes
@@ -16,37 +16,87 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** August 5, 2026
+**Last updated:** August 6, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
 ## v2.1.0.24 (version .24) *(auto-generated)*
-- fix transaction safety for hypergraph store writes by making save_vertex_underlying transaction-aware and using atomic transactions in sync-apply path
-- make LazyVectorCommitmentTree::commit retry-safe by deferring dirty-state clearing until transaction is durably committed
-- make compute_shard_root read-only to prevent writes outside frame transactions during root comparison
+- fix race condition where initial sync failure could leave workers idle until reboot
+- fix patch number sync with config
+- fix transaction safety for hypergraph store writes
+- make lazy tree commit retry-safe by deferring dirty-state clearing until transaction commit succeeds
+- make compute_shard_root read-only to prevent writes outside frame transactions
 - require RocksTxn for hypergraph store writes, removing silent direct-write fallback
 - handle leaving scenario with store wipe
-- reduce score differential basis for flagging leave-to-join opportunities, extend scoring-based leave window to a full cycle
-- adjust margins on decisions and threshold for decides and joins
-- adjust snapshotting to use actual rocksdb snapshots
+- reduce score differential basis for flagging leave-to-join opportunities
+- extend scoring-based leave window to a full cycle
+- adjust margins on decisions and thresholds for decides and joins
+- adjust snapshotting to use actual RocksDB snapshots
 - resolve unsynced leave issuance condition
-- reapply docker build optimizations to Dockerfile.source (consolidate gen stages, restore cargo/go cache mounts)
-- enable a lagging archive to rejoin consensus by syncing proposals from peers via GetGlobalProposal and catch-up task
+- reapply Docker build optimizations to Dockerfile.source
+- allow lagging archive nodes to rejoin consensus by syncing proposals from peers
+
+## v2.1.0.23 (version .23) *(auto-generated)*
+- fix docker build issue with static linking for flint/mpfr/gmp
+- fix standalone worker connection string derivation
+- fix too many joins, invalid signature in qclient, standalone worker mode bugs, workers not logging to own files
+- fix keys file handling, reduce excess joins/leaves
+- demote p2p loggers to debug
+- resolve domain separation bug for invalid signature
+- resolve tokio thread issue with logging
+- fix leaving prover bug in worker allocator
+- resolve worker storage location bug and reduce log noise
+- fix prover shard choices and ring number calculation
+- fix TUI quirks for manual mode
+- forcibly adjust halt risk shards as primary selection criteria
+- address reported issues from blackswan
+- resolve worker persistence and missing lock update
+- harden prover path and fix shard store discrepancy
+- cache requests to prevent available shards from flashing
+- resolve stale 0 frame data response, adjust blossomsub parameters
+- refactor tree behaviors to skip stale data effects
+- handle orphaned allocations and allocations on zero byte shards
+- fix autonat bug crashing worker threads
+- fix build for linux, fix too many streams issue
+- address edge case with delegate address, resolve stream connection issue with kad-dht
+- fix router validator tests and quil-engine unit tests
+- support white spaces in genesis seed for testnets
+- fix propose skip on coverage halts
+- fix vdf link order and enable tests in CI
+- support archive endpoints config in rust node
+- use sha3 for prover join vdf verifier
+- fix rust node initialization issues
+- refactor quil-node main into sibling modules (storage, keys, engines, frame_pipeline, networking, runtime_state, peer_info_publisher, worker_manager, allocator_and_lifecycle, message_loop, archive_sync, grpc)
+- fix canonicalization bug for peer info
+- propagate errors from subsystems
+- reduce logging noise on noisy connection events
+- increase duration between peer info and key registry publishes
+- fix OOM from unbounded stores, add memory profiling and allocator swap
+- fix proposal bug using joining count as part of halt risk calculation
+- handle 67% barrier for halt risk
+- fix TUI manage submission of messages
+- fix expired leaves not treated as confirmed leaves in proposal logic and worker allocator
+- resolve loop of halt risk swap
+- resolve
+
+## v2.1.0.22 (version .22) *(auto-generated)*
+- improved prover commands to show worker id
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - reconcile old and new config paths
-- fix formatting and precision on prover reward data
-- address possible
+- fix formatting/precision on prover reward data
+- implement possible solution to peering issue
+- fix app shard lookups on mainnet
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
-- allow enabling debug logging via environment variable
-- fix pebble database constructor configuration parameter
-- fix high CPU overhead during initial worker behaviors and sync
-- add extra data to node info and metrics query from command line
+- allow debug mode via environment variable
+- fix pebble db constructor config parameter
+- fix high cpu overhead in initial worker behaviors and ongoing sync
+- add extra data to node info and query metrics from command line
 - leave proposals for overcrowded shards
 - implement hub-and-spoke global message broadcasts
-- tweak CLI output for
+- tweak cli output for join frames
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
@@ -97,6 +147,11 @@ This document tracks changes in each Quilibrium node release.
 - Extends ProverConfirm and ProverReject to have multiple filters per message
 - Adds snapshot integration to allow hypersync to occur concurrently with writes
 - Resolved infinitessimal rings divide-by-zero error
+
+## v2.1.0.11 (version .11) *(auto-generated)*
+- fixed channel bug
+- added DKLs23 fork
+- resolve sync race condition with prover registry pruning
 
 ---
 
