@@ -3,6 +3,10 @@ node_modules/
 vendor/
 .pnp/
 .pnp.js
+.pnp.cjs
+
+# Yarn Berry (local install-state cache; nodeLinker is node-modules, not zero-installs)
+.yarn/install-state.gz
 
 # Build outputs
 dist/
