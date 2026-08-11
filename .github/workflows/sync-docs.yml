@@ -29,7 +29,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          # 22+ required: @supabase/supabase-js needs a native WebSocket, which
+          # Node 20 lacks ("Node.js detected but native WebSocket not found").
+          node-version: '22'
           cache: 'yarn'
 
       - name: Install dependencies
