@@ -54,6 +54,7 @@ This is the main index for all documentation, bug reports, and task management.
 
 - 🐛 [Bot behavior bugs from Discord thread (issues #83, #84)](issues/.open/2026-06-03-bot-behavior-url-false-positive-and-issue-refusal.md)
 - 🐛 [sync-docs: locally deleted docs are never detected or restored](issues/.open/2026-07-29-sync-docs-silent-file-loss.md)
+- 🐛 [Bot presents outdated docs as current news](issues/.open/2026-08-11-latest-news-recency-workflow.md)
 
 ## ✅ Completed Issues
 
@@ -148,4 +149,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-08-11 10:18:59
+**Last Updated**: 2026-08-11 16:36:43
