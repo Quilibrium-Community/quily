@@ -62,10 +62,21 @@ const TARGET_CANDIDATE_POOL = 60;
 const MIN_PER_LIST_QUOTA = 3;
 
 // Below this concentration, the original query's own results are considered spread across the
-// corpus (genuinely broad) rather than clustered on one document (focused). Measured
-// separation is wide — 0.13 for every genuinely broad phrasing tested, 0.33-0.47 for focused
-// questions that merely contain a broad keyword — so the exact value is not delicate.
+// corpus (genuinely broad) rather than clustered on one document (focused).
+//
+// Measured over CONCENTRATION_SAMPLE results: every genuinely broad phrasing tested scores
+// exactly 0.13, while focused questions that merely contain a broad keyword score 0.33-0.47.
+// The threshold sits between those bands with roughly 1.3x headroom above and 1.9x below.
 const COVERAGE_CONCENTRATION_THRESHOLD = 0.25;
+
+// Concentration is measured over a FIXED number of results, never over the whole list. The
+// list length is initialCount, which is itself 15 or 25 depending on isBroadQuery, so scoring
+// the whole list makes the ratio depend on the very thing being classified: a document with 7
+// chunks can reach 7/15 = 0.47 but only 7/25 = 0.28. Calibrating on one denominator and
+// running on the other put the licensing query 0.03 away from the threshold, so it classified
+// one way locally and the other way in production, and the production bot answered the AGPL
+// question with one chunk per product and nothing from Quilibrium-Licensing.md.
+const CONCENTRATION_SAMPLE = 15;
 
 // Share of the final slots that may be spent guaranteeing one chunk per entity sub-query.
 // The remainder is always filled by pure rerank relevance, so breadth can never consume the
@@ -572,9 +583,10 @@ export async function retrieveWithReranking(
     const originalList =
       successfulEmbeddings[0]?.query === query && rankedLists.length > 0 ? rankedLists[0] : null;
     if (originalList && originalList.length > 0) {
+      const sample = originalList.slice(0, CONCENTRATION_SAMPLE);
       const perFile = new Map<string, number>();
-      for (const c of originalList) perFile.set(c.source_file, (perFile.get(c.source_file) ?? 0) + 1);
-      const concentration = Math.max(...perFile.values()) / originalList.length;
+      for (const c of sample) perFile.set(c.source_file, (perFile.get(c.source_file) ?? 0) + 1);
+      const concentration = Math.max(...perFile.values()) / sample.length;
       enforceEntityCoverage = concentration < COVERAGE_CONCENTRATION_THRESHOLD;
       console.log('[RAG] Original-query concentration:', {
         concentration: concentration.toFixed(2),
