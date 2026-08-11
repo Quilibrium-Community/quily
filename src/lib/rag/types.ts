@@ -24,6 +24,17 @@ export interface RetrievedChunk {
   title: string | null;
   /** Document type ('livestream_transcript', 'documentation', etc.) or null */
   doc_type: string | null;
+  /**
+   * Similarity measured against the USER'S OWN query, or null when no such measurement
+   * exists for this chunk.
+   *
+   * `similarity` cannot answer "how relevant is this to what was asked". On the
+   * decomposition path it may be the score against a synthetic sub-query such as "QStorage
+   * S3-compatible object storage", and priority/recency chunks carry a hardcoded placeholder.
+   * Relevance judgements must use this field, which is null precisely when relevance to the
+   * question is unknown.
+   */
+  directSimilarity?: number | null;
   /** Cosine similarity score (0-1) */
   similarity: number;
   /** Citation index for display (1-based) */

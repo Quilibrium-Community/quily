@@ -47,13 +47,31 @@ export function buildContextBlock(chunks: RetrievedChunk[]): ContextBlockResult 
     };
   }
 
-  // Calculate average similarity to assess overall relevance
-  const avgSimilarity = chunks.reduce((sum, c) => sum + c.similarity, 0) / chunks.length;
-  const maxSimilarity = Math.max(...chunks.map(c => c.similarity));
+  // Relevance is judged ONLY on scores measured against the user's own query.
+  //
+  // `similarity` is not that number. On the decomposition path a chunk's score may have come
+  // from a synthetic sub-query written to match its own document ("QStorage S3-compatible
+  // object storage"), and the merge keeps the maximum across sub-queries. Priority chunks
+  // carry a hardcoded 0.45 and recency chunks 0.6 — and since the threshold is 0.45, a single
+  // placeholder was enough to declare "high" on its own. So this could report high confidence
+  // about a question none of the retrieved text addressed, which is how the bot came to deny
+  // having licensing docs in a confident voice rather than a hedged one.
+  //
+  // directSimilarity is null exactly when relevance to the question was never measured, so
+  // those chunks abstain instead of voting.
+  const scored = chunks
+    .map((c) => c.directSimilarity)
+    .filter((s): s is number => typeof s === 'number');
 
-  // Determine quality based on best match
+  const avgSimilarity = scored.length > 0
+    ? scored.reduce((sum, s) => sum + s, 0) / scored.length
+    : 0;
+
+  // No chunk was measured against the query — every one arrived via a sub-query or a
+  // placeholder. That is precisely the case where confidence is unwarranted, so warn rather
+  // than assume.
   const quality: RelevanceQuality =
-    maxSimilarity >= HIGH_RELEVANCE_THRESHOLD ? 'high' : 'low';
+    scored.length > 0 && Math.max(...scored) >= HIGH_RELEVANCE_THRESHOLD ? 'high' : 'low';
 
   const formattedChunks = chunks
     .map((chunk) => {

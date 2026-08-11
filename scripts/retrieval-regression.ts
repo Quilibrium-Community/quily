@@ -81,6 +81,8 @@ interface Expectation {
   minChunksFrom?: { file: string; count: number };
   /** At least this many distinct ENTITY_DOCS groups must be represented. */
   minDistinctEntities?: number;
+  /** The relevance signal handed to the LLM, which drives the low-confidence warning. */
+  quality?: 'high' | 'low' | 'none';
 }
 
 interface Case {
@@ -131,6 +133,15 @@ const CASES: Case[] = [
     query: 'what services does Quilibrium offer',
     description: 'GUARD: legitimately broad use of "services" — must keep decomposing well',
     expect: { minDistinctEntities: 4 },
+  },
+  {
+    id: 'quality-offtopic-broad-must-hedge',
+    query: 'list all the best pizza toppings and delivery services',
+    description:
+      'Off-topic but broad: "all"/"services" force decomposition, so entity sub-queries pull ' +
+      'product docs scoring ~0.75 against THEIR OWN sub-query. Quality must not read those as ' +
+      'confidence about pizza, or the bot answers assertively from irrelevant context.',
+    expect: { quality: 'low' },
   },
 ];
 
@@ -192,6 +203,10 @@ async function runCase(c: Case): Promise<CaseOutcome> {
         `expected >=${c.expect.minDistinctEntities} distinct entity docs, got ${covered.length} [${covered.join(', ')}]`
       );
     }
+  }
+
+  if (c.expect.quality !== undefined && prepared.ragQuality !== c.expect.quality) {
+    failures.push(`expected quality "${c.expect.quality}", got "${prepared.ragQuality}"`);
   }
 
   return {

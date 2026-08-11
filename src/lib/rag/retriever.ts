@@ -496,6 +496,12 @@ export async function retrieveWithReranking(
   // Chunk ids from the ORIGINAL query's own sub-query, in its own rank order. Scores within a
   // single list share one embedding and so are comparable; scores across lists are not.
   let originalSubQueryIds: number[] = [];
+
+  // Similarity against the user's own query, per chunk id. Populated only from a search using
+  // the user's query embedding, so a chunk retrieved solely by an entity sub-query is absent,
+  // as is anything carrying a synthetic score. Absence means "relevance to the question is
+  // unknown", which is the distinction the quality signal needs and `similarity` cannot make.
+  const directSimilarityById = new Map<number, number>();
   // Whether to spend final slots guaranteeing per-entity coverage (see below).
   let enforceEntityCoverage = false;
 
@@ -604,6 +610,10 @@ export async function retrieveWithReranking(
     );
     originalSubQueryIds = originalList ? quotaLists[0].map((c) => c.id) : [];
 
+    // Record scores from the user's own query only. Uses the full pre-quota list so a chunk
+    // the user's query genuinely matched still counts even if the quota kept it out of the pool.
+    for (const chunk of originalList ?? []) directSimilarityById.set(chunk.id, chunk.similarity);
+
     // Merge via Reciprocal Rank Fusion
     const rrfScores = reciprocalRankFusion(quotaLists);
 
@@ -639,6 +649,8 @@ export async function retrieveWithReranking(
     }
 
     candidates = vectorCandidates || [];
+    // Every candidate here was scored against the user's own embedding.
+    for (const chunk of candidates) directSimilarityById.set(chunk.id, chunk.similarity);
   }
 
   // Merge priority docs (previously cited) - await parallel fetch
@@ -732,6 +744,7 @@ export async function retrieveWithReranking(
       title: chunk.title,
       doc_type: chunk.doc_type,
       similarity: chunk.similarity,
+      directSimilarity: directSimilarityById.get(chunk.id) ?? null,
       citationIndex: idx + 1,
     }));
 
@@ -823,6 +836,7 @@ export async function retrieveWithReranking(
       title: item.original.title,
       doc_type: item.original.doc_type,
       similarity: item.original.similarity,
+      directSimilarity: directSimilarityById.get(item.original.id) ?? null,
       citationIndex: idx + 1,
     }));
   };
@@ -898,6 +912,7 @@ export async function retrieveWithReranking(
           idx: number
         ): RetrievedChunk => ({
           ...chunk,
+          directSimilarity: directSimilarityById.get(chunk.id) ?? null,
           citationIndex: idx + 1,
         })
       );
