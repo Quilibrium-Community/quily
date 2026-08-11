@@ -59,6 +59,7 @@ This is the main index for all documentation, bug reports, and task management.
 ## ✅ Completed Issues
 
 - 🐛 [RAG retrieval surfaces outdated sharding/milestone info despite recency improvements](issues/.done/2026-03-21-rag-outdated-sharding-sources.md)
+- 🐛 [Broad-query retrieval collapse](issues/.done/2026-08-11-broad-query-retrieval-collapse.md)
 - 🐛 [All scheduled workflows failing after Yarn Berry migration](issues/.done/2026-08-11-ci-broken-after-yarn-berry-migration.md)
 - 🐛 [Sidebar Scroll Snaps Back When Collapsible Nav Items Change Height](issues/.done/sidebar-scroll-snapback-collapsible-nav.md)
 - 🐛 [Turnstile Token Reuse Causes Verification Failure](issues/.done/turnstile-token-reuse-verification-failure.md)
@@ -133,6 +134,7 @@ This is the main index for all documentation, bug reports, and task management.
 - [Model Scout — OpenRouter LLM Discovery](reports/2026-06-03-model-scout-openrouter.md)
 - [Chat latency optimization — before/after report](reports/2026-07-10-chat-latency-optimization.md)
 - [Reasoning A/B — reasoning ON vs OFF (2026-07-11)](reports/2026-07-11-reasoning-ab.md)
+- [Quily as a Quorum bot — feasibility and chosen architecture](reports/2026-08-11-quily-in-quorum-feasibility.md)
 
 ### Archived
 - [LLM Provider Pricing Research](reports/archived/2026-01-30_llm-provider-pricing-research.md)
@@ -149,4 +151,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-08-11 16:36:43
+**Last Updated**: 2026-08-11 20:53:56
