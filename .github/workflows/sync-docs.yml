@@ -20,6 +20,12 @@ jobs:
         with:
           token: ${{ secrets.PAT_TOKEN }}
 
+      # Must run BEFORE setup-node: `cache: 'yarn'` shells out to `yarn cache dir`,
+      # and the runner's global Yarn 1 refuses to run at all once package.json
+      # declares "packageManager": "yarn@4.x". Corepack replaces that shim.
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
@@ -27,7 +33,7 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Sync Discord announcements
         # Non-fatal: the Discord API rate-limits (429) and has transient outages.
