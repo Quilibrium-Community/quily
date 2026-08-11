@@ -46,10 +46,20 @@ const LARGE_POOL_THRESHOLD = 30;
 // regardless of how fusion would have scored them. RRF rewards a chunk for appearing across
 // many lists, so a topic with no matching KNOWN_ENTITIES sub-query (licensing, governance,
 // tokenomics) can never win on fused score alone no matter how well it answers the question.
-// Measured at 11 sub-queries: quota 4 -> 42-chunk pool, 6 -> 61, 8 -> 80. The reranker
-// surfaced every licensing chunk at all three, so this is chosen for latency headroom
-// under RERANK_TIMEOUT_MS_LARGE_POOL rather than for recall.
-const PER_LIST_QUOTA = 6;
+// The quota is derived from a target POOL size rather than fixed per list, because the number
+// of lists is KNOWN_ENTITIES.length + 1 and that list grows as Quilibrium ships products. A
+// fixed per-list quota silently reinflates the pool with every entity added: going from 11 to
+// 16 sub-queries at a fixed quota of 6 pushed rerank back over budget and reproduced the exact
+// licensing failure this was written to fix. Sizing to the pool keeps rerank cost flat as the
+// catalogue grows.
+//
+// Measured at 11 sub-queries: quota 4 -> 42-chunk pool (rerank ~1541ms), 6 -> 61 (~1069ms),
+// 8 -> 80 (~1740ms). The reranker surfaced every licensing chunk at all three, so the target
+// is set for latency headroom under RERANK_TIMEOUT_MS_LARGE_POOL, not for recall.
+const TARGET_CANDIDATE_POOL = 60;
+
+// Floor, so a large catalogue can never starve a sub-query down to a single hit.
+const MIN_PER_LIST_QUOTA = 3;
 
 // Below this concentration, the original query's own results are considered spread across the
 // corpus (genuinely broad) rather than clustered on one document (focused). Measured
@@ -176,6 +186,26 @@ const KNOWN_ENTITIES = [
   // Well-documented (dedicated docs exist in RAG knowledge base)
   { name: 'Klearu', query: 'Klearu private AI inference LLM two-party computation 2PC E2EE ML',
     keywords: ['klearu', 'private ai', 'private inference', 'private llm', 'llm', 'ai inference', 'machine learning', 'ml inference', '2pc', 'two-party', 'e2ee ml', 'slide', 'local ai', 'run ai', 'ai model', 'language model'] },
+
+  // Products documented after this list was first written. Without an entry here a product
+  // gets no retrieval pass of its own, so a broad "what does Quilibrium offer" question can
+  // never surface it however good its docs are.
+  //
+  // Scope note: this list is Quilibrium's OWN products only. Community ecosystem projects
+  // (Quilscan, ZapMe, and similar) have docs in the knowledge base but are not Quilibrium Inc
+  // services, so they must not be fanned out to as if they were part of the product catalogue.
+  { name: 'MetaVM', query: 'MetaVM zero-knowledge proof system for VM execution RISC-V EVM',
+    keywords: ['metavm', 'meta vm', 'zkvm', 'zero-knowledge proof', 'risc-v', 'virtual machine'] },
+  { name: 'QCL', query: 'QCL Q Compute Language garbled circuits MPC application language',
+    keywords: ['qcl', 'q compute language', 'compute language', 'garbled circuit'] },
+  // "balance" alone is far too common (token balances, account balances), so this entity is
+  // matched only by multi-word phrases that unambiguously mean the language.
+  { name: 'Balance', query: 'Balance programming language for distributed systems capabilities CSP',
+    keywords: ['balance language', 'balance programming', 'programming language'] },
+  { name: 'MegaRPC', query: 'MegaRPC privacy-preserving RPC service oblivious RAM',
+    keywords: ['megarpc', 'mega rpc', 'rpc'] },
+  { name: 'QConsole', query: 'QConsole account credits deposits billing dashboard for Q services',
+    keywords: ['qconsole', 'q console', 'console', 'credits', 'billing', 'deposit'] },
 
   // Lightly documented (mentioned in talks/overviews, no dedicated docs yet)
   { name: 'Quark', query: 'Quark 3D game asset library SDK',
@@ -517,8 +547,12 @@ export async function retrieveWithReranking(
       throw new Error('All sub-query vector searches failed during query decomposition');
     }
 
-    // Bound the pool before fusing (see PER_LIST_QUOTA above)
-    const quotaLists = rankedLists.map((list) => list.slice(0, PER_LIST_QUOTA));
+    // Bound the pool before fusing (see TARGET_CANDIDATE_POOL above)
+    const perListQuota = Math.max(
+      MIN_PER_LIST_QUOTA,
+      Math.ceil(TARGET_CANDIDATE_POOL / rankedLists.length)
+    );
+    const quotaLists = rankedLists.map((list) => list.slice(0, perListQuota));
 
     // Decide whether this query needs per-entity coverage in the final result.
     //

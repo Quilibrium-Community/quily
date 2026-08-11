@@ -46,6 +46,10 @@ const ENTITY_DOCS: Record<string, string[]> = {
   Hypersnap: ['hypersnap'],
   Klearu: ['klearu'],
   MetaVM: ['metavm'],
+  QCL: ['qcl-quilibrium-compute-language', 'q-compute-language'],
+  Balance: ['balance-programming-language'],
+  MegaRPC: ['megarpc'],
+  QConsole: ['qconsole', 'q-console'],
   // Bridge, QPing and QQ are three separate services, but the knowledge base documents all
   // three in a single file (Bridge-QPing-QQ-Services.md), so retrieval cannot surface one
   // without the others and coverage cannot distinguish them. They are counted as one group
@@ -111,7 +115,10 @@ const CASES: Case[] = [
     id: 'coverage-all-products',
     query: 'tell me about all Quilibrium products',
     description: 'GUARD: the scenario decomposition was built for — must not regress',
-    expect: { minDistinctEntities: 4 },
+    // Baseline before the 2026-08-11 retrieval fix was 4. Observed 6-8 after. Set to 5 rather
+    // than the observed maximum: reranking is a network call and occasionally times out, so a
+    // guard pinned to the best run would flake, and a flaky guard gets ignored.
+    expect: { minDistinctEntities: 5 },
   },
   {
     id: 'coverage-what-services',
