@@ -1,0 +1,57 @@
+name: CI
+
+# Guards the toolchain, not the app build — Vercel already builds every push
+# and PR. This catches the class of breakage that took the daily sync down for
+# three days after the Yarn Berry migration: a package manager / Node / lockfile
+# mismatch that only ever surfaced at 06:00 UTC.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      # The daily sync bot commits docs to main every morning; don't burn a run on it.
+      - 'docs/**'
+      - '.agents/**'
+      - 'archives/**'
+      - '**/*.md'
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '.agents/**'
+      - 'archives/**'
+      - '**/*.md'
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  install-and-typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      # Must run BEFORE setup-node: `cache: 'yarn'` shells out to `yarn cache dir`,
+      # and the runner's global Yarn 1 refuses to run at all once package.json
+      # declares "packageManager": "yarn@4.x". Corepack replaces that shim.
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          # Keep in step with the sync workflows: @supabase/supabase-js needs a
+          # native WebSocket, which Node 20 lacks.
+          node-version: '22'
+          cache: 'yarn'
+
+      # --immutable fails if the lockfile is out of sync with package.json,
+      # which is the check that matters most here.
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Typecheck
+        run: yarn typecheck
