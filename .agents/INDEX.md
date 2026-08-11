@@ -58,6 +58,7 @@ This is the main index for all documentation, bug reports, and task management.
 ## ✅ Completed Issues
 
 - 🐛 [RAG retrieval surfaces outdated sharding/milestone info despite recency improvements](issues/.done/2026-03-21-rag-outdated-sharding-sources.md)
+- 🐛 [All scheduled workflows failing after Yarn Berry migration](issues/.done/2026-08-11-ci-broken-after-yarn-berry-migration.md)
 - 🐛 [Sidebar Scroll Snaps Back When Collapsible Nav Items Change Height](issues/.done/sidebar-scroll-snapback-collapsible-nav.md)
 - 🐛 [Turnstile Token Reuse Causes Verification Failure](issues/.done/turnstile-token-reuse-verification-failure.md)
 - 📋 [Design: Discord Bot Integration for Quily](issues/.done/2026-03-17-discord-bot-design.md)
@@ -147,4 +148,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-08-03 09:03:39
+**Last Updated**: 2026-08-11 10:18:59
