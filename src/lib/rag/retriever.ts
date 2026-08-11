@@ -16,6 +16,52 @@ const CHUTES_EMBEDDING_MODEL_SLUG = 'chutes-baai-bge-m3';
 // Cohere's SDK exposes no timeout, so it's wrapped in a Promise.race; Cloudflare takes it as a param.
 const RERANK_TIMEOUT_MS = 1200;
 
+// Rerank budget for decomposed pools. 1200ms was calibrated in the 2026-07-10 latency work
+// as roughly 2-4x an observed p50 of 300-600ms — but that p50 was measured on the
+// single-query path, whose pool is ~15 chunks. Decomposed pools are several times larger and
+// were never sized: measured p50 is ~1100ms at ~60 chunks, so the 1200ms budget sat right on
+// the edge and the reranker aborted on essentially every broad query. This keeps the original
+// "2-4x p50" principle and applies it to the pool the reranker is actually handed.
+// Reranking stays a fail-safe refinement — every failure path below is unchanged.
+const RERANK_TIMEOUT_MS_LARGE_POOL = 2500;
+
+// Pool size above which the larger budget applies. The single-query path uses
+// initialCount=15, so this only ever trips on the decomposition path.
+const LARGE_POOL_THRESHOLD = 30;
+
+// How many hits each sub-query contributes to the fused candidate pool.
+//
+// Decomposition fans a broad query out to the original query plus every entry in
+// KNOWN_ENTITIES. Left unbounded, those 11 result lists produced a ~200-chunk pool that
+// cannot be reranked inside RERANK_TIMEOUT_MS (measured 3902ms at 199 chunks vs 560ms at
+// 15), so the reranker aborted on EVERY broad query and ordering silently fell through to
+// raw `similarity`. Those similarities are not comparable across sub-queries — a chunk
+// scoring 0.75 against "QStorage S3-compatible object storage" is not more relevant to the
+// user than one scoring 0.56 against their actual question — so the correct document could
+// be ranked below a hundred others. That is how "the AGPL license for Q and its services"
+// returned zero chunks from Quilibrium-Licensing.md on 2026-08-11.
+//
+// Quota-ing per list rather than truncating the fused ranking is deliberate: it guarantees
+// every sub-query, including the user's original question, contributes its own best hits
+// regardless of how fusion would have scored them. RRF rewards a chunk for appearing across
+// many lists, so a topic with no matching KNOWN_ENTITIES sub-query (licensing, governance,
+// tokenomics) can never win on fused score alone no matter how well it answers the question.
+// Measured at 11 sub-queries: quota 4 -> 42-chunk pool, 6 -> 61, 8 -> 80. The reranker
+// surfaced every licensing chunk at all three, so this is chosen for latency headroom
+// under RERANK_TIMEOUT_MS_LARGE_POOL rather than for recall.
+const PER_LIST_QUOTA = 6;
+
+// Below this concentration, the original query's own results are considered spread across the
+// corpus (genuinely broad) rather than clustered on one document (focused). Measured
+// separation is wide — 0.13 for every genuinely broad phrasing tested, 0.33-0.47 for focused
+// questions that merely contain a broad keyword — so the exact value is not delicate.
+const COVERAGE_CONCENTRATION_THRESHOLD = 0.25;
+
+// Share of the final slots that may be spent guaranteeing one chunk per entity sub-query.
+// The remainder is always filled by pure rerank relevance, so breadth can never consume the
+// whole answer.
+const COVERAGE_SLOT_SHARE = 0.7;
+
 // Temporal keywords that indicate the user wants recent content
 // Includes translations for major languages to support multilingual queries
 const TEMPORAL_KEYWORDS = [
@@ -403,6 +449,12 @@ export async function retrieveWithReranking(
     similarity: number;
   }[];
 
+  // Chunk ids contributed by each entity sub-query, in that sub-query's own rank order.
+  // Only populated on the decomposition path, and only used to guarantee coverage.
+  let entitySubQueryIds: number[][] = [];
+  // Whether to spend final slots guaranteeing per-entity coverage (see below).
+  let enforceEntityCoverage = false;
+
   if (shouldDecompose) {
     // Build sub-query list: original query + one per matched entity
     const allQueries = [query, ...decomposedEntities.map(e => e.query)];
@@ -465,12 +517,49 @@ export async function retrieveWithReranking(
       throw new Error('All sub-query vector searches failed during query decomposition');
     }
 
+    // Bound the pool before fusing (see PER_LIST_QUOTA above)
+    const quotaLists = rankedLists.map((list) => list.slice(0, PER_LIST_QUOTA));
+
+    // Decide whether this query needs per-entity coverage in the final result.
+    //
+    // Reranking and coverage pull in opposite directions. The reranker scores every chunk
+    // against the ONE original query, so on a decomposed query it collapses the fan-out back
+    // into "chunks most similar to the question" — exactly the single-embedding behaviour
+    // decomposition exists to escape. Measured: once reranking started succeeding, coverage of
+    // "tell me about all Quilibrium products" fell from 4 distinct product docs to 2.
+    //
+    // The discriminator is how concentrated the ORIGINAL query's own results are. A question
+    // that merely contains a broad keyword still lands mostly on one document ("...AGPL license
+    // for Q and its services" -> 0.40 on Quilibrium-Licensing.md, "give me an overview of QKMS"
+    // -> 0.47), whereas a genuinely broad question spreads thin across the corpus (all of
+    // "all Quilibrium products", "what services does Quilibrium offer", "the Quilibrium
+    // ecosystem", "list everything Quilibrium can do" measured 0.13). Only the spread-out case
+    // should spend slots on breadth; for the concentrated case the reranker is already right.
+    const originalList =
+      successfulEmbeddings[0]?.query === query && rankedLists.length > 0 ? rankedLists[0] : null;
+    if (originalList && originalList.length > 0) {
+      const perFile = new Map<string, number>();
+      for (const c of originalList) perFile.set(c.source_file, (perFile.get(c.source_file) ?? 0) + 1);
+      const concentration = Math.max(...perFile.values()) / originalList.length;
+      enforceEntityCoverage = concentration < COVERAGE_CONCENTRATION_THRESHOLD;
+      console.log('[RAG] Original-query concentration:', {
+        concentration: concentration.toFixed(2),
+        enforceEntityCoverage,
+      });
+    }
+
+    // Index 0 is the original query; the rest are the entity sub-queries whose
+    // representation coverage enforcement protects.
+    entitySubQueryIds = (originalList ? quotaLists.slice(1) : quotaLists).map((list) =>
+      list.map((c) => c.id)
+    );
+
     // Merge via Reciprocal Rank Fusion
-    const rrfScores = reciprocalRankFusion(rankedLists);
+    const rrfScores = reciprocalRankFusion(quotaLists);
 
     // Build a deduplicated chunk map (keep highest similarity from any list)
     const chunkMap = new Map<number, typeof candidates[number]>();
-    for (const list of rankedLists) {
+    for (const list of quotaLists) {
       for (const chunk of list) {
         const existing = chunkMap.get(chunk.id);
         if (!existing || chunk.similarity > existing.similarity) {
@@ -635,7 +724,46 @@ export async function retrieveWithReranking(
     // Re-sort by adjusted score and take the top results
     boosted.sort((a, b) => b.adjustedScore - a.adjustedScore);
 
-    return boosted.slice(0, rerankFinalCount).map((item, idx) => ({
+    // For genuinely broad queries, guarantee each entity sub-query is represented before
+    // filling the rest by pure relevance. Without this the reranker answers "which chunks
+    // best match the question" when the user asked "what are all the things" — a different
+    // question. Selection walks the reranked order, so each entity contributes its own
+    // best-scoring chunk rather than an arbitrary one.
+    const selected = boosted.slice();
+    if (enforceEntityCoverage && entitySubQueryIds.length > 0) {
+      const coverageBudget = Math.min(
+        Math.floor(rerankFinalCount * COVERAGE_SLOT_SHARE),
+        entitySubQueryIds.length
+      );
+      const picked: typeof boosted = [];
+      const pickedIds = new Set<number>();
+      const coveredLists = new Set<number>();
+
+      for (const item of boosted) {
+        if (picked.length >= coverageBudget) break;
+        const listIdx = entitySubQueryIds.findIndex(
+          (ids, i) => !coveredLists.has(i) && ids.includes(item.original.id)
+        );
+        if (listIdx >= 0) {
+          picked.push(item);
+          pickedIds.add(item.original.id);
+          coveredLists.add(listIdx);
+        }
+      }
+      // Remaining slots go to the highest-ranked chunks not already picked.
+      for (const item of boosted) {
+        if (picked.length >= rerankFinalCount) break;
+        if (!pickedIds.has(item.original.id)) {
+          picked.push(item);
+          pickedIds.add(item.original.id);
+        }
+      }
+      // Present in relevance order regardless of why each chunk was selected.
+      picked.sort((a, b) => b.adjustedScore - a.adjustedScore);
+      selected.splice(0, selected.length, ...picked);
+    }
+
+    return selected.slice(0, rerankFinalCount).map((item, idx) => ({
       id: item.original.id,
       content: item.original.content,
       source_file: item.original.source_file,
@@ -694,6 +822,12 @@ export async function retrieveWithReranking(
     ? Math.min(candidates.length, rerankFinalCount * 2)
     : rerankFinalCount;
 
+  // Size the rerank budget to the pool the reranker is actually handed, not to a
+  // constant tuned for the single-query path. Applies to both providers so a large
+  // pool doesn't burn the whole budget failing Cohere before Cloudflare is tried.
+  const rerankBudgetMs =
+    candidates.length > LARGE_POOL_THRESHOLD ? RERANK_TIMEOUT_MS_LARGE_POOL : RERANK_TIMEOUT_MS;
+
   // Resolve Cohere API key: options > environment
   const resolvedCohereKey = cohereApiKey || process.env.COHERE_API_KEY;
 
@@ -709,7 +843,7 @@ export async function retrieveWithReranking(
           topN: rerankTopN,
         }),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Cohere rerank timeout')), RERANK_TIMEOUT_MS)
+          setTimeout(() => reject(new Error('Cohere rerank timeout')), rerankBudgetMs)
         ),
       ]);
       return mergeWithReserved(mapRankedToChunks(ranking));
@@ -731,7 +865,7 @@ export async function retrieveWithReranking(
         rerankTopN,
         cloudflareAccountId,
         cloudflareApiToken,
-        RERANK_TIMEOUT_MS
+        rerankBudgetMs
       );
       if (ranking.length > 0) {
         return mergeWithReserved(mapRankedToChunks(

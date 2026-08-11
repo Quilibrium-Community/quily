@@ -50,7 +50,8 @@
     "stats:snapshot": "tsx scripts/stats-snapshot.ts",
     "sync-techtree": "tsx scripts/sync-techtree.ts",
     "sync-monorepo": "tsx scripts/sync-monorepo.ts",
-    "sync-ecosystem": "tsx scripts/sync-ecosystem.ts"
+    "sync-ecosystem": "tsx scripts/sync-ecosystem.ts",
+    "retrieval:check": "tsx scripts/retrieval-regression.ts"
   },
   "keywords": [],
   "author": "",
