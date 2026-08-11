@@ -13,14 +13,57 @@ const openrouter = createOpenRouter({ apiKey: process.env.OPENROUTER_API_KEY! })
 // Use BGE-M3 model (1024 dims) to match document_chunks_chutes table
 const EMBEDDING_MODEL = 'baai/bge-m3';
 
-async function debugSearch() {
-  console.log('=== Searching for chunks containing "quilibrium" ===\n');
+// Search term / query, taken from the command line.
+//   npx tsx scripts/debug-search.ts                        -> defaults to "quilibrium"
+//   npx tsx scripts/debug-search.ts copyleft               -> text + vector search for "copyleft"
+//   npx tsx scripts/debug-search.ts "how do fees work"     -> quote multi-word queries
+//   npx tsx scripts/debug-search.ts --source discord/      -> dump chunks whose path matches
+// The same string drives both the literal text search and the vector search.
+const argv = process.argv.slice(2);
+const sourceFlag = argv.indexOf('--source');
+const SOURCE_FILTER = sourceFlag !== -1 ? argv[sourceFlag + 1] : undefined;
+const QUERY =
+  (sourceFlag !== -1 ? argv.filter((_, i) => i !== sourceFlag && i !== sourceFlag + 1) : argv)
+    .join(' ')
+    .trim() || 'quilibrium';
 
-  // Search for chunks containing 'quilibrium' in content
+/**
+ * Dump the chunks stored under a given source_file path.
+ * Useful for inspecting an orphaned or duplicated entry before deleting it.
+ */
+async function dumpBySource(pathFragment: string) {
+  console.log(`=== Chunks whose source_file matches "${pathFragment}" ===\n`);
+
+  const { data, error } = await supabase
+    .from('document_chunks_chutes')
+    .select('id, source_file, content')
+    .ilike('source_file', `%${pathFragment}%`)
+    .order('id');
+
+  if (error) {
+    console.error('Query error:', error.message);
+    return;
+  }
+
+  console.log(`Found ${data?.length ?? 0} chunk(s)\n`);
+  for (const chunk of data ?? []) {
+    console.log('---');
+    console.log('ID:', chunk.id);
+    console.log('Source:', chunk.source_file);
+    console.log('Length:', chunk.content.length, 'chars');
+    console.log('Content:', chunk.content.slice(0, 600).replace(/\n/g, ' '));
+    console.log('');
+  }
+}
+
+async function debugSearch() {
+  console.log(`=== Searching for chunks containing "${QUERY}" ===\n`);
+
+  // Literal substring match on chunk content
   const { data: textMatches, error: textError } = await supabase
     .from('document_chunks_chutes')
     .select('id, source_file, content')
-    .ilike('content', '%quilibrium%')
+    .ilike('content', `%${QUERY}%`)
     .limit(20);
 
   if (textError) {
@@ -28,7 +71,7 @@ async function debugSearch() {
     return;
   }
 
-  console.log(`Found ${textMatches?.length ?? 0} chunks with "quilibrium" in text\n`);
+  console.log(`Found ${textMatches?.length ?? 0} chunks with "${QUERY}" in text\n`);
 
   if (textMatches && textMatches.length > 0) {
     for (const chunk of textMatches.slice(0, 5)) {
@@ -37,18 +80,21 @@ async function debugSearch() {
       console.log('Source:', chunk.source_file);
       console.log('Preview:', chunk.content.slice(0, 200).replace(/\n/g, ' ') + '...');
     }
+  } else {
+    console.log('(This is a literal substring match, not semantic — a full sentence');
+    console.log(' will usually find nothing here. See the vector search below.)');
   }
 
   // Also check source files
-  console.log('\n\n=== Source files containing "quilibrium" in path ===\n');
+  console.log(`\n\n=== Source files containing "${QUERY}" in path ===\n`);
 
   const { data: sourceFiles } = await supabase
     .from('document_chunks_chutes')
     .select('source_file')
-    .ilike('source_file', '%quilibrium%');
+    .ilike('source_file', `%${QUERY}%`);
 
   const uniqueSources = [...new Set(sourceFiles?.map(f => f.source_file) ?? [])];
-  console.log(`Found ${uniqueSources.length} source files with "quilibrium" in path:`);
+  console.log(`Found ${uniqueSources.length} source files with "${QUERY}" in path:`);
   for (const src of uniqueSources) {
     console.log('  -', src);
   }
@@ -80,14 +126,13 @@ async function debugSearch() {
 async function testVectorSearch() {
   console.log('\n\n=== Testing vector search directly ===\n');
 
-  const query = 'what is Quilibrium?';
-  console.log('Query:', query);
+  console.log('Query:', QUERY);
 
   // Generate embedding using BGE-M3 (1024 dims)
   console.log('Generating embedding with BGE-M3...');
   const { embedding } = await embed({
     model: openrouter.textEmbeddingModel(EMBEDDING_MODEL),
-    value: query,
+    value: QUERY,
   });
 
   console.log('Embedding generated, length:', embedding.length);
@@ -154,4 +199,8 @@ async function testVectorSearch() {
   }
 }
 
-debugSearch().then(testVectorSearch).catch(console.error);
+if (SOURCE_FILTER) {
+  dumpBySource(SOURCE_FILTER).catch(console.error);
+} else {
+  debugSearch().then(testVectorSearch).catch(console.error);
+}

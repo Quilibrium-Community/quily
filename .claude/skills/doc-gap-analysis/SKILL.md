@@ -338,7 +338,7 @@ Template structure:
 
 5. Write to `docs/custom/gap-analysis/` with a descriptive filename (e.g., `QStorage-Overview.md`)
 6. Update the audit log: mark all related official doc files as `status: "covered"` with a reference to the new custom doc
-7. Run `python .agents/update-index.py`
+7. Run `python "$HOME/.agents/skills/docs-manager/update-index.py" .`
 
 </process>
 

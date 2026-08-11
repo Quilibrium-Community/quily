@@ -45,6 +45,16 @@ const SUPPORTED_EXTENSIONS = ['md', 'txt'];
 /**
  * Load all document files from a directory
  * Supports: .md (markdown) and .txt (plain text/transcriptions)
+ *
+ * Files with no body content are skipped. Upstream docs repos carry empty
+ * placeholders for unwritten pages (e.g. QKMS `_02-data-types/01-general.md`,
+ * a 0-byte stub for a page that 404s on docs.quilibrium.com), and the sync
+ * mirrors them faithfully. Chunking one yields nothing, so it never reaches the
+ * database and `ingest status` reports it as perpetually "not ingested" — a
+ * phantom that looks like a broken pipeline. Skipping them here keeps the status
+ * report honest, and the warning means a doc that becomes empty by accident is
+ * still visible rather than silently dropped.
+ *
  * @param docsPath - Path to documentation directory
  * @returns Array of loaded documents with path and content
  */
@@ -60,6 +70,7 @@ export async function loadDocuments(docsPath: string): Promise<LoadedDocument[]>
   }
 
   const documents: LoadedDocument[] = [];
+  const emptyFiles: string[] = [];
 
   for (const filePath of files) {
     const rawContent = await readFile(filePath, 'utf-8');
@@ -70,6 +81,10 @@ export async function loadDocuments(docsPath: string): Promise<LoadedDocument[]>
     // Only parse frontmatter for markdown files
     if (isMarkdown) {
       const { content, frontmatter } = parseFrontmatter(rawContent);
+      if (content.trim().length === 0) {
+        emptyFiles.push(relativePath);
+        continue;
+      }
       documents.push({
         path: relativePath,
         content,
@@ -77,12 +92,26 @@ export async function loadDocuments(docsPath: string): Promise<LoadedDocument[]>
       });
     } else {
       // Plain text files (e.g., transcriptions) - use as-is
+      if (rawContent.trim().length === 0) {
+        emptyFiles.push(relativePath);
+        continue;
+      }
       documents.push({
         path: relativePath,
         content: rawContent,
         frontmatter: undefined,
       });
     }
+  }
+
+  if (emptyFiles.length > 0) {
+    console.warn(
+      `\n⚠️  Skipped ${emptyFiles.length} empty file(s) with no content to ingest:`
+    );
+    for (const path of emptyFiles) {
+      console.warn(`    - ${path}`);
+    }
+    console.warn('');
   }
 
   return documents;
