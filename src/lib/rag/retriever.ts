@@ -493,6 +493,9 @@ export async function retrieveWithReranking(
   // Chunk ids contributed by each entity sub-query, in that sub-query's own rank order.
   // Only populated on the decomposition path, and only used to guarantee coverage.
   let entitySubQueryIds: number[][] = [];
+  // Chunk ids from the ORIGINAL query's own sub-query, in its own rank order. Scores within a
+  // single list share one embedding and so are comparable; scores across lists are not.
+  let originalSubQueryIds: number[] = [];
   // Whether to spend final slots guaranteeing per-entity coverage (see below).
   let enforceEntityCoverage = false;
 
@@ -599,6 +602,7 @@ export async function retrieveWithReranking(
     entitySubQueryIds = (originalList ? quotaLists.slice(1) : quotaLists).map((list) =>
       list.map((c) => c.id)
     );
+    originalSubQueryIds = originalList ? quotaLists[0].map((c) => c.id) : [];
 
     // Merge via Reciprocal Rank Fusion
     const rrfScores = reciprocalRankFusion(quotaLists);
@@ -823,11 +827,60 @@ export async function retrieveWithReranking(
     }));
   };
 
-  // Helper for similarity-based fallback
-  // Sort all candidates by similarity so priority docs don't blindly take slots
+  // Ordering used whenever reranking is unavailable — no key configured, provider down, or
+  // timeout. This is not a rare path: the web deployment ran without any reranker configured
+  // for its entire life, so the fallback WAS the ranking there.
+  //
+  // On the single-query path every candidate was scored against the same embedding, so sorting
+  // by similarity is meaningful. On the decomposition path it is not: each candidate's
+  // `similarity` is against whichever sub-query retrieved it, and the merge step keeps the
+  // MAX across sub-queries. A chunk scoring 0.75 against the synthetic sub-query "QStorage
+  // S3-compatible object storage" then outranks one scoring 0.56 against the user's actual
+  // question, even for a question about licensing. That comparison is what buried
+  // Quilibrium-Licensing.md at rank 109 of 199 on 2026-08-11.
+  //
+  // So on the decomposition path, order by RANK WITHIN A LIST — which is comparable — instead
+  // of by raw score across lists. Which list leads depends on the same signal the rerank path
+  // uses: a focused question leads with its own results, a genuinely broad one interleaves
+  // sub-queries so no single product dominates.
+  const fallbackOrdering = (): typeof candidates => {
+    const decomposed = originalSubQueryIds.length > 0 || entitySubQueryIds.length > 0;
+    if (!decomposed) {
+      return [...candidates].sort((a, b) => b.similarity - a.similarity);
+    }
+
+    const byId = new Map(candidates.map((c) => [c.id, c]));
+    const ordered: typeof candidates = [];
+    const taken = new Set<number>();
+    const take = (id: number) => {
+      const chunk = byId.get(id);
+      if (chunk && !taken.has(id)) {
+        taken.add(id);
+        ordered.push(chunk);
+      }
+    };
+    const interleave = (lists: number[][]) => {
+      const longest = lists.reduce((m, l) => Math.max(m, l.length), 0);
+      for (let i = 0; i < longest; i++) for (const list of lists) if (list[i] !== undefined) take(list[i]);
+    };
+
+    if (enforceEntityCoverage) {
+      interleave([originalSubQueryIds, ...entitySubQueryIds]);
+    } else {
+      for (const id of originalSubQueryIds) take(id);
+      interleave(entitySubQueryIds);
+    }
+
+    // Priority (previously cited) and temporal chunks belong to no sub-query list; they keep
+    // competing on their own scores rather than being dropped.
+    const leftovers = candidates
+      .filter((c) => !taken.has(c.id))
+      .sort((a, b) => b.similarity - a.similarity);
+    return [...ordered, ...leftovers];
+  };
+
   const fallbackToSimilarity = (): RetrievedChunk[] => {
-    const sorted = [...candidates].sort((a, b) => b.similarity - a.similarity);
-    return sorted
+    return fallbackOrdering()
       .slice(0, rerankFinalCount)
       .map(
         (

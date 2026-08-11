@@ -21,6 +21,12 @@
  *   yarn retrieval:check              # run every case
  *   yarn retrieval:check licensing    # run cases whose id contains "licensing"
  *   yarn retrieval:check --verbose    # also dump every retrieved chunk
+ *   yarn retrieval:check --no-rerank  # force the no-reranker path (see below)
+ *
+ * --no-rerank strips the rerank credentials for the run, so retrieval falls back to its
+ * degraded ordering. This is not hypothetical: the Vercel deployment had no reranker
+ * configured at all until 2026-08-11, so the fallback was its real ranking, while local runs
+ * always reranked and looked fine. Every case should pass in BOTH modes.
  */
 
 import 'dotenv/config';
@@ -203,6 +209,14 @@ async function runCase(c: Case): Promise<CaseOutcome> {
 async function main() {
   const args = process.argv.slice(2);
   const verbose = args.includes('--verbose');
+  if (args.includes('--no-rerank')) {
+    // Cleared before any retrieval runs; the retriever reads these at call time and treats
+    // an absent key as "this provider is unavailable".
+    delete process.env.COHERE_API_KEY;
+    delete process.env.CLOUDFLARE_ACCOUNT_ID;
+    delete process.env.CLOUDFLARE_API_TOKEN;
+    console.log('Running with rerankers DISABLED — exercising the fallback ordering.');
+  }
   const filter = args.find((a) => !a.startsWith('--'));
   const selected = filter ? CASES.filter((c) => c.id.includes(filter)) : CASES;
 
