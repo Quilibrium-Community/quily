@@ -28,6 +28,13 @@ topics:
 
 # QUIL Token — Usage, Fees, and Where Tokens Go
 
+> **⚠️ Most of the token utility described here is NOT live yet (as of 2026-08-12).** The QUIL
+> token shard-out has not completed, so **token transactions, mining reward payouts, and bridging
+> are all still switched off**. This document describes what QUIL is *for* and how the mechanics
+> are designed, not what a user can do today. Do not tell anyone they can transfer QUIL, bridge it,
+> or that they are currently being paid for proving. See
+> [Mainnet Status](Mainnet-Status-What-Is-Live.md).
+
 A consolidated answer to three related questions: **what is QUIL used for**, **how are fees
 calculated**, and **where do tokens go once spent**. The third question is the one with the least
 public documentation, and this document is explicit about that rather than filling the gap with
@@ -37,7 +44,7 @@ estimates.
 
 | Use | What happens | Source |
 |---|---|---|
-| **Node rewards / mining** | QUIL is minted to node operators for proving work. Native QUIL can only be mined: no VC allocation, no premine, no airdrops. | [Tokenomics](https://docs.quilibrium.com/docs/discover/quilibrium-tokenomics) |
+| **Node rewards / mining** | QUIL is minted to node operators for proving work. Native QUIL can only be mined: no VC allocation, no premine, no airdrops. **Payouts are NOT live yet** — provers run and accrue coverage, but rewards are not being distributed until the token shard-out completes. | [Tokenomics](https://docs.quilibrium.com/docs/discover/quilibrium-tokenomics) |
 | **Transaction gas fees** | Every transaction pays a fee denominated in QUIL, based on data size, execution complexity, and proof size. | [Gas Fees and Dynamic Fee Market](https://docs.quilibrium.com/docs/discover/gas-fees-and-dynamic-fee-market-on-quilibrium) |
 | **Bridging** | Native QUIL is locked/burned on the Quilibrium chain to mint wQUIL on Ethereum; the reverse unlocks/burns wQUIL. | [Bridging](https://docs.quilibrium.com/docs/run-node/qclient/commands/bridging) |
 | **Paying for QConsole services** | QConsole services (QStorage, QKMS, Relational, F(x)) are billed in USD but payable in wQUIL, USDC, or fiat by card. | [QConsole Pricing](https://github.com/Quilibrium-Community/quily/blob/main/docs/custom/QStorage-Pricing-Estimates.md) |

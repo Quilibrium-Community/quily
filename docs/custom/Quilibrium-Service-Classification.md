@@ -31,6 +31,10 @@ topics:
 
 # Quilibrium Service Classification
 
+> **This document answers "what kind of thing is it", NOT "does it work yet".** The two are independent. Several things listed here exist and are classified correctly but are **not currently usable**, because mainnet is not fully operational: the QUIL token shard-out has not completed. Most importantly, **the Bridge is not live**, and neither are token transactions, mining rewards, or permissionless app deployment by external developers.
+>
+> Before telling anyone something works, check **[Mainnet Status: What Is and Is Not Live](Mainnet-Status-What-Is-Live.md)**. Being listed in this document is not evidence that a thing is running.
+
 **This document is the authoritative reference for which Quilibrium things are Q Console managed services and which are not.** If another document in this knowledge base describes something as a "Q Console service" and this document disagrees, this document is correct.
 
 Quilibrium ships in three distinct layers. Conflating them is the single most common mistake when answering "list all Q services", because Quilibrium Inc. builds at all three layers and the marketing surface often presents them together.
@@ -80,7 +84,7 @@ These are **not** Q Console services. They are part of the network, and the offi
 |---|---|---|
 | **MetaVM** | Zero-knowledge proof system for VM execution, covering RISC-V, EVM and Solana BPF. The foundation that f(x) and raw compute workloads will be built on. | In development. Prover and verifier work today, mainnet integration arrives with Equinox |
 | **Klearu** | End-to-end encrypted ML inference via two-party computation. Open source, runs today as a library and a browser demo. | In development for mainnet. Native network integration planned for a future protocol upgrade |
-| **Bridge** | QUIL to wQUIL cross-chain bridging with Ethereum, using an in-network Ethereum execution node plus an MPC signer. | Live, at quilibrium.com/bridge and via `qclient cross-mint` |
+| **Bridge** | QUIL to wQUIL cross-chain bridging with Ethereum, using an in-network Ethereum execution node plus an MPC signer. | **NOT live.** Gated on the token shard-out completing. It was up previously and was taken down; expected back shortly after the v0.25 release. `quilibrium.com/bridge` currently 404s. See [Mainnet Status](Mainnet-Status-What-Is-Live.md) |
 | **Hypersnap** | Decentralized, hyperdimensional Snapchain. | Shipped at the protocol layer; the Q Console managed offering is separate and still coming soon |
 | **Dispatch Queue** | Ordered message dispatch between participants. The primitive QPing and QQ are built on. | Shipped |
 | **EVM Shard** | EVM-compatible app shard supporting rollup follower mode or raw EVM execution. | In development |

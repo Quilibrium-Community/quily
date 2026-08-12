@@ -1,7 +1,7 @@
 ---
 title: "QUIL Token — Quick Reference"
 source: official
-date: 2026-03-20
+date: 2026-08-12
 type: technical_reference
 topics:
   - QUIL
@@ -26,8 +26,10 @@ $QUIL is a utility token. It is not intended for speculation, investment, or fin
 
 ## Key Facts
 
-- **Native token**: $QUIL — earned by running nodes on the Quilibrium network. $QUIL lives on the Quilibrium chain and is not directly tradeable on Ethereum exchanges.
-- **Wrapped token**: $wQUIL — ERC-20 on Ethereum, created by bridging native $QUIL via the [Quilibrium Bridge](https://quilibrium.com/bridge). $wQUIL is the tradeable form on Ethereum DEXs and CEXs.
+> **⚠️ Status (2026-08-12): native QUIL is still locked.** The token shard-out has not completed, so **mining reward payouts, token transactions, and bridging are all NOT live yet**. Nodes prove and accrue coverage, but operators are not being paid out, and native QUIL cannot currently be moved or bridged. The wQUIL market data below is real and tradeable; the route to *get* native QUIL out to it is not open. See [Mainnet Status](Mainnet-Status-What-Is-Live.md).
+
+- **Native token**: $QUIL — earned by running nodes on the Quilibrium network (reward payouts not yet enabled, see above). $QUIL lives on the Quilibrium chain and is not directly tradeable on Ethereum exchanges.
+- **Wrapped token**: $wQUIL — ERC-20 on Ethereum, created by bridging native $QUIL via the Quilibrium Bridge (**bridge not currently live**; `quilibrium.com/bridge` returns 404). $wQUIL is the tradeable form on Ethereum DEXs and CEXs.
 - **Fair launch**: No VC allocation, no premine, no airdrops — $QUIL can only be mined
 
 ## wQUIL on Ethereum

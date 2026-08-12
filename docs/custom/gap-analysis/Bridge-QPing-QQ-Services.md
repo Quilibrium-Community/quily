@@ -22,7 +22,9 @@ topics:
 
 This document covers three capabilities that are frequently referenced but lack standalone documentation: the **Bridge** (QUIL/wQUIL cross-chain bridging), **QPing** (dispatch-based notifications), and **QQ** (SQS-compatible message queue).
 
-> **Classification note.** QQ and QPing are **Q Console managed services**. The **Bridge is not**: it is a protocol-layer capability used at quilibrium.com/bridge or via `qclient`, and it does not appear in Q Console. See [Quilibrium Service Classification](../Quilibrium-Service-Classification.md) for the authoritative list of what is and is not a Q Console service.
+> **⚠️ The Bridge is NOT live.** Everything below describes how the bridge works **when it is running**. It is not running: `quilibrium.com/bridge` currently 404s, and bridging is gated on the QUIL token shard-out completing. It was up previously, was taken down, and is expected back shortly after the v0.25 release. **Do not present the bridging steps below as something a user can do today.** See [Mainnet Status](../Mainnet-Status-What-Is-Live.md).
+>
+> **Classification note.** QQ and QPing are **Q Console managed services**, and both are live. The **Bridge is not a Q Console service**: it is a protocol-layer capability used at quilibrium.com/bridge or via `qclient`, and it does not appear in Q Console. See [Quilibrium Service Classification](../Quilibrium-Service-Classification.md) for the authoritative list.
 
 ## How These Capabilities Map to Primitives
 
@@ -46,7 +48,9 @@ These are composable primitives that can create traditional web services. An app
 
 ### What the Bridge Does
 
-The Quilibrium Bridge enables bidirectional transfer of tokens between the Quilibrium network and Ethereum. In its current form, it converts native QUIL tokens into wQUIL (wrapped QUIL), an audited ERC-20 token on Ethereum, and vice versa. The wQUIL ERC-20 contract has received a successful independent audit (publicly accessible via IPFS).
+> **Not currently operational** — see the warning at the top of this document. The description below is of the design, not of an available service.
+
+The Quilibrium Bridge is designed to enable bidirectional transfer of tokens between the Quilibrium network and Ethereum. In its current form, it converts native QUIL tokens into wQUIL (wrapped QUIL), an audited ERC-20 token on Ethereum, and vice versa. The wQUIL ERC-20 contract has received a successful independent audit (publicly accessible via IPFS).
 
 The bridge monitors the Ethereum blockchain for mint and burn events. An MPC-based signer built on top of Quilibrium handles the signing operations, eliminating single points of failure and making the bridge trustless rather than relying on a centralized custodian.
 
@@ -87,6 +91,8 @@ When you bridge an asset to Quilibrium, the entry point is public (because Ether
 This means you can give privacy to every single ERC-20 on Ethereum by routing through Q. Coins can come in and come out such that sender and recipient cannot be linked, provided sufficient bridging volume and time have elapsed.
 
 ### Bridging Commands via qclient
+
+> **These steps cannot be completed today.** The bridge is not live and the web flow at `quilibrium.com/bridge` returns 404. This is the procedure for when it returns.
 
 The `cross-mint` command initiates a cross-chain bridging operation:
 

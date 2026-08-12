@@ -16,6 +16,10 @@ topics:
 
 # Quilibrium Bridge
 
+> **⚠️ NOT LIVE (as of 2026-08-12).** The bridge is not operational: `quilibrium.com/bridge` returns 404, and bridging is gated on the QUIL token shard-out completing. It was up previously, was taken down, and is expected back shortly after the v0.25 release. The description below is of the design, not of a service anyone can use today. See [Mainnet Status](../../Mainnet-Status-What-Is-Live.md).
+>
+> *(Manual annotation. This file is auto-generated from the ecosystem feed, which does not carry deployment status — the upstream entry needs a status field, otherwise this warning is lost on the next sync.)*
+
 **Part of the official Quilibrium ecosystem.** Relation to the network: Quilibrium Protocol (a core piece of Quilibrium, built into the network itself).
 
 **The official bridge between Quilibrium and Ethereum.** Move native `QUIL` to `wQUIL` (an audited ERC-20 on Ethereum) and back, with no centralised custodian sitting in the middle. The bridge is bidirectional: every direction of the trip is handled by the same on-chain mechanism.
