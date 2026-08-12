@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Services — Bridge (QUIL/wQUIL), QPing Notifications & QQ Message Queue"
 source: official_docs_synthesis
-date: 2026-05-01
+date: 2026-08-12
 type: technical_reference
 topics:
   - Bridge
@@ -20,21 +20,23 @@ topics:
 
 # Quilibrium Services: Bridge, QPing, and QQ
 
-Quilibrium exposes a set of AWS-compatible managed services built on top of its core network primitives (hypergraph, dispatch, and compute). This document covers three services that are frequently referenced but lack standalone documentation: the **Bridge** (QUIL/wQUIL cross-chain bridging), **QPing** (dispatch-based notifications), and **QQ** (SQS-compatible message queue).
+This document covers three capabilities that are frequently referenced but lack standalone documentation: the **Bridge** (QUIL/wQUIL cross-chain bridging), **QPing** (dispatch-based notifications), and **QQ** (SQS-compatible message queue).
 
-## How Services Map to Primitives
+> **Classification note.** QQ and QPing are **Q Console managed services**. The **Bridge is not**: it is a protocol-layer capability used at quilibrium.com/bridge or via `qclient`, and it does not appear in Q Console. See [Quilibrium Service Classification](../Quilibrium-Service-Classification.md) for the authoritative list of what is and is not a Q Console service.
 
-Every Q Console managed service is composed from a small number of protocol-level building blocks. The table below shows which primitives each service uses:
+## How These Capabilities Map to Primitives
 
-| Service | Primitives Used | Description |
-|---------|----------------|-------------|
-| Q Storage | Hypergraph | S3-compatible object storage |
-| QKMS | Compute primitive | MPC-native key management |
-| Identity/Authorization | Hypergraph + MPC via compute primitive | Account and permission management |
-| **QQ** | **Hypergraph + dispatch mechanism** | SQS-compatible message queue |
-| **QPing** | **Dispatch mechanism** | Notification and event dispatch |
-| Bridge | Ethereum state import via alt-fee basis app shards | Cross-chain token bridging |
-| Quark | Token + File schemas + QStorage + RDF schema validation | Privacy-preserving game assets |
+Everything Quilibrium builds is composed from a small number of protocol-level building blocks. The table below shows which primitives each capability uses, and whether it is a Q Console managed service:
+
+| Capability | Q Console service? | Primitives Used | Description |
+|---------|---|----------------|-------------|
+| Q Storage | Yes (active) | Hypergraph | S3-compatible object storage |
+| QKMS | Yes (active) | Compute primitive | MPC-native key management |
+| Identity/Authorization | Yes (active) | Hypergraph + MPC via compute primitive | Account and permission management |
+| **QQ** | **Yes (active)** | **Hypergraph + dispatch mechanism** | SQS-compatible message queue |
+| **QPing** | **Yes (active)** | **Dispatch mechanism** | Notification and event dispatch |
+| Quark | Yes (coming soon) | Token + File schemas + QStorage + RDF schema validation | 3D asset library and SDK, surfaced as a console service |
+| Bridge | **No** | Ethereum state import via alt-fee basis app shards | Protocol-layer cross-chain token bridging |
 
 These are composable primitives that can create traditional web services. An application can combine QQ for asynchronous messaging, QPing for event notifications, QKMS for secure signing, and Q Storage for data persistence, all within a single project on Q Console.
 
@@ -225,36 +227,42 @@ In practice, QPing and QQ are complementary. A common pattern is to use QPing to
 
 ---
 
-## Accessing These Services
+## Accessing These Capabilities
 
-All three services are accessible through **Q Console**, Quilibrium's unified management interface for managed services. Q Console provides:
+**QQ and QPing** are accessible through **Q Console**, Quilibrium's unified management interface for managed services. Q Console provides:
 
-- A web-based dashboard for managing queues, notifications, and bridge operations
+- A web-based dashboard for managing queues and notifications
 - Full API compatibility (SQS APIs for QQ, REST APIs for other services)
 - Integration with QKMS for secure key management and signing
 - Cross-account asset sharing between different Q Console accounts
 - Fiat and QUIL/wQUIL payment options for service usage
 
-The Bridge is also accessible directly via the qclient CLI tool using the `cross-mint` command, independent of Q Console.
+**The Bridge is not in Q Console.** It is used either through the web flow at `https://quilibrium.com/bridge` or directly via the qclient CLI tool using the `cross-mint` command.
 
 ---
 
 ## Relationship to the AWS-Compatible Service Roadmap
 
-QQ and QPing are part of Quilibrium's broader strategy to provide AWS API-compatible services, first outlined in the September 2024 roadmap. The planned services include:
+QQ and QPing are part of Quilibrium's broader strategy to provide AWS API-compatible services, first outlined in the September 2024 roadmap. The Q Console services include:
 
 | Service | AWS Equivalent | Status |
 |---------|---------------|--------|
 | Q Storage | Amazon S3 | Launched |
 | QKMS | Amazon KMS | Launched |
+| Identity/Authorization | AWS IAM | Launched |
 | QQ | Amazon SQS | Launched |
 | QPing | Amazon SNS (partial) | Launched |
+| Hypersnap | (none) | Listed in Q Console, coming soon |
+| Quark | (none) | Listed in Q Console, coming soon |
+| f(x) | AWS Lambda | In development (requires MetaVM) |
+| Relational | RDS / Keyspaces / DynamoDB / Redis | In development |
 | API Gateway | Amazon API Gateway | Planned |
-| Lambda | AWS Lambda | Planned (requires MetaVM) |
 | ElastiCache | Amazon ElastiCache | Planned |
+
+Note that the Bridge does not appear in this table: it is a protocol-layer capability, not one of the AWS-compatible managed services.
 
 The goal is to make migration from AWS to Quilibrium as frictionless as possible for developers, while providing privacy, encryption, and decentralization properties that centralized cloud providers cannot offer.
 
 ---
 
-*Last updated: 2026-02-11T15:00:00*
+*Last updated: 2026-08-12*

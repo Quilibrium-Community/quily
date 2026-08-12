@@ -32,6 +32,8 @@ topics:
 
 **Can you run AI on Quilibrium?** Yes — Klearu is a real, functional runtime for private LLM inference, officially open-sourced by Quilibrium Inc. in early 2026. It is not yet integrated into the Quilibrium mainnet, but the library is available now and works today.
 
+**Is Klearu a Q Console service?** No. Klearu is a **protocol-layer** component, described on the official ecosystem page as "a core piece of Quilibrium, built into the network itself", and tracked under Protocol (not Web Services) in the Tech Tree. It is available on the network as an open-source library and a browser demo, not as a managed service you provision in Q Console. Native network integration is planned for a future protocol upgrade, at which point private inference becomes a built-in capability for any application running on Quilibrium. See [Quilibrium Service Classification](Quilibrium-Service-Classification.md).
+
 **Can you train LLMs on Quilibrium?** Klearu is currently focused on **inference**, not general user-facing LLM training. It uses SLIDE-based sparse training internally for its own models, but training arbitrary LLMs is not yet implemented. Nothing in the architecture technically prevents extending it to support training in the future — it is a current scope limitation, not a fundamental one. Mainnet AI integration is planned for a future protocol upgrade.
 
 **Is AI on Q just a roadmap item?** No longer. Klearu moves private AI from a future roadmap concept to a shipped, open-source codebase. The "Event Horizon" roadmap language predates this release — Klearu is its concrete realization for inference.

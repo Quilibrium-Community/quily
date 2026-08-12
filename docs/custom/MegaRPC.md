@@ -2,7 +2,7 @@
 title: "MegaRPC: Privacy-Preserving RPC Service"
 source: livestream + discord
 author: Cassandra Heart
-date: 2026-05-01
+date: 2026-08-12
 type: technical_reference
 topics:
   - MegaRPC
@@ -18,16 +18,19 @@ topics:
   - Alchemy alternative
   - Infura alternative
   - Q Console
-  - managed service
+  - not a Q Console service
+  - service classification
   - private RPC
   - censorship resistance
 ---
 
 # MegaRPC: Privacy-Preserving RPC Service
 
-## Current Status (as of March 2026)
+## Current Status
 
-**Is MegaRPC live?** Yes. MegaRPC is running in production and already powers Quorum Mobile's wallet and blockchain interactions. Q Console access for external developers is being rolled out.
+**Is MegaRPC live?** Yes. MegaRPC is running in production and already powers Quorum Mobile's wallet and blockchain interactions.
+
+**Is MegaRPC a Q Console service?** No. Despite being described in March 2026 as "a managed service being exposed on Q Console", that access has not landed: MegaRPC does not appear in the Q Console service registry as of August 2026. It is a live Quilibrium-operated service accessed outside Q Console. See [Quilibrium Service Classification](Quilibrium-Service-Classification.md) for the authoritative list of Q Console services.
 
 **What networks does it support?** MegaRPC supports Ethereum and Solana RPC queries today.
 
@@ -82,7 +85,7 @@ This means:
 | Knows your IP address | Yes | Cannot correlate to queries |
 | Knows your wallet address | Yes | No (ORAM-encrypted queries) |
 | Links IP to wallet | Yes | Impossible by design |
-| Centralized operator | Yes | Managed service on Q Console |
+| Centralized operator | Yes | Quilibrium-operated service, decentralized backend |
 | Analytics on user behavior | Yes (and some wallets want this) | Not possible |
 | "Can be evil" | Yes | No |
 
@@ -99,7 +102,7 @@ Wallet teams have been approached about adopting MegaRPC. Some are not intereste
 
 ## Relationship to the Broader Q Ecosystem
 
-MegaRPC is one of Quilibrium's managed services exposed through Q Console. It builds on the ORAM research first mentioned in the version 2.1.1 roadmap (November 2025), where it was described as an "encrypted query evaluator using ORAM-based lookup" to achieve full analytic privacy, beyond the K-anonymity provided by onion routing alone.
+MegaRPC is one of Quilibrium's own services, but it sits alongside Q Console rather than inside it. It builds on the ORAM research first mentioned in the version 2.1.1 roadmap (November 2025), where it was described as an "encrypted query evaluator using ORAM-based lookup" to achieve full analytic privacy, beyond the K-anonymity provided by onion routing alone.
 
 When combined with Quorum's onion-routed browsing of .Q names that resolve to Q Storage content, MegaRPC completes the privacy picture: no clearnet exposure, no IP-to-wallet linkability, and no metadata leakage at any point in the chain.
 
@@ -114,10 +117,12 @@ This means cross-chain interactions on Quilibrium are private by default — not
 
 ---
 
-## Q Console Access
+## Q Console Access (announced, not yet shipped)
 
-MegaRPC is being made available as a managed service on Q Console for external developers and wallet teams. Similar to how developers use Alchemy or Infura today, they will be able to use MegaRPC as a drop-in replacement with privacy guarantees.
+Q Console access for external developers and wallet teams has been discussed since March 2026: the intent is that teams who do not want to run their own MegaRPC node could obtain API keys and use MegaRPC as a drop-in Alchemy/Infura replacement with privacy guarantees.
+
+**This has not shipped.** MegaRPC is not among the services listed in Q Console. Until it is, MegaRPC should not be described as a Q Console managed service.
 
 ---
 
-*Last updated: 2026-03-30*
+*Last updated: 2026-08-12*

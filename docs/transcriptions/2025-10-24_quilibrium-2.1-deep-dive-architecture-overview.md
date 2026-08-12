@@ -31,6 +31,8 @@ The Q Name Service is our equivalent to the Ethereum Name Service but works diff
 
 ### Upcoming Services
 
+> **Classification note (added 2026-08-12):** the three lists below are *not* all Q Console services, despite the shared heading. Only **Q Storage**, **QKMS**, **F of X** and **Relational** are Q Console managed services. **Quorum Mobile** is a consumer product, **Q Name Service** (QNS) is a separate app at names.quilibrium.com that is not accessible through Q Console, and **Klearu** and the **streaming data primitives** are protocol-layer capabilities arriving via protocol upgrades, not managed services. See [Quilibrium Service Classification](../custom/Quilibrium-Service-Classification.md).
+
 After 2.1 launch concludes, we're rolling out additional services:
 - Quorum Mobile
 - Q Console
