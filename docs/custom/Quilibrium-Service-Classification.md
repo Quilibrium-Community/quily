@@ -31,9 +31,13 @@ topics:
 
 # Quilibrium Service Classification
 
-> **This document answers "what kind of thing is it", NOT "does it work yet".** The two are independent. Several things listed here exist and are classified correctly but are **not currently usable**, because mainnet is not fully operational: the QUIL token shard-out has not completed. Most importantly, **the Bridge is not live**, and neither are token transactions, mining rewards, or permissionless app deployment by external developers.
+> **This document answers "what kind of thing is it", NOT "does it work yet".** The two are independent.
 >
-> Before telling anyone something works, check **[Mainnet Status: What Is and Is Not Live](Mainnet-Status-What-Is-Live.md)**. Being listed in this document is not evidence that a thing is running.
+> **Shipped and usable today:** Quorum (mobile and desktop), the Q Console services (QStorage, QKMS, Identity and Authorization, QQ, QPing), QNS, MegaRPC, Klearu and MetaVM. Quilibrium Inc. has shipped a great deal that does not depend on the token layer.
+>
+> **Not live yet**, all gated on the QUIL token shard-out: **the Bridge**, token transactions, mining reward payouts, and permissionless app deployment by external developers.
+>
+> Being listed in this document is not evidence that a thing is running, and is not evidence that it is broken either. For status, see **[Quilibrium Network Status](Mainnet-Status-What-Is-Live.md)**.
 
 **This document is the authoritative reference for which Quilibrium things are Q Console managed services and which are not.** If another document in this knowledge base describes something as a "Q Console service" and this document disagrees, this document is correct.
 
