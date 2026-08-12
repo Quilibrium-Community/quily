@@ -90,12 +90,14 @@ Quilibrium ships **alt-fee-basis app shards**: a shard type that is not consensu
 
 Every item here is blocked by the same root cause: the token shard-out has not completed, so fee-based transactions on the token shards are not enabled.
 
+**This list is complete.** Confirmed with the maintainer on 2026-08-12: transactions, mining rewards, the bridge and external app deployment are the only things gated on the shard-out. Nothing else is waiting on it, so do not imply there may be more.
+
 | Capability | Status |
 |---|---|
 | **QUIL token transactions / transfers** | **Not live.** Token shards locked pending shard-out |
 | **Mining rewards** | **Not live.** Provers run and accrue coverage, but payouts are not being distributed |
 | **The Bridge (QUIL ↔ wQUIL)** | **Not live.** See below |
-| **Apps from external developers** | **Not live.** Permissionless third-party deployment directly on the network needs the shard-out. Quilibrium's own services run on an alt-fee basis instead |
+| **Apps from external developers** | **Not live.** Permissionless third-party deployment directly on the network needs the shard-out. Quilibrium Inc. own services run on an alt-fee basis instead |
 | **Full QUIL token utility** | **Not live.** Paying for services in QUIL and the rest of the token's role follow the same unlock |
 
 Do not give step-by-step instructions for any of these as though they were available. Where docs contain such instructions, they describe the intended flow.
