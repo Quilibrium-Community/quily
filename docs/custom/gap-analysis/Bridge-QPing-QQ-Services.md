@@ -22,7 +22,7 @@ topics:
 
 This document covers three capabilities that are frequently referenced but lack standalone documentation: the **Bridge** (QUIL/wQUIL cross-chain bridging), **QPing** (dispatch-based notifications), and **QQ** (SQS-compatible message queue).
 
-> **⚠️ The Bridge is NOT live.** Everything below describes how the bridge works **when it is running**. It is not running: `quilibrium.com/bridge` currently 404s, and bridging is gated on the QUIL token shard-out completing. It was up previously, was taken down, and is expected back shortly after the v0.25 release. **Do not present the bridging steps below as something a user can do today.** See [Mainnet Status](../Mainnet-Status-What-Is-Live.md).
+> **⚠️ The Bridge is NOT live.** Everything below describes how the bridge works **when it is running**. It is not running: bridging is gated on the QUIL token shard-out completing, and the bridge page at `quilibrium.com/bridge` has not been published yet. It was up previously, was taken down, and is expected back shortly after the v0.25 release. **Do not present the bridging steps below as something a user can do today.** See [Mainnet Status](../Mainnet-Status-What-Is-Live.md).
 >
 > **Classification note.** QQ and QPing are **Q Console managed services**, and both are live. The **Bridge is not a Q Console service**: it is a protocol-layer capability used at quilibrium.com/bridge or via `qclient`, and it does not appear in Q Console. See [Quilibrium Service Classification](../Quilibrium-Service-Classification.md) for the authoritative list.
 
@@ -92,7 +92,7 @@ This means you can give privacy to every single ERC-20 on Ethereum by routing th
 
 ### Bridging Commands via qclient
 
-> **These steps cannot be completed today.** The bridge is not live and the web flow at `quilibrium.com/bridge` returns 404. This is the procedure for when it returns.
+> **These steps cannot be completed today.** The bridge is not live, and the web flow at `quilibrium.com/bridge` has not been published yet. This is the procedure for when it returns.
 
 The `cross-mint` command initiates a cross-chain bridging operation:
 

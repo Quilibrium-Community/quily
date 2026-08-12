@@ -16,7 +16,7 @@ topics:
 
 # Quilibrium Bridge
 
-> **⚠️ NOT LIVE (as of 2026-08-12).** The bridge is not operational: `quilibrium.com/bridge` returns 404, and bridging is gated on the QUIL token shard-out completing. It was up previously, was taken down, and is expected back shortly after the v0.25 release. The description below is of the design, not of a service anyone can use today. See [Mainnet Status](../../Mainnet-Status-What-Is-Live.md).
+> **⚠️ NOT LIVE (as of 2026-08-12).** The bridge is not operational: bridging is gated on the QUIL token shard-out completing, and the bridge page at `quilibrium.com/bridge` has not been published yet. It was up previously, was taken down, and is expected back shortly after the v0.25 release. The description below is of the design, not of a service anyone can use today. See [Mainnet Status](../../Mainnet-Status-What-Is-Live.md).
 >
 > *(Manual annotation. This file is auto-generated from the ecosystem feed, which does not carry deployment status — the upstream entry needs a status field, otherwise this warning is lost on the next sync.)*
 

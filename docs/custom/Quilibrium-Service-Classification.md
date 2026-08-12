@@ -88,7 +88,7 @@ These are **not** Q Console services. They are part of the network, and the offi
 |---|---|---|
 | **MetaVM** | Zero-knowledge proof system for VM execution, covering RISC-V, EVM and Solana BPF. The foundation that f(x) and raw compute workloads will be built on. | In development. Prover and verifier work today, mainnet integration arrives with Equinox |
 | **Klearu** | End-to-end encrypted ML inference via two-party computation. Open source, runs today as a library and a browser demo. | In development for mainnet. Native network integration planned for a future protocol upgrade |
-| **Bridge** | QUIL to wQUIL cross-chain bridging with Ethereum, using an in-network Ethereum execution node plus an MPC signer. | **NOT live.** Gated on the token shard-out completing. It was up previously and was taken down; expected back shortly after the v0.25 release. `quilibrium.com/bridge` currently 404s. See [Mainnet Status](Mainnet-Status-What-Is-Live.md) |
+| **Bridge** | QUIL to wQUIL cross-chain bridging with Ethereum, using an in-network Ethereum execution node plus an MPC signer. | **NOT live.** Gated on the token shard-out completing. It was up previously and was taken down; expected back shortly after the v0.25 release. The bridge page at `quilibrium.com/bridge` has not been published yet. See [Mainnet Status](Mainnet-Status-What-Is-Live.md) |
 | **Hypersnap** | Decentralized, hyperdimensional Snapchain. | Shipped at the protocol layer; the Q Console managed offering is separate and still coming soon |
 | **Dispatch Queue** | Ordered message dispatch between participants. The primitive QPing and QQ are built on. | Shipped |
 | **EVM Shard** | EVM-compatible app shard supporting rollup follower mode or raw EVM execution. | In development |

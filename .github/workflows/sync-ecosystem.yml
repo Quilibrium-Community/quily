@@ -7,12 +7,23 @@ name: Weekly Ecosystem Sync
 # going stale in the knowledge base, so this feed needs to refresh on its own
 # rather than whenever someone remembers to run the script.
 
+# ⚠️ THE SCHEDULE IS INTENTIONALLY COMMENTED OUT. Enable it in one step, below,
+# once https://quilibrium.com/ecosystem.json is being served.
+#
+# As of 2026-08-12 that URL 404s — not a regression, the new site simply has not
+# been published to the apex yet (www.quilibrium.com 301s to an older build with
+# no ecosystem route). Scheduling the job now would paint the Actions tab red
+# every Monday for an unknown number of weeks, and a job everyone expects to fail
+# is a job nobody reads. That is the same failure mode as a lint that cries wolf.
+#
+# To enable: uncomment the two cron lines. Nothing else needs to change; the job
+# already runs green when the feed responds.
 on:
-  schedule:
-    # Every Monday at 08:00 UTC. Offset an hour after the tech tree sync so the
-    # two jobs don't race each other pushing to main.
-    - cron: '0 8 * * 1'
-  workflow_dispatch: # Allow manual trigger from GitHub UI
+  # schedule:
+  #   # Every Monday at 08:00 UTC, offset an hour after the tech tree sync so the
+  #   # two jobs don't race each other pushing to main.
+  #   - cron: '0 8 * * 1'
+  workflow_dispatch: # Manual trigger, and the only trigger until the feed is live
 
 permissions:
   contents: write

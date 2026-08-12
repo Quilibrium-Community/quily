@@ -106,8 +106,8 @@ Do not give step-by-step instructions for any of these as though they were avail
 
 The bridge is **not live**. As of 2026-08-12:
 
-- `quilibrium.com/bridge` returns **404**.
-- It **was** up earlier and was taken down. In the 2026-08-09 call Cassie noted that when it was previously up people immediately tried to exploit it, so it is being approached fresh-eyed.
+- The bridge page at `quilibrium.com/bridge` **has not been published yet**, so links to it do not resolve. This is not a site outage: that part of the site simply is not live.
+- The bridge **was** up earlier and was taken down. In the 2026-08-09 call Cassie noted that when it was previously up people immediately tried to exploit it, so it is being approached fresh-eyed.
 - Expected back **shortly after the v0.25 release**, roughly a day after. `.25` was pushed on 2026-08-11; the bridge had not followed as of 2026-08-12.
 - The 2026-06-18 announcement described "preparation work for the bridge".
 - The date has slipped repeatedly: an opening was referenced as "this weekend" about six weeks before 2026-08-04.

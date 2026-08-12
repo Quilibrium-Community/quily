@@ -8,10 +8,44 @@ import { chunkDocuments } from './chunker.js';
 import { generateEmbeddings } from './embedder.js';
 import { generateChutesEmbeddings } from './embedder-chutes.js';
 import { uploadChunks, getChunkCount, cleanOrphanedChunks, type EmbeddingTable } from './uploader.js';
+import { findIngestChunkIssues } from './chunk-health.js';
+import type { LoadedDocument, ChunkWithContext } from './types.js';
 import type { IngestOptions } from './types.js';
 
 interface ExtendedIngestOptions extends IngestOptions {
   clean: boolean;
+}
+
+/**
+ * Report hand-authored docs whose chunks would mislead if retrieved alone.
+ *
+ * Advisory only — never blocks ingestion. This runs here rather than only in
+ * `yarn doc:lint` because ingestion is the one gate every document passes
+ * through regardless of how it was written. The docs that caused the incident
+ * were hand-written directly, never through the add-doc skill, so a check that
+ * depends on remembering to run it would not have caught them.
+ */
+function reportChunkHealth(documents: LoadedDocument[], chunks: ChunkWithContext[]): void {
+  const issues = findIngestChunkIssues(documents, chunks);
+  if (issues.length === 0) return;
+
+  const byDoc = new Map<string, string[]>();
+  for (const i of issues) {
+    if (!byDoc.has(i.doc)) byDoc.set(i.doc, []);
+    byDoc.get(i.doc)!.push(i.message);
+  }
+
+  console.log(
+    chalk.yellow(`\n⚠  Chunk health: ${issues.length} issue(s) across ${byDoc.size} doc(s)`)
+  );
+  for (const [doc, messages] of byDoc) {
+    console.log(chalk.yellow(`   ${doc}`));
+    messages.forEach((m) => console.log(chalk.gray(`     · ${m}`)));
+  }
+  console.log(
+    chalk.gray('   Inspect with: yarn doc:lint docs/<path> --full') +
+      chalk.gray('\n   These chunks may mislead when retrieved on their own. Ingestion continues.\n')
+  );
 }
 
 const program = new Command();
@@ -102,6 +136,7 @@ program
       const chunks = await chunkDocuments(documents, options.version);
       const totalTokens = chunks.reduce((sum, c) => sum + c.metadata.token_count, 0);
       spinner.succeed(`Created ${chunks.length} chunks (${totalTokens.toLocaleString()} tokens total)`);
+      reportChunkHealth(documents, chunks);
 
       // In dry-run mode, show sample and exit
       if (options.dryRun) {
@@ -243,6 +278,7 @@ program
       const chunks = await chunkDocuments(documents, options.version);
       const totalTokens = chunks.reduce((sum, c) => sum + c.metadata.token_count, 0);
       spinner.succeed(`Created ${chunks.length} chunks (${totalTokens.toLocaleString()} tokens total)`);
+      reportChunkHealth(documents, chunks);
 
       // In dry-run mode, show sample and exit
       if (options.dryRun) {
