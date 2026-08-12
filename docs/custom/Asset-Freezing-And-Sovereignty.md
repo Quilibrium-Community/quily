@@ -145,7 +145,7 @@ wQUIL is an ERC-20 representation of QUIL on Ethereum, address `0x8143182a775C54
 
 > "An MPC-based signer built on top of Quilibrium handles the signing operations, eliminating single points of failure and making the bridge trustless rather than relying on a centralized custodian."
 >
-> — `docs/custom/gap-analysis/Bridge-QPing-QQ-Services.md`
+> — `docs/custom/gap-analysis/Bridge-QUIL-wQUIL-Cross-Chain.md`
 
 **The wQUIL ERC-20 contract itself has been audited.** The official docs link the audit report on IPFS:
 

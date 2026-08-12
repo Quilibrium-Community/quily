@@ -82,7 +82,7 @@ If you have authoritative information on any of the above (from Cassie, the core
 
 ## Related Topics
 
-- **QUIL ↔ wQUIL bridge** (separate from account credits) — see official docs at `docs.quilibrium.com/run-node/qclient/commands/bridging` and the community gap-analysis doc `Bridge-QPing-QQ-Services.md`.
+- **QUIL ↔ wQUIL bridge** (separate from account credits) — see official docs at `docs.quilibrium.com/run-node/qclient/commands/bridging` and the community gap-analysis doc `Bridge-QUIL-wQUIL-Cross-Chain.md` (note: the bridge is not live yet).
 - **QConsole account creation** — see `docs/custom/Q-Console-CreateAccount-API.md`.
 - **Paid services using account credits** — QStorage, QKMS, MegaRPC quotas.
 
