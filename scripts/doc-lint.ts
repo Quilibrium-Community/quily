@@ -32,7 +32,7 @@ import { resolve, relative, sep } from 'path';
 import { existsSync } from 'fs';
 import { loadDocuments } from './ingest/loader.js';
 import { chunkDocuments } from './ingest/chunker.js';
-import { findChunkIssues, polarity, subjectTerms } from './ingest/chunk-health.js';
+import { findChunkIssues, polarity } from './ingest/chunk-health.js';
 
 const DOCS_ROOT = resolve(__dirname, '../docs');
 
@@ -69,12 +69,10 @@ async function main() {
 
   const chunks = await chunkDocuments([doc], 'doc-lint');
   const title = String(doc.frontmatter?.title ?? '').replace(/^["']|["']$/g, '');
-  const terms = subjectTerms(title || wantedPath, wantedPath);
   const issues = findChunkIssues(doc, chunks);
 
   console.log(`\n${wantedPath}`);
   console.log(`${chunks.length} chunk(s)${title ? ` · "${title}"` : ''}`);
-  if (terms.length) console.log(`subject terms: ${terms.slice(0, 8).join(', ')}`);
   if (chunks.length === 1) {
     console.log('single chunk — chunking cannot have split anything apart');
   }
@@ -83,13 +81,21 @@ async function main() {
   chunks.forEach((c, i) => {
     const body = c.content;
     const firstLine = body.split('\n').find((l) => l.trim())?.trim() ?? '';
-    const { pos, neg, skewed } = polarity(body);
+    const { pos, neg, skewed, negTerms, posTerms } = polarity(body);
     const mine = issues.filter((x) => x.chunk === i + 1);
 
     console.log(`\n[${i + 1}/${chunks.length}] ${c.metadata.token_count} tokens`);
     console.log(`  heading: ${c.metadata.heading_path || '(none)'}`);
     console.log(`  starts:  ${firstLine.slice(0, 90)}`);
     console.log(`  status:  ${pos} positive / ${neg} negative${skewed ? '  ← skewed' : ''}`);
+
+    // Show what actually matched when skewed. Without this you cannot tell a real
+    // "this thing is unavailable" chunk from a comparison table full of "not
+    // supported" describing a competitor, and the two need opposite responses.
+    if (skewed) {
+      if (negTerms.length) console.log(`  neg hits: ${negTerms.join(', ')}`);
+      if (posTerms.length) console.log(`  pos hits: ${posTerms.join(', ')}`);
+    }
 
     if (FULL) {
       console.log('  ┌─');

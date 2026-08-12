@@ -11,6 +11,14 @@
  *
  * Shared by `scripts/doc-lint.ts` (on demand, one file) and the ingest pipeline
  * (automatically, every run). One copy of the rules so the two cannot disagree.
+ *
+ * There was a second check here, "orphan subject", flagging chunks that never
+ * named their own document's subject. It was removed after checking how chunks
+ * actually reach the model: prompt.ts renders every one as
+ * `[N] Source: [<frontmatter title>](url)` immediately above its content, so the
+ * subject is always attributed regardless of the body text. All 54 hand-authored
+ * docs carry a frontmatter title, so the check could never fire meaningfully — it
+ * flagged 5 harmless chunks and would only ever have produced false positives.
  */
 
 import type { LoadedDocument, ChunkWithContext } from './types.js';
@@ -19,26 +27,37 @@ export interface ChunkIssue {
   doc: string;
   chunk: number;
   totalChunks: number;
-  kind: 'orphan-subject' | 'one-sided-lead';
+  kind: 'one-sided-lead';
   message: string;
 }
 
-/** Words too common to identify a subject. */
-const STOPWORDS = new Set([
-  'the', 'and', 'for', 'with', 'what', 'that', 'this', 'from', 'into', 'about',
-  'your', 'you', 'are', 'not', 'but', 'how', 'why', 'when', 'where', 'which',
-  'is', 'it', 'a', 'an', 'of', 'to', 'in', 'on', 'or', 'vs', 'guide',
-  'reference', 'overview', 'introduction', 'notes', 'doc', 'docs', 'status',
-]);
+/**
+ * Claims that something is unavailable.
+ *
+ * Every alternative here must be a statement about AVAILABILITY. The first
+ * version of this pattern included a bare `NOT\b` for emphatic "**NOT** live",
+ * but the case-insensitive flag turned it into "match the word not", so it
+ * counted ordinary prose negation. Measured on the real corpus, 9 of the 9
+ * "negative" hits in QKMS-Key-Management-Service.md were the word "not" inside
+ * an AWS comparison table ("Not supported", "Not offered") describing what a
+ * COMPETITOR lacks. The check was reporting a live service as unavailable.
+ *
+ * `cannot` and `can't` are excluded for the same reason: they describe capability
+ * limits ("Ethereum cannot store payloads this large"), not deployment state.
+ */
+const NEGATIVE_PHRASES = /\b(not live|isn't live|is not live|are not live|not yet live|not yet available|not yet functional|not yet enabled|not yet|not available|not functional|not enabled|not currently|no longer available|unavailable|gated on|blocked by|still locked|not been published|coming soon)\b/gi;
+
+/** Emphatic, shouty NOT. Case-SENSITIVE — this is the one the `i` flag broke. */
+const NEGATIVE_EMPHATIC = /\bNOT\b/g;
 
 /**
- * Claims that something does not work. Deliberately narrow: phrases asserting
- * unavailability, not merely any use of the word "not".
+ * Claims that something does work.
+ *
+ * Same discipline: bare `running` and `active` are excluded because "running a
+ * node" and "active provers" saturate this corpus without saying anything about
+ * whether a product is available.
  */
-const NEGATIVE = /\b(not live|isn't live|is not live|are not live|not yet|not available|not functional|not enabled|not currently|no longer|cannot|can't|unavailable|gated on|blocked by|still locked|coming soon|404|NOT\b)/gi;
-
-/** Claims that something does work. */
-const POSITIVE = /\b(is live|are live|went live|shipped|usable|available today|works today|working today|in production|running|launched|active|already)\b/gi;
+const POSITIVE = /\b(is live|are live|went live|now live|launched|shipped|in production|available today|works today|working today|usable today|already available|generally available)\b/gi;
 
 /**
  * Calibrated against the real failure: the pre-fix status doc's lead chunk
@@ -51,30 +70,26 @@ const SKEW_RATIO = 3;
 /** Below this the chunk is too sparse in status language for a ratio to mean anything. */
 const SKEW_MIN_HITS = 4;
 
-function countMatches(text: string, re: RegExp): number {
-  return (text.match(re) || []).length;
-}
-
-export function subjectTerms(title: string, path: string): string[] {
-  const source = `${title} ${path.split(/[\\/]/).pop() ?? ''}`;
-  return [
-    ...new Set(
-      source
-        .replace(/\.md$/i, '')
-        .split(/[^A-Za-z0-9]+/)
-        .map((w) => w.trim())
-        .filter((w) => w.length > 2 && !STOPWORDS.has(w.toLowerCase()))
-        .map((w) => w.toLowerCase())
-    ),
-  ];
-}
-
 /** Polarity counts for a chunk, exposed so doc-lint can display them. */
-export function polarity(body: string): { pos: number; neg: number; skewed: boolean } {
-  const pos = countMatches(body, POSITIVE);
-  const neg = countMatches(body, NEGATIVE);
+export function polarity(body: string): {
+  pos: number;
+  neg: number;
+  skewed: boolean;
+  negTerms: string[];
+  posTerms: string[];
+} {
+  const negTerms = [...(body.match(NEGATIVE_PHRASES) ?? []), ...(body.match(NEGATIVE_EMPHATIC) ?? [])];
+  const posTerms = body.match(POSITIVE) ?? [];
+  const pos = posTerms.length;
+  const neg = negTerms.length;
   const [hi, lo] = neg >= pos ? [neg, pos] : [pos, neg];
-  return { pos, neg, skewed: hi >= SKEW_MIN_HITS && hi >= (lo || 0.5) * SKEW_RATIO };
+  return {
+    pos,
+    neg,
+    skewed: hi >= SKEW_MIN_HITS && hi >= (lo || 0.5) * SKEW_RATIO,
+    negTerms,
+    posTerms,
+  };
 }
 
 /**
@@ -87,9 +102,6 @@ export function findChunkIssues(
   const issues: ChunkIssue[] = [];
   if (chunks.length === 0) return issues;
 
-  const title = String(doc.frontmatter?.title ?? '').replace(/^["']|["']$/g, '');
-  const terms = subjectTerms(title || doc.path, doc.path);
-
   // Only meaningful when the DOCUMENT presents both sides. A wholly negative doc
   // is allowed wholly negative chunks; the bug is a balanced doc whose balance
   // does not survive chunking.
@@ -98,17 +110,6 @@ export function findChunkIssues(
 
   chunks.forEach((c, i) => {
     const body = c.content;
-
-    // A chunk that never names its own subject is unattributable once shown alone.
-    if (terms.length && !terms.some((t) => body.toLowerCase().includes(t))) {
-      issues.push({
-        doc: doc.path,
-        chunk: i + 1,
-        totalChunks: chunks.length,
-        kind: 'orphan-subject',
-        message: `chunk ${i + 1}/${chunks.length} never names its subject (${terms.slice(0, 4).join(', ')})`,
-      });
-    }
 
     // Only the LEAD chunk is an issue. Later sections are allowed to be
     // one-sided: a "what is not live" section is supposed to be negative, and a
@@ -124,7 +125,23 @@ export function findChunkIssues(
     // chunking problem that cannot exist.
     if (i === 0 && docIsMixed && chunks.length > 1) {
       const { pos, neg, skewed } = polarity(body);
-      if (skewed) {
+
+      // NEGATIVE skew only, deliberately asymmetric.
+      //
+      // A negative-skewed lead is the incident: the chunk says a dozen things are
+      // unavailable, names nothing that works, and the bot answers "the network
+      // isn't ready". A positive-skewed lead is the ordinary shape of almost every
+      // product doc — describe the thing, caveat it further down — and flagging it
+      // fires constantly on healthy documents.
+      //
+      // Nothing real is lost by the asymmetry. Overclaiming ("the bridge works")
+      // came from docs with no negative content at all, so docIsMixed is false and
+      // this check never applied to them either way.
+      //
+      // This also stops the check punishing the very fix it recommends: a good
+      // both-sides summary table states "not live yet" once in a column header
+      // rather than per row, so it reads as positive-skewed by phrase count.
+      if (skewed && neg > pos) {
         const [hi, lo] = neg >= pos ? [neg, pos] : [pos, neg];
         issues.push({
           doc: doc.path,

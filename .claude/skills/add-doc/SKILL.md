@@ -187,15 +187,20 @@ Practical rules:
 - **Put a complete, compact summary near the top.** Keep both halves of any
   contrast inside a single table row or paragraph so they cannot be split apart.
   The lead chunk holds the title and is what broad queries land on first.
-- **Repeat the subject in each major section.** A chunk that never names what it
-  is about is unattributable once retrieved on its own.
 - **Let topic-scoped sections be one-sided**, but have them point at the other
   side in their first line.
 
 `yarn doc:lint` runs the real ingest chunker over the file and shows the chunks a
-retriever will actually see, flagging a one-sided lead chunk and any chunk that
-never names its subject. Add `--full` to print whole chunk bodies, `--strict` to
-exit non-zero.
+retriever will actually see, flagging a lead chunk skewed toward "this does not
+work". Add `--full` to print whole chunk bodies, `--strict` to exit non-zero.
+
+You do not have to remember to run it: `yarn ingest:run` reports the same thing
+across every hand-authored doc on every run. It never blocks ingestion.
+
+You do NOT need to repeat the document's subject in each section. Every chunk
+reaches the model as `[N] Source: [<frontmatter title>](url)` directly above its
+content, so attribution is already handled — just make sure the frontmatter
+`title` is meaningful.
 </step>
 
 <step name="report">

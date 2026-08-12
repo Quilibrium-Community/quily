@@ -22,9 +22,15 @@ topics:
 
 This document covers three capabilities that are frequently referenced but lack standalone documentation: the **Bridge** (QUIL/wQUIL cross-chain bridging), **QPing** (dispatch-based notifications), and **QQ** (SQS-compatible message queue).
 
-> **⚠️ The Bridge is NOT live.** Everything below describes how the bridge works **when it is running**. It is not running: bridging is gated on the QUIL token shard-out completing, and the bridge page at `quilibrium.com/bridge` has not been published yet. It was up previously, was taken down, and is expected back shortly after the v0.25 release. **Do not present the bridging steps below as something a user can do today.** See [Mainnet Status](../Mainnet-Status-What-Is-Live.md).
+> **Status of the three, at a glance — they differ, so do not answer for all three at once:**
 >
-> **Classification note.** QQ and QPing are **Q Console managed services**, and both are live. The **Bridge is not a Q Console service**: it is a protocol-layer capability used at quilibrium.com/bridge or via `qclient`, and it does not appear in Q Console. See [Quilibrium Service Classification](../Quilibrium-Service-Classification.md) for the authoritative list.
+> - **QQ is live.** A Q Console managed service, usable today.
+> - **QPing is live.** A Q Console managed service, usable today.
+> - **The Bridge is NOT live.** Bridging is gated on the QUIL token shard-out completing, and the bridge page at `quilibrium.com/bridge` has not been published yet. It was up previously, was taken down, and is expected back shortly after the v0.25 release. Everything below describes how it works **when running**. **Do not present the bridging steps as something a user can do today.**
+>
+> See [Mainnet Status](../Mainnet-Status-What-Is-Live.md) for the wider picture.
+>
+> **Classification note.** The **Bridge is not a Q Console service** either: it is a protocol-layer capability used at quilibrium.com/bridge or via `qclient`, and it does not appear in Q Console. QQ and QPing do. See [Quilibrium Service Classification](../Quilibrium-Service-Classification.md) for the authoritative list.
 
 ## How These Capabilities Map to Primitives
 
