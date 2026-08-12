@@ -27,6 +27,11 @@ import { resolve, join } from 'path';
 const FEED_URL = process.env.ECOSYSTEM_FEED_URL || 'https://quilibrium.com/ecosystem.json';
 const OUT_DIR = resolve(__dirname, '../docs/custom/auto/ecosystem');
 
+// Exit non-zero when the sync cannot run, so a scheduled workflow reports the
+// breakage rather than passing green having done nothing. See the catch at the
+// bottom of this file for why that distinction matters.
+const STRICT = process.argv.includes('--strict');
+
 const NETWORK_LABELS: Record<string, string> = {
   protocol: 'Quilibrium Protocol (a core piece of Quilibrium, built into the network itself)',
   'built-on': 'Built on Quilibrium (an app that runs on Quilibrium and needs the network to work)',
@@ -211,8 +216,18 @@ async function main() {
 }
 
 main().catch((err) => {
-  // Graceful failure: warn but exit 0 so the daily CI workflow continues and
-  // existing ecosystem docs are preserved unchanged.
+  // Either way the existing docs are preserved: every throw above happens before
+  // the first write, so a failed sync can never leave a half-updated corpus.
+  //
+  // What differs is whether anyone finds out. Exiting 0 was fine while this was a
+  // script someone ran by hand and watched. Under a scheduler it is the worst case:
+  // the feed 404'd from some point after 2026-06-11 and nothing said so, the
+  // ecosystem docs silently froze, and the "Relation to the network" field they
+  // carry went stale — which is how issue #109 (Klearu/MetaVM/Bridge/MegaRPC
+  // misfiled as Q Console services) survived as long as it did.
+  //
+  // So --strict, used by .github/workflows/sync-ecosystem.yml, turns a dead feed
+  // into a red run instead of a green one that did nothing.
   console.warn('Warning: ecosystem sync failed, skipping:', err.message || err);
-  process.exit(0);
+  process.exit(STRICT ? 1 : 0);
 });

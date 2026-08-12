@@ -1,0 +1,90 @@
+name: Weekly Ecosystem Sync
+
+# The ecosystem feed carries each project's "Relation to the network" field
+# (Quilibrium Protocol vs Built on Quilibrium vs community project), which is the
+# authoritative signal for whether something is a protocol component, a Q Console
+# managed service, or a third-party app. Issue #109 was caused by that distinction
+# going stale in the knowledge base, so this feed needs to refresh on its own
+# rather than whenever someone remembers to run the script.
+
+on:
+  schedule:
+    # Every Monday at 08:00 UTC. Offset an hour after the tech tree sync so the
+    # two jobs don't race each other pushing to main.
+    - cron: '0 8 * * 1'
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+permissions:
+  contents: write
+
+jobs:
+  sync-ecosystem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      # Must run BEFORE setup-node: `cache: 'yarn'` shells out to `yarn cache dir`,
+      # and the runner's global Yarn 1 refuses to run at all once package.json
+      # declares "packageManager": "yarn@4.x". Corepack replaces that shim.
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          # 22+ required: @supabase/supabase-js needs a native WebSocket, which
+          # Node 20 lacks ("Node.js detected but native WebSocket not found").
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      # --strict so an unreachable feed fails the run. Without it the script exits 0
+      # on a fetch error and this job would go green having changed nothing, which is
+      # indistinguishable from "already up to date".
+      - name: Sync ecosystem projects
+        run: yarn sync-ecosystem --strict
+
+      - name: Check for changes
+        id: check
+        run: |
+          if [ -n "$(git status --porcelain docs/custom/auto/ecosystem/)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      # --clean removes chunks for projects that disappeared from the feed, which
+      # matters here: sync-ecosystem deletes their markdown files, and without
+      # --clean the stale chunks would keep answering queries about a delisted project.
+      - name: Run RAG ingestion
+        if: steps.check.outputs.has_changes == 'true'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: yarn ingest run --clean
+
+      - name: Commit updated ecosystem docs
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/custom/auto/ecosystem/
+          git commit -m "docs: sync ecosystem projects (automated weekly)"
+          git pull --rebase origin main
+          git push
+
+      - name: Summary
+        run: |
+          if [ "${{ steps.check.outputs.has_changes }}" == "true" ]; then
+            echo "Ecosystem projects updated and RAG re-ingested"
+          else
+            echo "No changes detected — ecosystem docs are up to date"
+          fi
