@@ -61,7 +61,20 @@ Parse conventional commit format. Highest-priority bump wins: major > minor > pa
 
 ### Step 3: Bump Version
 
-Edit `package.json` directly to set the new version.
+Edit `package.json` directly to set the new version. **That is the only file to touch.**
+
+`package.json` is the single source of truth. `next.config.js` inlines it as
+`NEXT_PUBLIC_APP_VERSION` at build time, and `src/lib/version.ts` reads it back,
+so the About page follows automatically. Do **not** hand-edit `src/lib/version.ts`:
+it no longer contains a version literal.
+
+> This was not always true. Until v1.6.0 the version lived in both files, and the
+> v1.5.0 release bumped only `package.json`, so the About page advertised v1.4.0
+> for a whole release cycle. If you find yourself editing two files, something has
+> regressed.
+
+Use the Edit tool, not a shell one-liner. A `node -e`/`sed` rewrite of
+`package.json` in bash is easy to get wrong with quoting and will corrupt the file.
 
 **Do NOT create or update CHANGELOG.md** — we use GitHub releases instead.
 
@@ -125,11 +138,26 @@ Write descriptions from the user's perspective. Never mention Claude, AI, or Ant
 
 ## Files Modified
 
-- `package.json` — version number only
+- `package.json` — version number only, and the only file that carries it
 - Git commit: `chore(release): vX.Y.Z`
 - Git tag: `vX.Y.Z`
 - GitHub release with changelog notes
 
+## Verifying the UI version
+
+The About page renders the version, so it is worth confirming the bump actually
+reached it rather than assuming. After `yarn build`:
+
+```bash
+grep -oE '.{40}<NEW_VERSION>.{20}' .next/server/app/about.html   # expect ["v","X.Y.Z"]
+grep -c '0\.0\.0-dev' .next/server/app/about.html                # expect 0
+```
+
+React renders `<span>v{VERSION}</span>` as two adjacent text nodes, so searching
+for a joined `vX.Y.Z` finds nothing even when it worked. The second check is the
+one that matters: `0.0.0-dev` is the fallback in `src/lib/version.ts`, and its
+presence means the build-time injection failed.
+
 ---
 
-*Last updated: 2026-03-21*
+*Last updated: 2026-08-12*

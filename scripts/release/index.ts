@@ -35,32 +35,42 @@ import {
   getCommitSummary,
 } from './changelog.js';
 
-// Version file path
-const VERSION_FILE = path.join(process.cwd(), 'src/lib/version.ts');
+// package.json is the single source of truth for the version. src/lib/version.ts
+// no longer holds a literal — it reads NEXT_PUBLIC_APP_VERSION, which
+// next.config.js inlines from here at build time. Writing one file keeps the UI
+// and the released tag from drifting, which they did at v1.5.0.
+const PACKAGE_FILE = path.join(process.cwd(), 'package.json');
 const CHANGELOG_FILE = path.join(process.cwd(), 'CHANGELOG.md');
 
 /**
- * Get current version from version.ts
+ * Get current version from package.json
  */
 function getCurrentVersion(): string {
-  const content = fs.readFileSync(VERSION_FILE, 'utf-8');
-  const match = content.match(/VERSION\s*=\s*['"]([^'"]+)['"]/);
-  if (!match) {
-    throw new Error('Could not find VERSION in version.ts');
+  const pkg = JSON.parse(fs.readFileSync(PACKAGE_FILE, 'utf-8'));
+  if (typeof pkg.version !== 'string') {
+    throw new Error('Could not find "version" in package.json');
   }
-  return match[1];
+  return pkg.version;
 }
 
 /**
- * Update version.ts with new version
+ * Update package.json with new version.
+ *
+ * Rewrites just the version line rather than re-serialising the parsed object,
+ * so key order, indentation and the trailing newline survive untouched.
  */
 function updateVersionFile(newVersion: string): void {
-  let content = fs.readFileSync(VERSION_FILE, 'utf-8');
-  content = content.replace(
-    /VERSION\s*=\s*['"][^'"]+['"]/,
-    `VERSION = '${newVersion}'`
+  const content = fs.readFileSync(PACKAGE_FILE, 'utf-8');
+  const updated = content.replace(
+    /("version"\s*:\s*")[^"]+(")/,
+    `$1${newVersion}$2`
   );
-  fs.writeFileSync(VERSION_FILE, content);
+
+  if (updated === content) {
+    throw new Error('Version line in package.json did not match — nothing written');
+  }
+
+  fs.writeFileSync(PACKAGE_FILE, updated);
 }
 
 /**
@@ -245,8 +255,8 @@ program
         return;
       }
 
-      // Step 1: Update version.ts
-      spinner.start('Updating version.ts...');
+      // Step 1: Update package.json
+      spinner.start('Updating package.json...');
       updateVersionFile(result.newVersion);
       spinner.succeed(`Version updated to ${result.newVersion}`);
 
@@ -259,7 +269,7 @@ program
       // Step 3: Create commit (if not skipped)
       if (!options.skipCommit) {
         spinner.start('Creating release commit...');
-        stageFiles([VERSION_FILE, CHANGELOG_FILE]);
+        stageFiles([PACKAGE_FILE, CHANGELOG_FILE]);
         createCommit(`chore(release): v${result.newVersion}`);
         spinner.succeed('Release commit created');
       }

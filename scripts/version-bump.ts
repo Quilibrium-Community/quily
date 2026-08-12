@@ -6,12 +6,16 @@
  *   yarn version:bump patch   # 0.1.0 -> 0.1.1
  *   yarn version:bump minor   # 0.1.0 -> 0.2.0
  *   yarn version:bump major   # 0.1.0 -> 1.0.0
+ *
+ * Writes package.json, which is the single source of truth. src/lib/version.ts
+ * reads the value back through NEXT_PUBLIC_APP_VERSION, injected by
+ * next.config.js at build time, so the UI follows automatically.
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 
-const VERSION_FILE = path.join(__dirname, '../src/lib/version.ts');
+const PACKAGE_FILE = path.join(__dirname, '../package.json');
 
 type BumpType = 'major' | 'minor' | 'patch';
 
@@ -37,21 +41,31 @@ function bumpVersion(current: string, type: BumpType): string {
 }
 
 function getCurrentVersion(): string {
-  const content = fs.readFileSync(VERSION_FILE, 'utf-8');
-  const match = content.match(/VERSION\s*=\s*['"]([^'"]+)['"]/);
-  if (!match) {
-    throw new Error('Could not find VERSION in version.ts');
+  const pkg = JSON.parse(fs.readFileSync(PACKAGE_FILE, 'utf-8'));
+  if (typeof pkg.version !== 'string') {
+    throw new Error('Could not find "version" in package.json');
   }
-  return match[1];
+  return pkg.version;
 }
 
+/**
+ * Rewrites just the version line rather than re-serialising the parsed object,
+ * so key order, indentation and the trailing newline survive untouched. A
+ * JSON.stringify round-trip would reformat the whole file and bury a one-line
+ * bump in noise.
+ */
 function updateVersionFile(newVersion: string): void {
-  let content = fs.readFileSync(VERSION_FILE, 'utf-8');
-  content = content.replace(
-    /VERSION\s*=\s*['"][^'"]+['"]/,
-    `VERSION = '${newVersion}'`
+  const content = fs.readFileSync(PACKAGE_FILE, 'utf-8');
+  const updated = content.replace(
+    /("version"\s*:\s*")[^"]+(")/,
+    `$1${newVersion}$2`
   );
-  fs.writeFileSync(VERSION_FILE, content);
+
+  if (updated === content) {
+    throw new Error('Version line in package.json did not match — nothing written');
+  }
+
+  fs.writeFileSync(PACKAGE_FILE, updated);
 }
 
 function main() {
