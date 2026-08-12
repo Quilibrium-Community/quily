@@ -51,7 +51,8 @@
     "sync-techtree": "tsx scripts/sync-techtree.ts",
     "sync-monorepo": "tsx scripts/sync-monorepo.ts",
     "sync-ecosystem": "tsx scripts/sync-ecosystem.ts",
-    "retrieval:check": "tsx scripts/retrieval-regression.ts"
+    "retrieval:check": "tsx scripts/retrieval-regression.ts",
+    "doc:lint": "tsx scripts/doc-lint.ts"
   },
   "keywords": [],
   "author": "",

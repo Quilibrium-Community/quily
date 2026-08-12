@@ -154,10 +154,48 @@ topics:
 
 3. **Format content:**
    - Clean up markdown
-   - Ensure clear section headers for better RAG chunking
+   - Use clear section headers, but see the chunking warning below
    - Remove redundant info already well-covered elsewhere
 
 4. **Write to `docs/custom/Title-Kebab-Case.md`**
+
+5. **Check how it will chunk:**
+   ```bash
+   yarn doc:lint docs/custom/Title-Kebab-Case.md
+   ```
+
+### Write for the chunk, not the document
+
+The retriever hands the model **individual chunks**, never the whole file. So the
+unit that has to be correct on its own is the chunk. A document that reads
+perfectly end to end can still produce a wrong answer, because no reader ever
+sees it end to end.
+
+> **Clear section headers are not automatically good.** They are good for
+> retrieval precision, but the splitter breaks *on* them, so a `##` section
+> becomes its own chunk. If one section says what works and the next says what
+> does not, each chunk carries half the truth.
+>
+> This is not hypothetical. `Mainnet-Status-What-Is-Live.md` split with the
+> boundary exactly on `## Live and working today`, leaving a lead chunk that
+> asserted unavailability twenty-three times and named zero shipped products.
+> Retrieved alone it could only say "the network isn't ready" — badly wrong, when
+> Quorum, QStorage, QKMS, QNS, MegaRPC, Klearu and MetaVM had all shipped.
+
+Practical rules:
+
+- **Put a complete, compact summary near the top.** Keep both halves of any
+  contrast inside a single table row or paragraph so they cannot be split apart.
+  The lead chunk holds the title and is what broad queries land on first.
+- **Repeat the subject in each major section.** A chunk that never names what it
+  is about is unattributable once retrieved on its own.
+- **Let topic-scoped sections be one-sided**, but have them point at the other
+  side in their first line.
+
+`yarn doc:lint` runs the real ingest chunker over the file and shows the chunks a
+retriever will actually see, flagging a one-sided lead chunk and any chunk that
+never names its subject. Add `--full` to print whole chunk bodies, `--strict` to
+exit non-zero.
 </step>
 
 <step name="report">

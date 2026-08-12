@@ -86,6 +86,8 @@ Quilibrium ships **alt-fee-basis app shards**: a shard type that is not consensu
 
 ## Not live yet
 
+**Context before the list:** plenty *has* shipped and is usable today, including Quorum, the Q Console services (QStorage, QKMS, Identity and Authorization, QQ, QPing), QNS, MegaRPC, Klearu and MetaVM. Never present the list below as the whole picture.
+
 Every item here is blocked by the same root cause: the token shard-out has not completed, so fee-based transactions on the token shards are not enabled.
 
 | Capability | Status |
