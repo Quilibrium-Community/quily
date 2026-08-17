@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-08-16
+date: 2026-08-17
 type: release_notes
 topics:
   - release notes
@@ -16,64 +16,54 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** August 16, 2026
+**Last updated:** August 17, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
-## v2.1.0.24 (version .24) *(auto-generated)*
-- fix patch number sync with config, fix race where initial failout of sync causes workers to stay idle forever
-- fix transaction safety for hypergraph store writes
-- make lazy tree commit retry-safe by deferring dirty-state clearing until the surrounding transaction commits
-- make compute_shard_root read-only to prevent writes outside any frame transaction
-- require RocksTxn for hypergraph store writes, removing silent fallback that masked bugs
-- handle leaving scenario with store wipe
-- reduce score differential basis for flagging leave-to-join opportunities, extend scoring-based leave window to a full cycle
-- adjust margins on decisions, thresholds for decides and joins
-- adjust snapshotting to use actual rocksdb snapshots
-- resolve unsynced leave issuance condition
-- reapply docker build optimizations to Dockerfile.source
-- rejoin a lagging archive by syncing proposals from peers
-
-## v2.1.0.23 (version .23) *(auto-generated)*
-- fixed docker build and static linking issues for flint/mpfr/gmp
-- fixed standalone worker connection string derivation and logging
-- fixed too many joins, invalid signature, and various worker mode bugs
-- reduced p2p, archive client
-
 ## v2.1.0.22 (version .22) *(auto-generated)*
-- improved prover commands to show worker id
-- relaxed peerstore clearing interval
+- improved prover commands, show worker id
+- relax peerstore clearing interval
 - component-level logger tuning
-- prover management TUI now tracks manual management and allows joining by worker id
-- optimized TUI rendering (round 2)
-- added logging for shard allocation join confirm/reject and plan leave details
+- prover management TUI adds manual management tracking and specifies joins by worker id
+- optimize TUI
+- log shard allocation join confirm/reject + plan leave details
 - default archive peer list
-- fixed prover eviction bug
-- prover visibility tweaks when leaving is implicitly accepted
-- fixed prover leaving status in event distributor
-- renamed pending to joining
-- fixed merge spend marker
-- fixed sorting/ring position issues in TUI
-- fixed render width for [M] marker
-- timereel now accepts new head immediately
-- added timeout for global frame fetch
-- added
+- fix prover eviction bug
+- small tweaks around prover visibility when leaving is implicitly accepted
+- fix prover leaving status in event distributor
+- rename pending to joining
+- fix merge spend marker
+- fix sorting/ring position issues in TUI
+- fix render width for [M] marker
+- fix timereel behavior to accept new head immediately
+- add timeout for global frame fetch
+- add lru cache to getglobalframe handler
+- adjust estimation behavior to properly calculate ring position and membership set
+- fix worker TUI reward calc/logical shard count, bandwidth reduction on app worker
+- auto-sized filters
+- optimize logging for plan/decide and confirm/reject for shard joins and leaves
+- fix dynamic filter width
+- blossomsub improvements, estimate/hard calc changes
+- fix migration + improved logging
+- new migration to resolve eviction issue
+- refactor global consensus engine into discrete components, update tests
+- adjust rpc/worker ring display
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - reconcile old and new config paths
 - fix formatting/precision on prover reward data
-- fix possible peering issue
+- fix possible solution to peering issue
 - fix app shard lookups on mainnet
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
-- fix high CPU overhead in initial worker behaviors and ongoing sync
-- add debug environment variable support
-- fix newPebbleDB constructor config parameter
-- add extra data to node info and query metrics from command line
+- read in debug env variable
+- fix newPebbleDB constructor config param
+- fix high CPU overhead in initial worker behaviors / ongoing sync
+- add extra data to node info and query metrics from cli
 - leave proposals for overcrowded shards
-- implement hub-and-spoke global message broadcasts
-- small tweaks to CLI output for join frames
+- add hub-and-spoke global message broadcasts
+- tweak cli output for join frames
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
