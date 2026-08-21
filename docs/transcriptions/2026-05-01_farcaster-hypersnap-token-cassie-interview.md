@@ -1,5 +1,5 @@
 ---
-title: "Cassie on Farcaster History, Hypersnap Fork, and Token Incentives"
+title: "Cassie on Farcaster History, the Hypersnap Fork, and $SNAP Token Incentives"
 source: youtube
 youtube_url: https://www.youtube.com/watch?v=p16Qe1irwSM
 author: Cassandra Heart
@@ -21,7 +21,7 @@ topics:
   - retroactive rewards
 ---
 
-> **Naming note (added 2026-08-21):** Throughout this transcript the token is called **"the Farcaster token"**, because it did not yet have a public ticker on 2026-05-01. That token is now known as **$SNAP**, the official token of Hypersnap. The two names refer to the same thing. $SNAP is **not** a Quilibrium token and is separate from $QUIL. See [Quilibrium, Hypersnap, $QUIL and $SNAP](../custom/Quilibrium-Hypersnap-QUIL-SNAP-Relationship.md).
+> **Naming note (added 2026-08-21):** In the original interview Cassie called this token **"the Farcaster token"**, because it had no public ticker on 2026-05-01. It is now **$SNAP**, the official token of Hypersnap, and this transcript has been updated to use that name. $SNAP is **not** a Quilibrium token and is separate from $QUIL. See [Quilibrium, Hypersnap, $QUIL and $SNAP](../custom/Quilibrium-Hypersnap-QUIL-SNAP-Relationship.md).
 
 > **Time-Bounded Notice:** The following information was discussed on May 1, 2026. Farcaster, Hypersnap, and Quorum are rapidly evolving projects. Specific timelines, statuses, token details, and governance structures described below may have changed since this date. Always verify current status against the latest official announcements and documentation.
 
@@ -93,7 +93,7 @@ Cassie is not suggesting conspiracies. Different pressures, different priorities
 
 Cassie and the Farcaster.org team stopped contributing FIPs to Farcaster XYZ. Everything is under Farcaster.org on GitHub. Cassie has called out the irony of them positioning themselves as champions of Farcaster when they have none of the original protocol dev team. The Clanker team did some work but weren't the original protocol team. They didn't build Hubs or Snapchain.
 
-Cassie said "I'll just do this fork since you told me to anyway, and continue growing the protocol." At least they share the same goal: grow the user base. Ree mentioned something about 10x in two years. The team is trying to ramp faster. They talked about the Farcaster token as part of proof-of-work decentralization on Hypersnap. That got old users interested. The moment people heard a Farcaster token was coming, daily active users instantly ramped up, and the ratio of quality users to airdrop farmers increased in favor of quality users.
+Cassie said "I'll just do this fork since you told me to anyway, and continue growing the protocol." At least they share the same goal: grow the user base. Ree mentioned something about 10x in two years. The team is trying to ramp faster. They talked about $SNAP as part of proof-of-work decentralization on Hypersnap. That got old users interested. The moment people heard a Hypersnap token was coming, daily active users instantly ramped up, and the ratio of quality users to airdrop farmers increased in favor of quality users.
 
 > **Note (May 1, 2026):** The governance split between Farcaster XYZ and Farcaster.org, and the feature-sharing relationship between Snapchain and Hypersnap, reflects the situation as of this date.
 
@@ -215,7 +215,7 @@ Because of these laws, without a decentralized protocol, eventually they'll forc
 
 A good example is Emerge, a mini app doing AI-generated thematic images. It's a coin-operated vending machine. Right now they use USDC, but at the Farcaster protocol level they could gain more because transactions are on network associated with their mini app. It's like Roblox with Robux or Fortnite with V-Bucks: an ecosystem using something not actual dollars, materially connected but separate, living in that ecosystem.
 
-The Farcaster token fills that niche. Cassie expects a lot of applications built using the Farcaster token primitive because it unlocks things in ways fiat restrictions don't. It's intrinsically linked to the overall flywheel.
+$SNAP fills that niche. Cassie expects a lot of applications built using the $SNAP primitive because it unlocks things in ways fiat restrictions don't. It's intrinsically linked to the overall flywheel.
 
 ## Team and Funding
 
@@ -235,23 +235,23 @@ They have a massive user base in China. China is very restrictive about social m
 
 > **Note (May 1, 2026):** User metrics (thousands of DAU, hundreds of thousands of messages daily) and geographic distribution were described as of this date and may have grown significantly since.
 
-## Farcaster Token: Generation Event and Retroactive Rewards
+## $SNAP: Generation Event and Retroactive Rewards
 
-> **Important:** This section discusses the **Farcaster token — now ticker $SNAP**, the official token of Hypersnap (the utility token introduced via Hypersnap's proof-of-work protocol changes). It is **not** Quilibrium's QUIL token. These are entirely separate tokens on separate networks.
+> **Important:** This section discusses **$SNAP**, the official token of Hypersnap (the utility token introduced via Hypersnap's proof-of-work protocol changes, called "the Farcaster token" at the time of this interview). It is **not** Quilibrium's QUIL token. These are entirely separate tokens on separate networks.
 
-Has the community landed on a TGE date for the Farcaster token? Yes, but Cassie won't announce it because scammers target announced dates. When it happens, you'll hear it from Cassie's Farcaster account immediately. She said it will be before Farcon, and Farcon is just a few days away.
+Has the community landed on a TGE date for $SNAP? Yes, but Cassie won't announce it because scammers target announced dates. When it happens, you'll hear it from Cassie's Farcaster account immediately. She said it will be before Farcon, and Farcon is just a few days away.
 
-> **Note (May 1, 2026):** The Farcaster token TGE was anticipated before an upcoming Farcon event. The actual TGE timing and token launch details should be verified against current official announcements.
+> **Note (May 1, 2026):** The $SNAP TGE was anticipated before an upcoming Farcon event. The actual TGE timing and token launch details should be verified against current official announcements.
 
-Airdrop history is based on weird criteria: retweet counts, hackathons with throwaway projects. Cassie doesn't do that. Farcaster token rewards use the same rules the Farcaster protocol will continue using after Hypersnap changes, but applied to Farcaster history. Think of it as a premine, but it's not, because it's the same rules. No special developer or contributor allocations. No VC allocation. No team allocation. Strictly protocol-based.
+Airdrop history is based on weird criteria: retweet counts, hackathons with throwaway projects. Cassie doesn't do that. $SNAP rewards use the same rules the Farcaster protocol will continue using after Hypersnap changes, but applied to Farcaster history. Think of it as a premine, but it's not, because it's the same rules. No special developer or contributor allocations. No VC allocation. No team allocation. Strictly protocol-based.
 
-There are six months of tranches. Every month, one-sixth of retroactive Farcaster tokens release. Users must keep engaging to remain eligible. It's intrinsically bound to continued protocol growth.
+There are six months of tranches. Every month, one-sixth of retroactive $SNAP releases. Users must keep engaging to remain eligible. It's intrinsically bound to continued protocol growth.
 
-The total Farcaster token pool is 2 billion tokens. The retroactive pool is 200 million, 10% of supply. It fits into the halving of the Farcaster protocol token issuance. It's applying the halving in reverse for the period before Farcaster had a token.
+The total $SNAP pool is 2 billion tokens. The retroactive pool is 200 million, 10% of supply. It fits into the halving of the Farcaster protocol token issuance. It's applying the halving in reverse for the period before Farcaster had a token.
 
-The Farcaster token max supply target is 2 billion with continual halving, like Bitcoin. It goes on indefinitely, asymptotically approaching 2 billion. Check the FIP for Farcaster token halving period details.
+The $SNAP max supply target is 2 billion with continual halving, like Bitcoin. It goes on indefinitely, asymptotically approaching 2 billion. Check the FIP for $SNAP halving period details.
 
-> **Note (May 1, 2026):** Farcaster token supply figures (2B max, 200M retroactive), tranche schedule (6 months), and halving mechanics were described as of this interview. Always verify current tokenomics against the latest FIP and official documentation.
+> **Note (May 1, 2026):** $SNAP supply figures (2B max, 200M retroactive), tranche schedule (6 months), and halving mechanics were described as of this interview. Always verify current tokenomics against the latest FIP and official documentation.
 
 ## Closing
 
