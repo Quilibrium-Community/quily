@@ -11,7 +11,17 @@ topics:
   - tokenomics
   - decentralization
   - quorum
+  - SNAP
+  - $SNAP
+  - SNAP token
+  - Hypersnap token
+  - Farcaster token
+  - SNAP supply
+  - SNAP airdrop
+  - retroactive rewards
 ---
+
+> **Naming note (added 2026-08-21):** Throughout this transcript the token is called **"the Farcaster token"**, because it did not yet have a public ticker on 2026-05-01. That token is now known as **$SNAP**, the official token of Hypersnap. The two names refer to the same thing. $SNAP is **not** a Quilibrium token and is separate from $QUIL. See [Quilibrium, Hypersnap, $QUIL and $SNAP](../custom/Quilibrium-Hypersnap-QUIL-SNAP-Relationship.md).
 
 > **Time-Bounded Notice:** The following information was discussed on May 1, 2026. Farcaster, Hypersnap, and Quorum are rapidly evolving projects. Specific timelines, statuses, token details, and governance structures described below may have changed since this date. Always verify current status against the latest official announcements and documentation.
 
@@ -227,7 +237,7 @@ They have a massive user base in China. China is very restrictive about social m
 
 ## Farcaster Token: Generation Event and Retroactive Rewards
 
-> **Important:** This section discusses the **Farcaster token** (the utility token being introduced via Hypersnap's proof-of-work protocol changes), not Quilibrium's QUIL token. These are entirely separate tokens on separate networks.
+> **Important:** This section discusses the **Farcaster token — now ticker $SNAP**, the official token of Hypersnap (the utility token introduced via Hypersnap's proof-of-work protocol changes). It is **not** Quilibrium's QUIL token. These are entirely separate tokens on separate networks.
 
 Has the community landed on a TGE date for the Farcaster token? Yes, but Cassie won't announce it because scammers target announced dates. When it happens, you'll hear it from Cassie's Farcaster account immediately. She said it will be before Farcon, and Farcon is just a few days away.
 
