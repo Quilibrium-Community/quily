@@ -66,14 +66,17 @@ The guiding principle from the reference: nothing on Quilibrium happens instantl
 
 ---
 
-## Correction: the "113 frames" confusion
+## Epoch Boundaries
 
-Community recaps from August 2026 contain the phrasing *"active status will appear in the next epoch (~113 frames away, about 19 minutes at 10s per frame)"*.
+Epoch size is fixed. **How far you are from the next boundary is not.** Because frame numbers run continuously, the distance to the next boundary depends entirely on where in the current epoch you currently sit:
 
-**113 is not the epoch size.** It was the distance remaining from that moment to the next epoch boundary. Because frames are numbered continuously, how far you are from the next boundary depends entirely on where in the current epoch you happen to be, and can be anywhere from 1 to 720 frames.
+```
+frames until next epoch = 720 - (frame mod 720)
+```
 
-- Epoch size: **720 frames**, always (mainnet).
-- Distance to the next boundary: **720 - (frame mod 720)**, which varies constantly.
+That figure moves constantly and can be anywhere from 1 to 720 frames.
+
+This matters when reading status updates. A statement like "the next epoch is ~113 frames away, about 19 minutes" is describing **a node's position at that moment**, not the length of an epoch. Epoch length is always 720 frames on mainnet, which is roughly 2 hours at a 10-second frame time.
 
 ---
 
@@ -184,8 +187,6 @@ State these as unknown rather than guessing:
 ## Sources
 
 - **epoch.qstorage.quilibrium.com** — community reference guide for the epoch and shard system, self-labelled "Quilibrium 2.1 Bloom — PQ / .25". Sections: Time, Architecture, Shards, Economics, Lifecycle, Summary. This is hosted on Quilibrium infrastructure but is not part of the official docs at docs.quilibrium.com, so prefer official docs where the two overlap.
-- **Community recap, 2026-08-10** — origin of the "~113 frames away" phrasing that this document corrects.
-- **Issue #112** — community correction that prompted this document.
 
 ---
 

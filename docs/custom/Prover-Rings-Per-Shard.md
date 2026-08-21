@@ -30,7 +30,7 @@ topics:
 
 The number of rings around a given shard grows organically as more nodes declare membership for that shard, with priority determined by seniority.
 
-> **Update (2026-08-21, Quilibrium 2.1 Bloom):** There is still no hard cap on rings, but ring depth is now known to be bounded *in practice* by re-bundling. A shard bundle **subdivides once it reaches 32 provers**, which is exactly four full rings of eight. Subdivision resets ring assignments on the new sub-bundles, so rings do not grow without limit on a single bundle. Ring membership is also no longer undocumented: `ring = floor(rank / 8)`. See [Epochs and Frames](Epochs-And-Frames.md) for the formulas and the reward consequences.
+> **As of Quilibrium 2.1 Bloom:** There is no hard cap on rings, but ring depth is bounded *in practice* by re-bundling. A shard bundle **subdivides once it reaches 32 provers**, which is exactly four full rings of eight. Subdivision resets ring assignments on the new sub-bundles, so rings do not grow without limit on a single bundle. Ring membership is also no longer undocumented: `ring = floor(rank / 8)`. See [Epochs and Frames](Epochs-And-Frames.md) for the formulas and the reward consequences.
 
 ---
 
@@ -68,7 +68,7 @@ What the public livestream and architecture docs explicitly cover:
 - Seniority-based priority for ring induction
 - Fragmentation as a scaling mechanism
 
-What is now documented as of 2.1 Bloom (previously listed here as unknown):
+What IS documented as of 2.1 Bloom:
 - **How ring membership is assigned:** `ring = floor(rank / 8)`, where rank comes from sorting provers by join frame (ascending), then seniority (descending), then address (ascending). Eight provers per ring.
 - **What triggers subdivision:** a shard bundle reaching 32 provers, driven by prover density.
 - **The reward consequence of ring position:** rewards are divided by `2^(ring+1)`, so Ring 0 receives 1/2, Ring 1 receives 1/4, and so on.
