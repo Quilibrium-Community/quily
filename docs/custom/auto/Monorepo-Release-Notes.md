@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-08-21
+date: 2026-08-22
 type: release_notes
 topics:
   - release notes
@@ -16,77 +16,81 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** August 21, 2026
+**Last updated:** August 22, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
 ## v2.1.0.24 (version .24) *(auto-generated)*
-- fix patch number sync with config
-- fix race condition where initial sync failure left workers idle until reboot
-- fix transaction safety for hypergraph store writes – aborted transactions no longer persist partial data
-- make lazy tree commit retry-safe – dirty state is cleared only after transaction commits, allowing safe retry on failure
-- make `compute_shard_root` read-only – no longer writes to disk outside a transaction
-- require `RocksTxn` for hypergraph store writes, removing silent direct-write fallback that masked bugs
-- handle leaving scenario with store wipe
-- reduce score differential threshold for flagging leave-to-join opportunities
-- extend scoring-based leave window to a full cycle
-- adjust margins on join/decision thresholds
-- adjust snapshotting to use actual RocksDB snapshots
+- fix transaction safety for hypergraph store writes by threading transactions through lazy tree commit and sync-apply paths
+- make `LazyVectorCommitmentTree::commit` retry-safe by deferring dirty-state clearing until transaction is durably committed
+- make `compute_shard_root` read-only by extracting read-only `compute_root` method, preventing writes outside frame transactions
+- refactor hypergraph store to require `RocksTxn` for writes, removing silent direct-write fallback that masked bugs
+- add catch-up mechanism for lagging archive nodes by syncing proposals from peers via `GetGlobalProposal`
+- implement `GlobalService.GetGlobalProposal` to serve full proposals with state, QC, TC, and proposer vote
+- persist proposer vote at proposal ingest so it can be served back via the store trait
+- add `on_missing_parent` hook triggered at orphan-cache site for recovery path wiring
+- fix patch number sync with config and race condition where initial sync failure left workers idle forever
+- reduce score differential basis for flagging leave-to-join opportunities, extend scoring-based leave window to full cycle
+- adjust threshold margins for decide and join decisions
+- adjust snapshotting to use actual rocksdb snapshots instead of previous approach
 - resolve unsynced leave issuance condition
-- reapply Docker build optimizations (consolidated gen stages, cargo/go cache mounts)
-- consensus: rejoin a lagging archive by syncing proposals from peers – missing parent proposals are fetched on demand, enabling a partitioned node to catch up and resume voting
+- reapply docker build optimizations to `Dockerfile.source` (consolidated cargo stages, restored cache mounts)
 
 ## v2.1.0.23 (version .23) *(auto-generated)*
-- fix docker build issue
+- fix docker build and static linking for flint/mpfr/gmp
+- resolve standalone worker connection string derivation
+- fix too many joins, invalid signature in qclient, standalone worker mode bugs, worker logging, and various additional bugs
+- improve keys file handling and reduce excess joins/leaves
+- demote p2p, archive client, coverage halt, shard ops, prover message, and shard frame logs to debug
 - resolve domain separation bug for invalid signature
-- fix too many joins, invalid signature in qclient, standalone worker mode bugs, workers not logging to own files, and various additional bugs
+- fix tokio thread issue related to logging
+- fast path: push straight to archives to retrieve info
 - fix leaving prover bug in worker allocator
-- resolve worker storage location bug
-- fix shard store discrepancy
-- fix stale 0 frame data response, adjust blossomsub params
+- resolve worker storage location bug and reduce log noise
+- fix prover shard choices, ring number calculation, and TUI quirks for manual mode
+- forcibly adjust halt risk shards as primary selection criteria
+- address issues 1, 2, 3 from blackswan
+- fix Left→Leaving transition and resolve edge cases
+- fix worker persistence and missing lock update
+- harden prover path and fix shard store discrepancy
+- use different source for current frame number
+- cache requests to prevent available shards from flashing
+- resolve stale 0 frame data response and adjust blossomsub params
+- refactor tree behaviors to skip stale data effects
+- add halt risk test and switch archive node
+- never assume, always ensure prover tree
+- add extra logging for worker panics
+- handle orphaned allocations and allocations on zero byte shards
+- fix issues 1-6 reported by blackswan
+- add missing worker_ids field
 - fix autonat bug crashing worker threads
-- fix too many streams issue
-- fix build script to force static link on libchannel
-- fix propose skip on coverage halts
-- fix vdf link order
-- support archive endpoints config in rs node
-- use sha3 for prover join vdf verifier
-- fix canonicalization bug for peer info
-- propagate errors from subsystems
-- fix OOM from unbounded stores
-- add memory profiling and logging to trace oom
-- fix proposal bug using joining count as part of halt risk calculation
-- handle 67% barrier for halt risk
-- fix tui manage submission of messages
-- fix bug where expired leaves were not treated as confirmed leaves in proposal logic and worker allocator
-- resolve race where overlapping joins are submitted
-- refactor quil-node main into submodules (storage, keys, engines, frame_pipeline, networking, runtime_state, peer_info_publisher, worker_manager, allocator_and_lifecycle, message_loop, archive_sync, grpc)
+- fix build for linux and force static link on libchannel
+- fix delegate address edge case and kad-dht stream connection issue
+- fix quil-engine unit tests and router validator tests
 - support white spaces in genesis seed for testnets
-- reduce logging noise on noisy connection events
-- increase duration between peer info and key registry publishes
+- fix propose skip on coverage halts
+- fix vdf link order and enable tests in CI
+- support archive endpoints config in rust node
+- use sha3 for prover join vdf verifier
+- fix rust node initialization and router validator test
+- refactor quil-node main into submodules (storage, keys, engines, frame_pipeline, networking, runtime_state, peer_info_publisher, worker_manager, allocator_and_lifecycle, message_loop, archive_sync, grpc)
+- fix canonicalization
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
-- reconcile old and new config paths
 - fix formatting/precision on prover reward data
-- fix peering issue
+- fix possible peering issue
 - fix app shard lookups on mainnet
+- reconcile old and new config paths
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
-- allow debug env var to be read
-- fix newPebbleDB constructor config parameter
+- read in debug mode via `DEBUG` environment variable
+- fix pebble db constructor config parameter
 - fix high CPU overhead in initial worker behaviors and ongoing sync
 - add extra data to node info and query metrics from command line
 - leave proposals for overcrowded shards
-- implement hub-and-spoke global message broadcasts
-- small tweaks to cli output for join frames
-
-## v2.1.0.19 (version .19) *(auto-generated)*
-- resolve sync message size limit defaults and one-shot sync size
-- fix app shard TC signature size and collector/hotstuff race condition
-- fix expired joins blocking new joins due to pruning disable
-- fix abandoned prover joins and reload prover registry
-- fix stale worker
+- hub-and-spoke global message broadcasts
+- minor cli output tweaks for join frames
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
