@@ -39,6 +39,7 @@ This is the main index for all documentation, bug reports, and task management.
 - 📋 [Chat latency round 2 — port the newer Kaya wins (2026-07-11)](issues/2026-07-11-latency-round-2-from-kaya.md)
 - 📋 [Harden sync-docs against silent local doc loss](issues/2026-07-29-harden-sync-docs-drift-detection.md)
 - 📋 [Two-axis prompt rework: stop refusing adjacent questions](issues/2026-07-29-quily-two-axis-prompt-rework.md)
+- 📋 [Provocation handling: replace the one-line jailbreak rule](issues/2026-08-22-provocation-handling-rework.md)
 - 📋 [Add Self-Review / Fact Check Button to Bot Replies](issues/self-review-fact-check-button.md)
 - 📋 [Add Web Fetching Capability to Chatbot](issues/web-fetching-capability.md)
 - 📋 [Cross-Reference Verification Against Source Docs](issues/cross-reference-verification.md)
@@ -151,4 +152,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-08-12 09:06:38
+**Last Updated**: 2026-08-22 18:31:34

@@ -148,8 +148,18 @@ export function registerMentionHandler(client: Client): void {
 
       typing = false;
 
-      // If model produced only a tool call with no text, provide a default
-      let responseText = result.text || 'Thanks for the correction!';
+      // If the model produced only a tool call with no text, provide a default.
+      //
+      // Guarded on a tool call actually having fired. The model can return a
+      // genuinely empty reply — under the Provocation rules it will shrink its
+      // answers to nothing when a user is just making noise — and an unguarded
+      // fallback turned that silence into "Thanks for the correction!", which
+      // reads as though a correction had been accepted and filed.
+      const issueToolFired = result.toolCalls?.some(
+        (tc) => tc.toolName === 'create_knowledge_issue',
+      );
+      let responseText =
+        result.text || (issueToolFired ? 'Thanks for the correction!' : '👀');
 
       // Handle auto-correction tool call
       if (result.toolCalls?.length) {
