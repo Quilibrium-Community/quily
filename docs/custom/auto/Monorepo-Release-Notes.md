@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-08-22
+date: 2026-08-23
 type: release_notes
 topics:
   - release notes
@@ -16,81 +16,25 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** August 22, 2026
+**Last updated:** August 23, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
-## v2.1.0.24 (version .24) *(auto-generated)*
-- fix transaction safety for hypergraph store writes by threading transactions through lazy tree commit and sync-apply paths
-- make `LazyVectorCommitmentTree::commit` retry-safe by deferring dirty-state clearing until transaction is durably committed
-- make `compute_shard_root` read-only by extracting read-only `compute_root` method, preventing writes outside frame transactions
-- refactor hypergraph store to require `RocksTxn` for writes, removing silent direct-write fallback that masked bugs
-- add catch-up mechanism for lagging archive nodes by syncing proposals from peers via `GetGlobalProposal`
-- implement `GlobalService.GetGlobalProposal` to serve full proposals with state, QC, TC, and proposer vote
-- persist proposer vote at proposal ingest so it can be served back via the store trait
-- add `on_missing_parent` hook triggered at orphan-cache site for recovery path wiring
-- fix patch number sync with config and race condition where initial sync failure left workers idle forever
-- reduce score differential basis for flagging leave-to-join opportunities, extend scoring-based leave window to full cycle
-- adjust threshold margins for decide and join decisions
-- adjust snapshotting to use actual rocksdb snapshots instead of previous approach
-- resolve unsynced leave issuance condition
-- reapply docker build optimizations to `Dockerfile.source` (consolidated cargo stages, restored cache mounts)
-
-## v2.1.0.23 (version .23) *(auto-generated)*
-- fix docker build and static linking for flint/mpfr/gmp
-- resolve standalone worker connection string derivation
-- fix too many joins, invalid signature in qclient, standalone worker mode bugs, worker logging, and various additional bugs
-- improve keys file handling and reduce excess joins/leaves
-- demote p2p, archive client, coverage halt, shard ops, prover message, and shard frame logs to debug
-- resolve domain separation bug for invalid signature
-- fix tokio thread issue related to logging
-- fast path: push straight to archives to retrieve info
-- fix leaving prover bug in worker allocator
-- resolve worker storage location bug and reduce log noise
-- fix prover shard choices, ring number calculation, and TUI quirks for manual mode
-- forcibly adjust halt risk shards as primary selection criteria
-- address issues 1, 2, 3 from blackswan
-- fix Left→Leaving transition and resolve edge cases
-- fix worker persistence and missing lock update
-- harden prover path and fix shard store discrepancy
-- use different source for current frame number
-- cache requests to prevent available shards from flashing
-- resolve stale 0 frame data response and adjust blossomsub params
-- refactor tree behaviors to skip stale data effects
-- add halt risk test and switch archive node
-- never assume, always ensure prover tree
-- add extra logging for worker panics
-- handle orphaned allocations and allocations on zero byte shards
-- fix issues 1-6 reported by blackswan
-- add missing worker_ids field
-- fix autonat bug crashing worker threads
-- fix build for linux and force static link on libchannel
-- fix delegate address edge case and kad-dht stream connection issue
-- fix quil-engine unit tests and router validator tests
-- support white spaces in genesis seed for testnets
-- fix propose skip on coverage halts
-- fix vdf link order and enable tests in CI
-- support archive endpoints config in rust node
-- use sha3 for prover join vdf verifier
-- fix rust node initialization and router validator test
-- refactor quil-node main into submodules (storage, keys, engines, frame_pipeline, networking, runtime_state, peer_info_publisher, worker_manager, allocator_and_lifecycle, message_loop, archive_sync, grpc)
-- fix canonicalization
-
 ## v2.1.0.21 (version .21) *(auto-generated)*
+- reconcile old and new config paths
 - fix formatting/precision on prover reward data
 - fix possible peering issue
 - fix app shard lookups on mainnet
-- reconcile old and new config paths
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
-- read in debug mode via `DEBUG` environment variable
-- fix pebble db constructor config parameter
+- allow debug mode via environment variable
+- fix newPebbleDB constructor config parameter
 - fix high CPU overhead in initial worker behaviors and ongoing sync
 - add extra data to node info and query metrics from command line
 - leave proposals for overcrowded shards
-- hub-and-spoke global message broadcasts
-- minor cli output tweaks for join frames
+- implement hub-and-spoke global message broadcasts
+- tweak cli output for join frames
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
