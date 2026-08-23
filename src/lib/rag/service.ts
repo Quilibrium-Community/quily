@@ -22,6 +22,8 @@ export interface PrepareQueryOptions {
   chutesAccessToken?: string;
   embeddingModel?: string;
   cohereApiKey?: string;
+  /** Operator-configured form of address for this user. Discord only. */
+  addressAs?: string;
 }
 
 export interface PreparedQuery {
@@ -55,7 +57,7 @@ export async function prepareQuery(options: PrepareQueryOptions): Promise<Prepar
 
   const chunks = await retrieveWithReranking(normalizedQuery, retrievalOptions);
   const { context, quality, avgSimilarity } = buildContextBlock(chunks);
-  const systemPrompt = buildSystemPrompt(context, chunks.length);
+  const systemPrompt = buildSystemPrompt(context, chunks.length, options.addressAs);
   const sources = formatSourcesForClient(chunks);
 
   return {

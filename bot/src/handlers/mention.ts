@@ -4,6 +4,7 @@ import { checkRateLimit, recordRequest } from '../utils/rateLimiter';
 import { checkIssueRateLimit, recordIssueCreation } from '../utils/issueRateLimiter';
 import { createGitHubIssue } from '../utils/githubIssues';
 import { getHistory, getLastChunkIds, addExchange } from '../utils/memory';
+import { getNickname } from '../utils/nicknames';
 import { chunkMessage } from '../utils/messageChunker';
 import { extractAttachments } from '../utils/attachments';
 import { formatForDiscord } from '../formatter';
@@ -138,6 +139,7 @@ export function registerMentionHandler(client: Client): void {
         embeddingProvider: 'openrouter',
         embeddingApiKey: process.env.OPENROUTER_API_KEY,
         cohereApiKey: process.env.COHERE_API_KEY,
+        addressAs: getNickname(message.author.id) ?? undefined,
       });
 
       const timeoutPromise = new Promise<never>((_, reject) =>

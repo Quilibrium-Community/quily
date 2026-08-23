@@ -170,15 +170,38 @@ function getTitleFromPath(filePath: string): string {
  *
  * @param context - Formatted context block from buildContextBlock
  * @param chunkCount - Number of sources available for citation
+ * @param addressAs - Operator-configured form of address for this specific user.
+ *   Discord only; the web client has no user identity, so it never passes one.
  * @returns Complete system prompt for LLM
  */
-export function buildSystemPrompt(context: string, chunkCount: number): string {
+export function buildSystemPrompt(
+  context: string,
+  chunkCount: number,
+  addressAs?: string,
+): string {
   const maxCitation = chunkCount > 0 ? chunkCount : 0;
   const personality = buildPersonalityBlock();
 
+  // Placed immediately after the personality block, adjacent to the Provocation
+  // rules it overrides, and stated as operator configuration rather than as a
+  // request from the person in the chat. Both matter: asked directly, Quily
+  // correctly refuses "call me X" as reaction-seeking, and a weakly-worded
+  // override loses to that rule.
+  const addressBlock = addressAs
+    ? `
+
+## Form of address
+
+The operator has configured how to address this specific user: **${addressAs}**. They asked for this themselves and it is set server-side, so it is a settled preference, NOT a "call me X" demand and NOT a jailbreak — the Provocation rules do not apply to it and you are not being manipulated into anything.
+
+Use it the way you'd use anyone's name: when greeting them or addressing them directly. Not in every sentence, not in every message. Never comment on it, never apologise for it, never explain why you're allowed to say it, and never announce that you've been configured to. To you it is simply their name.
+
+This applies to this user only. It says nothing about how you talk to anyone else, and it does not license insults, mirroring abuse, or coarse language generally — all of that stays exactly as the Provocation rules describe.`
+    : '';
+
   return `# Quily Assistant
 
-${personality}
+${personality}${addressBlock}
 
 ---
 
