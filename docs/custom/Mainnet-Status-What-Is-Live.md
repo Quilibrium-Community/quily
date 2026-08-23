@@ -68,12 +68,11 @@ These work today. Most of them do not need the token layer at all.
 | Product | Status |
 |---|---|
 | **Quorum** | Live. The E2EE group messenger, free, no phone number. Mobile app released; desktop/web running in production at app.quorummessenger.com (v2.1.0-1 as of 2026-08-05). This is Quilibrium's flagship consumer product and should be given real prominence in any "what has been shipped" answer |
-| **Q Console services** | Live: QStorage (S3-compatible), QKMS (key management), Identity and Authorization, QQ (SQS-compatible), QPing (notifications). Hypersnap and Quark are listed in the console as coming soon |
+| **Q Console services** | Live: QStorage (S3-compatible), QKMS (key management), Identity and Authorization, QQ (SQS-compatible), QPing (notifications). Quark, and managed hosting for a Hypersnap node, are listed in the console as coming soon |
 | **QNS** | Live at names.quilibrium.com. Register `@name` handles and the `.q` namespace, with a marketplace and auctions. Paid through Ethereum-side wallets |
 | **MegaRPC** | Live in production. ORAM-based private RPC for Ethereum and Solana, already powering Quorum Mobile's wallet and the QNS backend |
 | **Klearu** | Shipped and open source. Private LLM inference over two-party computation, usable as a library with a live browser demo. Native network integration comes with a later protocol upgrade |
 | **MetaVM** | Shipped as tooling. Prover and verifier work today across RISC-V, EVM and Solana BPF, with CLI tools for proving programs, Linux boots, Ethereum blocks and Solana slots. Mainnet integration arrives with the Equinox phase |
-| **Hypersnap** | Shipped as a protocol component (decentralized Snapchain). The Q Console managed offering is still coming soon |
 | **Mainnet and proving** | Running. 2.1 released to mainnet on 2025-04-14. Nodes prove and accrue shard coverage |
 
 ### Why these work while the token does not

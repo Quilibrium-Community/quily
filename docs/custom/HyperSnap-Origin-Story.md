@@ -1,8 +1,8 @@
 ---
 title: "HyperSnap: Why Quilibrium Forked Farcaster"
-source: livestream (2026-03-30) + discord
+source: livestream (2026-03-30) + discord + Community Contribution (Issue #113)
 author: Cassandra Heart
-date: 2026-03-30
+date: 2026-08-23
 type: technical_reference
 topics:
   - HyperSnap
@@ -20,11 +20,25 @@ topics:
   - why did Q fork Farcaster
   - HyperSnap history
   - Farcaster fork reason
+  - who owns HyperSnap
+  - who runs HyperSnap
+  - who builds HyperSnap
+  - who leads HyperSnap
+  - HyperSnap team
+  - HyperSnap contributors
+  - HyperSnap ownership
+  - Farcaster.org
+  - is HyperSnap a Quilibrium product
+  - is HyperSnap a Q Inc product
+  - is HyperSnap open source
+  - is HyperSnap Cassie's project
 ---
 
 # HyperSnap: Why Quilibrium Forked Farcaster
 
-HyperSnap is Quilibrium's fork of Farcaster's Snapchain protocol. This document covers the full story behind the fork: who was involved, what happened, and why it matters for decentralized social media.
+HyperSnap is a fork of Farcaster's Snapchain protocol. Quilibrium **triggered** the fork after a validator dispute, but HyperSnap itself is **not a Quilibrium Inc. product**: it is maintained by an independent open-source group of roughly 15 contributors, only one of whom is from Q. See [Governance: Not Just Q](#governance-not-just-q) below.
+
+This document covers the full story behind the fork: who was involved, what happened, and why it matters for decentralized social media.
 
 For technical details on HyperSnap's architecture, Hyper Mode, dual pipeline, and CLI tools, see the [HyperSnap technical reference](../gap-analysis/Hypersnap.md).
 
@@ -101,9 +115,18 @@ So Q forked. Since then, there have been multiple HyperSnap releases. Setup is d
 
 ### Governance: Not Just Q
 
-It's important to understand that HyperSnap is **not** just a Q project. There is explicitly one person from Q Inc. in the HyperSnap organization; the rest are other members of the Farcaster community.
+**HyperSnap is an open-source project, not a company product, and not Cassie's personal project.**
+
+Q Inc. triggered the fork, but it does not own or control what came out of it:
+
+- HyperSnap is built and maintained by an independent open-source group of **roughly 15 contributors**, all long-standing members of the Farcaster community. Cassie calls them "the **Farcaster.org** group"; the code lives in the [`farcasterorg`](https://github.com/farcasterorg/hypersnap) GitHub organization, not a Quilibrium one. It is a contributor group, not an incorporated company or foundation.
+- There is explicitly **one person from Q Inc.** in the HyperSnap organization: Cassandra Heart. The rest come from elsewhere in the Farcaster community.
+- **Cassie is a contributor, not the owner, CEO or singular leader.** Her role is technical history (she was one of the original Snapchain developers), not authority over the project.
+- Protocol changes go through **FIPs** (Farcaster Improvement Proposals), not through Q.
 
 This structure is intentional and deeply held: Farcaster does not succeed with a single corporate benefactor. It does not succeed with a single corporate steward. It requires multiple people congregating on that front. That's the way the fork is organized and the way it's moving forward.
+
+> **Do not describe HyperSnap as "a Quilibrium product", "a Q Inc service" or "Cassie's project".** The accurate phrasing is that Quilibrium initiated the fork and one Q person contributes to it, while the project is run by an independent open-source group.
 
 ---
 
@@ -141,4 +164,4 @@ Despite dramatically decreasing in daily active users, Farcaster remains one of 
 
 ---
 
-*Last updated: 2026-03-30*
+*Last updated: 2026-08-23*

@@ -47,7 +47,9 @@ Quorum added support for Farcaster direct messages. These DMs exist only on the 
 
 ## HyperSnap Integration
 
-Quorum connects to Farcaster through HyperSnap, Quilibrium's fork of the Snapchain protocol. HyperSnap runs as an alt-fee basis shard on the Q network.
+Quorum connects to Farcaster through HyperSnap, a fork of the Snapchain protocol that Quilibrium initiated. HyperSnap runs as an alt-fee basis shard on the Q network.
+
+**HyperSnap is not a Quilibrium product.** Q triggered the fork, but HyperSnap is maintained by an independent open-source group of roughly 15 contributors, only one of whom (Cassie) is from Q. Quorum *is* a Q Inc product; HyperSnap is the third-party protocol it talks to. See [Quilibrium, Hypersnap, $QUIL and $SNAP](Quilibrium-Hypersnap-QUIL-SNAP-Relationship.md).
 
 ### Q Storage Embeds on Farcaster
 

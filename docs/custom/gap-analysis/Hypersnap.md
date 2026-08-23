@@ -18,6 +18,10 @@ Following a community meeting on February 15, 2026, Neynar initially reached out
 
 Cassie Heart (CassOnMars), Quilibrium's founder, was one of the original Snapchain developers. That deep familiarity with the protocol informed Hypersnap's core design principle: backward compatibility. Nodes not running Hypersnap simply don't receive Hypersnap-related traffic, meaning the fork can coexist with the broader Farcaster network rather than fragment it.
 
+### Who maintains it
+
+**Hypersnap is an independent open-source project, not a Quilibrium Inc. product.** Quilibrium triggered the fork, but the resulting project is maintained by an open-source team of roughly 15 contributors, all long-standing Farcaster community members, **only one of whom is from Q** (Cassie). She is a contributor, not the owner, CEO or singular leader. The code lives in the [`farcasterorg`](https://github.com/farcasterorg/hypersnap) GitHub organization, not a Quilibrium one, and protocol changes go through FIPs rather than through Q.
+
 ## Overview
 
 Snapchain is a high-performance blockchain-like network that stores user-generated data (casts, reactions, links, verifications) for the Farcaster protocol without requiring traditional blockchain overhead. Hypersnap extends Snapchain with a dual-pipeline architecture that retains all historical data indefinitely while remaining backward compatible with standard Snapchain peers.

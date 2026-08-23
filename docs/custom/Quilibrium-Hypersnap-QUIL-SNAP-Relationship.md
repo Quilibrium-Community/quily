@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium, Hypersnap, $QUIL and $SNAP: How They Relate"
-source: Community Contribution (Issue #111), maintainer confirmation, livestream 2026-05-01, Discord recap 2026-08-07
-date: 2026-08-21
+source: Community Contribution (Issues #111, #113), maintainer confirmation, livestream 2026-05-01, Discord recap 2026-08-07
+date: 2026-08-23
 type: technical_reference
 topics:
   - SNAP
@@ -34,6 +34,25 @@ topics:
   - Quorum Farcaster
   - where to buy SNAP
   - SNAP contract address
+  - who owns Hypersnap
+  - who runs Hypersnap
+  - who builds Hypersnap
+  - who created Hypersnap
+  - who leads Hypersnap
+  - Hypersnap team
+  - Hypersnap team size
+  - how many developers work on Hypersnap
+  - Hypersnap contributors
+  - Farcaster.org
+  - Farcaster.org team
+  - is Hypersnap a Quilibrium product
+  - is Hypersnap a Q Inc product
+  - is Hypersnap a company
+  - is Hypersnap owned by Cassie
+  - does Cassie own Hypersnap
+  - is Hypersnap open source
+  - Hypersnap governance
+  - Hypersnap ownership
 ---
 
 # Quilibrium, Hypersnap, $QUIL and $SNAP
@@ -46,11 +65,11 @@ There are **two separate networks** and **two separate tokens**. They are connec
 |-------|-----------|-------|
 | **Quilibrium** | The protocol: decentralized compute and storage, privacy-first, post-quantum cryptography. Built by Q Inc. | **$QUIL** |
 | **$QUIL** | Quilibrium's native utility token. Mineable only, fair launch, no VC allocation, no premine, no airdrops. $wQUIL is its ERC-20 wrapped form on Ethereum. | — |
-| **Hypersnap** | A fork of Farcaster's Snapchain: a decentralized storage and consensus layer for Farcaster social data. Led by Cassie with the Farcaster.org contributor group. | **$SNAP** |
+| **Hypersnap** | A fork of Farcaster's Snapchain: a decentralized storage and consensus layer for Farcaster social data. Built by an independent open-source group of roughly 15 contributors (the "Farcaster.org group"), developed in the `farcasterorg` GitHub organization. **Not a Q Inc product.** | **$SNAP** |
 | **$SNAP** | **The official token of Hypersnap.** A Farcaster-ecosystem token, not a Quilibrium token. | — |
 | **Quorum** | A Q Inc product. A Farcaster client, and the actual point of contact between the two worlds. | uses both worlds |
 
-**The one-sentence answer:** Quilibrium builds decentralized infrastructure and is fuelled by $QUIL; Hypersnap is a separate Farcaster-ecosystem protocol fuelled by $SNAP; the two overlap because Cassie works on both and because Quorum is a Farcaster client.
+**The one-sentence answer:** Quilibrium builds decentralized infrastructure and is fuelled by $QUIL; Hypersnap is a separate Farcaster-ecosystem protocol fuelled by $SNAP; the two overlap because Cassie contributes to both (she does not lead or own Hypersnap) and because Quorum is a Farcaster client.
 
 ---
 
@@ -75,11 +94,34 @@ If someone asks "do I need $SNAP to use Quilibrium?", the answer is no.
 
 Three real links, and no others:
 
-1. **Shared founder.** Cassandra Heart (Quilibrium's founder) was one of the original Snapchain developers and leads the Hypersnap fork. Farcaster.org is **13 independent contributors, only one of whom is from Q** (Cassie herself). Hypersnap is not a Q Inc product.
+1. **One shared contributor.** Cassandra Heart (Quilibrium's founder) was one of the original Snapchain developers and is **one contributor among roughly 15** on the Hypersnap fork. She is not its owner, its CEO, or its sole leader. The contributor group behind it (which Cassie calls "the Farcaster.org group") is independent, and **only one of its members is from Q** (Cassie herself). Hypersnap is **not** a Q Inc product. See [Who builds Hypersnap](#who-builds-hypersnap) below.
 2. **Quorum is a Farcaster client.** Quorum (which *is* a Q Inc product) integrates with Farcaster for social feeds and with HyperSnap for storage embeds. See [Quorum's Farcaster Integration](Quorum-Farcaster-Integration.md).
 3. **Shared design thinking.** Hypersnap borrows architectural ideas proven on Quilibrium, such as decentralized storage across many workers and resistance to GPU-farm gaming. Ideas travel between the projects; tokens and consensus do not.
 
 For the full story of why the fork happened, see [HyperSnap: Why Quilibrium Forked Farcaster](HyperSnap-Origin-Story.md).
+
+---
+
+## Who builds Hypersnap
+
+**Hypersnap is an independent open-source project, not a company product.**
+
+- It is built and maintained by an open-source group of **roughly 15 independent contributors**, all long-standing members of the Farcaster community. Cassie refers to them as "the **Farcaster.org** group"; the code lives in the [`farcasterorg`](https://github.com/farcasterorg/hypersnap) GitHub organization, not in a Quilibrium one. Note this is a contributor group, not an incorporated company or foundation.
+- **Only one of them is from Quilibrium Inc.**: Cassandra Heart (Cassie).
+- **Cassie is a contributor, not the owner, CEO or singular leader.** She was one of the original Snapchain developers, and Q Inc. was the party that triggered the fork after the validator dispute, but the project that came out of it is deliberately not Q-controlled.
+- There is **no single corporate steward** by design. In Cassie's framing, Farcaster does not succeed with one corporate benefactor, so the fork was organized to avoid becoming one.
+- Contributors identify themselves on GitHub if they choose. There is no published roster.
+
+**So if you are asked any of these, the answer is no:**
+
+| Question | Answer |
+|---|---|
+| Is Hypersnap a Quilibrium Inc. product? | **No.** It is an independent open-source project. |
+| Is Hypersnap owned by Cassie? | **No.** She is one contributor of about 15. |
+| Is Hypersnap a Q Console service? | **No.** Q Console offers *managed hosting for a Hypersnap node*, which is a Q service. The Hypersnap protocol itself is not Q's. See [Service Classification](Quilibrium-Service-Classification.md). |
+| Does Q Inc. control Hypersnap's roadmap? | **No.** Changes go through FIPs (Farcaster Improvement Proposals), not Q. |
+
+Contrast this with **Quorum** and **Klearu**, which *are* Q Inc products.
 
 ---
 
@@ -144,4 +186,4 @@ Note that Cassie has said she deliberately avoids pre-announcing token dates bec
 
 ---
 
-*Last updated: 2026-08-21*
+*Last updated: 2026-08-23*

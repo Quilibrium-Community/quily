@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Service Classification — Protocol vs Q Console vs Ecosystem"
-source: Community Contribution (Issue #109) + Q Console service registry + Tech Tree + quilibrium.com/ecosystem
-date: 2026-08-12
+source: Community Contribution (Issues #109, #113) + Q Console service registry + Tech Tree + quilibrium.com/ecosystem
+date: 2026-08-23
 type: technical_reference
 topics:
   - Q services
@@ -39,7 +39,9 @@ topics:
 >
 > Being listed in this document is not evidence that a thing is running, and is not evidence that it is broken either. For status, see **[Quilibrium Network Status](Mainnet-Status-What-Is-Live.md)**.
 
-**This document is the authoritative reference for which Quilibrium things are Q Console managed services and which are not.** If another document in this knowledge base describes something as a "Q Console service" and this document disagrees, this document is correct.
+**This document is the authoritative reference for which Quilibrium things are Q Console managed services, and for which things Quilibrium Inc. actually builds and owns.** If another document in this knowledge base describes something as a "Q Console service" or as a Quilibrium product and this document disagrees, this document is correct.
+
+> **Specifically overrides the Tech Tree on Hypersnap.** The auto-synced [Tech Tree](auto/Quilibrium-Tech-Tree.md) lists Hypersnap under Quilibrium's Protocol components. That is an upstream artifact and is **not** a statement of ownership. **Hypersnap is not a Quilibrium Inc. product** — it is an independent open-source project. Do not cite the Tech Tree as evidence that it is.
 
 Quilibrium ships in three distinct layers. Conflating them is the single most common mistake when answering "list all Q services", because Quilibrium Inc. builds at all three layers and the marketing surface often presents them together.
 
@@ -62,12 +64,14 @@ These, and only these, appear under **Services** in Q Console.
 | **Identity and Authorization** (IAM) | Identity and access management | IAM | Active |
 | **QQ** | SQS-compatible message queuing | SQS | Active |
 | **QPing** | SNS-compatible notifications | SNS (partial) | Active |
-| **Hypersnap** | Enhanced Farcaster Snapchain node | (none) | Coming soon |
+| **Hypersnap node hosting** | Managed hosting for a Hypersnap node. **Hosting only** — see the caveat below | (none) | Coming soon |
 | **Quark** | 3D asset library and SDK | (none) | Coming soon |
 
 **Billing** and **Docs** also appear in the Q Console sidebar, but they are account/resource entries, not services.
 
 **Hypersnap and Quark are listed in Q Console but are not yet activated.** Quark is an SDK by nature (a 3D asset library composing the token primitive, file schemas, QStorage and RDF schema validation), and it is surfaced as a Q Console service entry. Both of these facts are true at once, and neither contradicts the other.
+
+> ⚠️ **The Q Console entry does not make Hypersnap a Quilibrium product.** What Q Console will offer is *managed hosting for a Hypersnap node*, in the same way a cloud provider offers managed hosting for third-party open-source software. **Hypersnap itself is not built, owned or controlled by Quilibrium Inc.** It is an independent open-source project maintained by a group of roughly 15 contributors, only one of whom (Cassandra Heart) is from Q. Do **not** list Hypersnap when asked "what products/services does Quilibrium offer". See [Quilibrium, Hypersnap, $QUIL and $SNAP](Quilibrium-Hypersnap-QUIL-SNAP-Relationship.md).
 
 ### Announced but not yet in Q Console
 
@@ -89,7 +93,6 @@ These are **not** Q Console services. They are part of the network, and the offi
 | **MetaVM** | Zero-knowledge proof system for VM execution, covering RISC-V, EVM and Solana BPF. The foundation that f(x) and raw compute workloads will be built on. | In development. Prover and verifier work today, mainnet integration arrives with Equinox |
 | **Klearu** | End-to-end encrypted ML inference via two-party computation. Open source, runs today as a library and a browser demo. | In development for mainnet. Native network integration planned for a future protocol upgrade |
 | **Bridge** | QUIL to wQUIL cross-chain bridging with Ethereum, using an in-network Ethereum execution node plus an MPC signer. | **NOT live.** Gated on the token shard-out completing. It was up previously and was taken down; expected back shortly after the v0.25 release. The bridge page at `quilibrium.com/bridge` has not been published yet. See [Mainnet Status](Mainnet-Status-What-Is-Live.md) |
-| **Hypersnap** | Decentralized, hyperdimensional Snapchain. | Shipped at the protocol layer; the Q Console managed offering is separate and still coming soon |
 | **Dispatch Queue** | Ordered message dispatch between participants. The primitive QPing and QQ are built on. | Shipped |
 | **EVM Shard** | EVM-compatible app shard supporting rollup follower mode or raw EVM execution. | In development |
 | **Streaming data primitives** | Video and audio streaming primitives for calls. | Planned, arriving with a future protocol upgrade |
@@ -108,6 +111,7 @@ Built on Quilibrium, accessed on their own sites, **not** provisioned through Q 
 | **QNS** (Quilibrium Names Service) | One-time-purchase names: `@yourname` on Quorum and the `yourname.q` namespace. Registry, marketplace and auctions at names.quilibrium.com. | Quilibrium Inc. |
 | **MegaRPC** | ORAM-based privacy-preserving RPC for Ethereum and Solana. Live in production, powering Quorum Mobile's wallet and QNS's backend. | Quilibrium Inc. |
 | **Klearu demo** | Browser demo of private inference. | Quilibrium Inc. |
+| **Hypersnap** | A fork of Farcaster's Snapchain, running as an alt-fee-basis shard on Quilibrium. A separate protocol that runs *on* Q, not a capability *of* Q. | **Not Quilibrium Inc.** An independent open-source group of ~15 contributors, only one of whom (Cassie) is from Q |
 | Quilscan, ZapMe, Quilibrium Dashboard and others | Community-built tools. | Community |
 
 **On MegaRPC specifically:** it has been described in livestreams as "a managed service being exposed on Q Console", and Q Console access for external teams wanting API keys has been discussed since March 2026. That access has not landed: MegaRPC is not in the Q Console service registry. Treat it as a live Quilibrium-operated service that is **not currently a Q Console managed service**.
@@ -121,7 +125,8 @@ Built on Quilibrium, accessed on their own sites, **not** provisioned through Q 
 | Thing | Is it a Q Console managed service? | What it actually is |
 |---|---|---|
 | QStorage, QKMS, QQ, QPing, Identity/Authorization | **Yes**, active | Managed services |
-| Quark, Hypersnap | **Yes**, listed as coming soon | Quark is an SDK surfaced as a console service; Hypersnap is also a shipped protocol component |
+| **Quark** | **Yes**, listed as coming soon | An SDK surfaced as a console service |
+| **Hypersnap** | **No** — and it is not a Quilibrium product at all | An independent open-source protocol (~15 contributors, one from Q) running as a shard on Quilibrium. Q Console will offer *managed hosting* for a Hypersnap node, which is a Q service; the protocol is not Q's. Never list it as a Quilibrium product or service |
 | **MetaVM** | **No** | Protocol layer. Foundation for f(x) |
 | **Klearu** | **No** | Protocol layer. Available on the network as a library, not a managed service |
 | **Bridge** | **No** | Protocol layer. Used at quilibrium.com/bridge or via `qclient` |
@@ -136,6 +141,8 @@ Ask: *can you provision it inside a Q Console project and get billed for usage?*
 
 Being built by Quilibrium Inc. does not make something a Q Console service, and neither does being AWS-comparable.
 
+And the reverse also holds: **appearing in Q Console does not make something a Quilibrium product.** Hypersnap is the one case where this matters today.
+
 ---
 
 ## Sources
@@ -144,7 +151,8 @@ Being built by Quilibrium Inc. does not make something a Q Console service, and 
 - **[Quilibrium Tech Tree](https://qstorage.quilibrium.com/techtree/index.html)** — separates Protocol, Cryptography, Consumer and Web Services. Synced weekly into `docs/custom/auto/Quilibrium-Tech-Tree.md`.
 - **[quilibrium.com/ecosystem](https://quilibrium.com/ecosystem)** — each project carries a "Relation to the network" field distinguishing "Quilibrium Protocol" from "Built on Quilibrium". Synced into `docs/custom/auto/ecosystem/`.
 - Community correction, GitHub issue #109.
+- Community correction, GitHub issue #113 — Hypersnap is an independent open-source project, not a Quilibrium Inc. product.
 
 ---
 
-*Last updated: 2026-08-12*
+*Last updated: 2026-08-23*

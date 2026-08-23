@@ -221,6 +221,8 @@ $SNAP fills that niche. Cassie expects a lot of applications built using the $SN
 
 The Farcaster.org group is 13 independent contributors, one from Q (Cassie), others from elsewhere. Quorum is a Q Inc product. Klearu, the ML runtime, is a Q Inc product.
 
+> **Update (August 2026):** The group has since grown to **roughly 15 contributors**. The key point is unchanged and worth stating plainly: **Hypersnap is an independent open-source project, not a Quilibrium Inc. product**, and **Cassie is one contributor, not its owner, CEO or singular leader**. See [Quilibrium, Hypersnap, $QUIL and $SNAP](../custom/Quilibrium-Hypersnap-QUIL-SNAP-Relationship.md).
+
 Cassie and Q Inc. have never taken VC funding and refuse to entertain deals. VCs always want token warrants. Q Inc. has revenue, actual numbers. Even traditional VCs aren't feeling it because Cassie's user-focused perspective isn't aligned with VC timelines. They're not strip-mining users for revenue. If users want to pay for something they can't live without, great. But they won't do the shitty things VC-backed companies do.
 
 They're bootstrapped, so not hiring yet.
@@ -258,4 +260,6 @@ The $SNAP max supply target is 2 billion with continual halving, like Bitcoin. I
 Cassie and the team are open to feedback. That's why FIPs exist. Clients, protocol, mini app support, new features — they're receptive. Cassie asks people to stop sending AI-generated slop posts.
 
 For team contact, check GitHub. Members identify themselves if they choose. There are 13 independent contributors, all long-standing Farcaster members. They share the same goal: grow Farcaster.
+
+> **Update (August 2026):** Now roughly 15 contributors. See the note under [Team and Funding](#team-and-funding) above.
 
