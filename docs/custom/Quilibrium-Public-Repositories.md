@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Public Repositories"
 source: Community Contribution (Issue #91)
-date: 2026-07-29
+date: 2026-08-23
 type: technical_reference
 topics: [github, repositories, source-code, open-source, sdk, quorum, qtools, monorepo]
 ---
@@ -51,7 +51,7 @@ Quorum ships on three platforms, split across three public repositories:
 | Repository | What it is |
 |---|---|
 | [quilibrium-js-sdk-channels](https://github.com/QuilibriumNetwork/quilibrium-js-sdk-channels) | JavaScript SDK for Quilibrium channels |
-| [quilibrium-rs-sdk-verkle](https://github.com/QuilibriumNetwork/quilibrium-rs-sdk-verkle) | Rust BLS48-581 Verkle Tree + RDF structured proofs implementation |
+| [quilibrium-rs-sdk-verkle](https://github.com/QuilibriumNetwork/quilibrium-rs-sdk-verkle) | Rust BLS48-581 Verkle Tree + RDF structured proofs implementation. The node itself moved off Verkle trees in v2.1.0.25 |
 | [quilibrium-names-sdk](https://github.com/QuilibriumNetwork/quilibrium-names-sdk) | Quilibrium Name Service (QNS) SDK (Rust) |
 | [qkms-sdk](https://github.com/QuilibriumNetwork/qkms-sdk) | Threshold MPC key management JavaScript SDK, backed by QKMS |
 
@@ -83,4 +83,4 @@ Quorum ships on three platforms, split across three public repositories:
 - Not every Quilibrium project is open source; some repositories are private. If a repository is not
   listed here, it may simply not be public.
 
-*Last updated: 2026-07-29*
+*Last updated: 2026-08-23*

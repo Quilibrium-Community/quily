@@ -1,7 +1,7 @@
 ---
 title: "Block Storage — Verifiable Delay Functions and Bloom Clocks"
 source: official_docs_synthesis
-date: 2026-02-11
+date: 2026-08-23
 type: technical_reference
 topics:
   - VDF
@@ -246,8 +246,8 @@ The complete flow integrating VDFs and Bloom Clocks:
 
 1. The **Time Reel VDF** produces frames at regular intervals, providing global ordering and randomness.
 2. Each **shard** maintains its own Bloom Clock for tracking causal relationships between events within the shard.
-3. **Storage proofs** use VDF-derived challenges to continuously verify data holding.
-4. **Frame consensus** combines VDF proofs (temporal) with KZG commitments (state) to finalize each frame.
+3. **Storage proofs** use VDF-derived challenges to continuously verify data holding. These still use KZG openings over BLS48-581.
+4. **Frame consensus** combines VDF proofs (temporal) with state roots (state) to finalize each frame. Since **v2.1.0.25** those state roots are SHA-256 hash commitments from a Jellyfish Merkle Tree forest, not KZG commitments. See [Post-Quantum Cryptography Migration](../Post-Quantum-Cryptography-Migration.md).
 
 ### State Transitions
 

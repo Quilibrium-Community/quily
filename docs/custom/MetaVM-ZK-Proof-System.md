@@ -1,7 +1,7 @@
 ---
 title: "MetaVM — Zero-Knowledge Proof System for VM Execution"
 source: MetaVM GitHub repo (QuilibriumNetwork/metavm) + transcripts + dev updates
-date: 2026-05-01
+date: 2026-08-23
 type: technical_reference
 topics:
   - MetaVM
@@ -34,6 +34,8 @@ MetaVM is Quilibrium's modular zero-knowledge proof system for proving correct e
 ## What MetaVM Does
 
 MetaVM takes a program execution (RISC-V binary, Ethereum transaction, or Solana BPF program) and produces a cryptographic proof that the execution was carried out correctly. This proof can be verified cheaply without re-executing the program. It uses KZG polynomial commitments and supports both BLS48-581 (Quilibrium's own ceremony) and BLS12-381 (Ethereum KZG ceremony) curves.
+
+> **Note (2026-08-23):** MetaVM was **not** part of the v2.1.0.25 post-quantum migration. That release moved Quilibrium's state trees to Merkle and its consensus signatures to Falcon, but MetaVM is a separate subsystem and still uses KZG over BLS48-581 and BLS12-381, as described throughout this document. See [Post-Quantum Cryptography Migration](Post-Quantum-Cryptography-Migration.md).
 
 ### Key Capabilities
 

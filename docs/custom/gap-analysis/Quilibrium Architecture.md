@@ -1,7 +1,7 @@
 ---
 title: Quilibrium Architecture
 source: codebase_analysis
-date: 2025-01-28
+date: 2026-08-23
 type: technical_reference
 ---
 
@@ -160,10 +160,15 @@ Distributed graph structure:
 
 ##### Cryptographic Layer (`crypto/`)
 
-Shared across all processes via Rust bindings:
-- **Proof Trees**: Verkle tree structures
+Shared across all processes via Rust bindings (as of v2.1.0.25):
+- **Proof Trees**: A three-tier authenticated Merkle forest built on Jellyfish Merkle Trees, using SHA-256 hash commitments
+- **Signatures**: Falcon (FN-DSA-512), for consensus signing and peer identity
+- **Key exchange**: sntrup761 (Streamlined NTRU Prime), for transport and config read keys
+- **Storage proofs**: KZG openings over BLS48-581, with the frame VDF output deriving the challenge
 - **Channel Crypto**: Secure E2EE communication
 - **Integration**: CGO bindings to Rust libraries and interfaces
+
+See [Post-Quantum Cryptography Migration](../Post-Quantum-Cryptography-Migration.md) for detail.
 
 #### 2. Client Module (`/client/`)
 

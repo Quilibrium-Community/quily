@@ -51,7 +51,6 @@ topics:
   - shard bundle
   - re-bundling
   - 32 provers
-  - verkle tree
   - logical shards
 ---
 
@@ -176,7 +175,7 @@ The practical takeaway: reward per prover falls as the network's stored state gr
 
 ## Shards and Bundles
 
-- A **shard** is a logical division in a **64-ary verkle tree**, giving **4,096 possible logical shard slots**.
+- A **shard** is a logical division of the network's state tree. Since **v2.1.0.25** that tree is a three-tier Merkle forest built on Jellyfish Merkle Trees: 256 global trees at the top, then a shard-commitment tree per app, then the per-shard state trees. See [Post-Quantum Cryptography Migration](Post-Quantum-Cryptography-Migration.md).
 - A **shard bundle** groups logical shards under one unit identifier. As of the 2.1 Bloom reference, bundles run around **6 GB** each with roughly **14 active**.
 - **Re-bundling (subdivision) triggers at 32 provers** on a bundle, because 32 is exactly four full rings of 8.
 - Subdivision is **driven by prover density**, not by data volume alone.

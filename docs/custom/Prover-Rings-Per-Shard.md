@@ -1,7 +1,7 @@
 ---
 title: "Prover Rings Per Shard — How Many Can Exist?"
 source: Community Contribution (Issue #70), updated from 2.1 Bloom epoch reference (Issue #112)
-date: 2026-08-21
+date: 2026-08-23
 type: faq
 topics:
   - prover rings
@@ -42,7 +42,7 @@ The Quilibrium network is **sharded across three tiers** (per the 2024-09-09 liv
 - **Tier 2 (core / app shards):** 65,536 core shards (or more — depends on fragmentation)
 - **Tier 3 (data blocks):** actual data
 
-> **Historical context (as of 2024-09-09):** The tier numbers above describe the 2.0-era architecture. The 2.1 Bloom reference describes the shard space differently: a **64-ary verkle tree with 4,096 logical shard slots**, grouped into **shard bundles** (~6 GB each, roughly 14 active). These are not contradictory descriptions of the same thing so much as two different eras and two different levels of description. **For anything about current shard structure, prefer the 2.1 figures.**
+> **Era note (updated 2026-08-23):** The tier numbers above describe the 2.0-era architecture and are historical. Since **v2.1.0.25** the state tree is a three-tier Merkle forest built on Jellyfish Merkle Trees: 256 global trees, then a shard-commitment tree per app, then the per-shard state trees. Logical shards are grouped into **shard bundles** of roughly 6 GB each, with about 14 active. The bundle figures still hold; the tree shape is what changed. See [Post-Quantum Cryptography Migration](Post-Quantum-Cryptography-Migration.md).
 
 Each tier can have **prover rings** around it — groups of nodes that verify data at that shard level. Two key dynamics:
 
@@ -99,4 +99,4 @@ If you need a definitive answer on a maximum or a protocol cap, the right move i
 
 ---
 
-*Last updated: 2026-08-21*
+*Last updated: 2026-08-23*

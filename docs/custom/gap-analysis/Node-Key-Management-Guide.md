@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Key Management — Types, Operations, Security & Custody Guide"
 source: official_docs_synthesis
-date: 2026-02-24
+date: 2026-08-23
 type: technical_reference
 topics:
   - key management
@@ -67,21 +67,25 @@ Prior to qclient 2.1, configs were created in a `.config` directory relative to 
 
 ## Key Types and Their Purposes
 
-Quilibrium supports four cryptographic key types, each serving a distinct role in the network:
+Quilibrium defines several cryptographic key types, each serving a distinct role in the network. **Node release v2.1.0.25 changed which algorithm backs the network-facing roles**, so what your keyset holds depends on your node version.
 
 | Key Type | Algorithm | Primary Purpose | Typical Use Cases |
 |----------|-----------|-----------------|-------------------|
-| `ed448` | Edwards Curve (Ed448) | Identity and signing | Identity keys, transaction signing, message signatures |
-| `x448` | Edwards Curve (X448) | Encryption and messaging | Data encryption in the hypergraph, messaging inbox keys |
+| `falcon512` | Falcon / FN-DSA-512 (post-quantum) | Network identity, signing, prover operations | Peer identity, consensus signatures, prover enrollment. **Mandatory network identity from v2.1.0.25** |
+| `sntrup761` | Streamlined NTRU Prime KEM (post-quantum) | Encryption and key agreement | Config read keys, transport key exchange, onion routing. **From v2.1.0.25** |
 | `decaf448` | Decaf | Token operations | View and spend tokens |
-| `bls48581` | BLS-48-581 | Prover operations | Prover enrollment, deployment administration |
+| `ed448` | Edwards Curve (Ed448) | Identity and signing | The pre-v2.1.0.25 identity key. Still a defined key type and still used by existing keysets |
+| `x448` | Edwards Curve (X448) | Encryption and messaging | The pre-v2.1.0.25 encryption key. Still a defined key type |
+| `bls48581` | BLS-48-581 | Prover and storage proofs | The pre-v2.1.0.25 prover key. Still used by the storage-attestation path |
 
-These four key types map to four functional roles in the network:
+How these map to functional roles **on a v2.1.0.25 node**:
 
-- **Identity keys (ed448)** -- Represent your identity on the network. Used to authenticate and sign transactions.
-- **Encryption keys (x448)** -- Encrypt and decrypt data stored in the hypergraph. Also used for receiving encrypted messages (inbox keys).
-- **Spend keys (decaf448)** -- Required for token view and spend operations.
-- **Prover keys (bls48581)** -- Used by node operators for prover enrollment and deployment administration.
+- **Identity and peer keys (falcon512)** -- Represent your identity on the network. Used to authenticate and sign. Replaced Ed448.
+- **Encryption and config read keys (sntrup761)** -- Encrypt data others write for you, and carry the transport key exchange. Replaced X448.
+- **Spend keys (decaf448)** -- Required for token view and spend operations. Unchanged; the post-quantum replacement exists in the repo but is pre-audit and not yet on the node's code path.
+- **Prover keys (falcon512)** -- Prover enrollment and deployment administration. Replaced BLS48-581 for signing, though BLS48-581 remains in use for storage-possession proofs.
+
+Older key types were not deleted from the codebase, so existing keysets and older command syntax are not automatically invalid. Run `qclient key --help` on your installed version to see the exact type names it accepts. See [Post-Quantum Cryptography Migration](../Post-Quantum-Cryptography-Migration.md).
 
 ### Peer ID vs Prover Seniority — Key Distinction
 
@@ -623,4 +627,4 @@ After merging, the network calculates your combined seniority from the merged ke
 **Q: What custody model should I use?**
 For most individual node operators, standard warm custody (direct key usage) is sufficient. Cold custody is recommended for high-value accounts or institutional operations. MPC custody is for organizations requiring distributed signing authority across multiple parties.
 
-*Last updated: 2026-03-21*
+*Last updated: 2026-08-23*
