@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-08-23
+date: 2026-08-24
 type: release_notes
 topics:
   - release notes
@@ -16,10 +16,26 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** August 23, 2026
+**Last updated:** August 24, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
+
+## v2.1.0.24 (version .24) *(auto-generated)*
+- fix race condition where initial sync failure left workers permanently idle
+- fix patch number synchronization with config
+- fix transaction safety for hypergraph store writes
+- make lazy tree commit retry-safe by deferring dirty state clearing until transaction commit
+- make compute_shard_root read-only to prevent unintended writes outside transactions
+- require RocksTxn for hypergraph store writes, removing silent direct-write fallback
+- handle node leaving scenario with store wipe
+- reduce score differential basis for flagging leave-to-join opportunities
+- extend scoring-based leave window to a full cycle
+- adjust margins on decisions and thresholds for decides and joins
+- adjust snapshotting to use actual RocksDB snapshots
+- resolve unsynced leave issuance condition
+- reapply Docker build optimizations to Dockerfile.source
+- enable lagging archive nodes to rejoin consensus by syncing proposals from peers
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - reconcile old and new config paths
@@ -28,13 +44,13 @@ This document tracks changes in each Quilibrium node release.
 - fix app shard lookups on mainnet
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
-- allow debug mode via environment variable
-- fix newPebbleDB constructor config parameter
-- fix high CPU overhead in initial worker behaviors and ongoing sync
-- add extra data to node info and query metrics from command line
 - leave proposals for overcrowded shards
-- implement hub-and-spoke global message broadcasts
-- tweak cli output for join frames
+- hub-and-spoke global message broadcasts
+- allow debug env var to be read
+- fix high CPU overhead in initial worker behaviors / ongoing sync
+- fix `newPebbleDB` constructor config param
+- add extra data to node info, and query metrics from command line
+- small tweaks to cli output for join frames
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
