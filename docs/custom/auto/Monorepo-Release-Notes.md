@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-08-24
+date: 2026-08-25
 type: release_notes
 topics:
   - release notes
@@ -16,41 +16,97 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** August 24, 2026
+**Last updated:** August 25, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
 ## v2.1.0.24 (version .24) *(auto-generated)*
-- fix race condition where initial sync failure left workers permanently idle
-- fix patch number synchronization with config
-- fix transaction safety for hypergraph store writes
-- make lazy tree commit retry-safe by deferring dirty state clearing until transaction commit
-- make compute_shard_root read-only to prevent unintended writes outside transactions
-- require RocksTxn for hypergraph store writes, removing silent direct-write fallback
-- handle node leaving scenario with store wipe
-- reduce score differential basis for flagging leave-to-join opportunities
-- extend scoring-based leave window to a full cycle
-- adjust margins on decisions and thresholds for decides and joins
-- adjust snapshotting to use actual RocksDB snapshots
+- fix transaction safety for hypergraph store writes, making lazy tree commit retry-safe and compute_shard_root read-only
+- resolve race where initial sync failout leaves workers idle forever until reboot
+- fix patch number sync with config
+- handle leaving scenario with store wipe
+- reduce score differential basis for flagging leave-to-join opportunities, extend scoring-based leave window to a full cycle
+- adjust margins on decisions and threshold for decides and joins
+- adjust snapshotting to use actual rocksdb snapshots
 - resolve unsynced leave issuance condition
-- reapply Docker build optimizations to Dockerfile.source
-- enable lagging archive nodes to rejoin consensus by syncing proposals from peers
+- reapply docker build optimizations to Dockerfile.source
+- consensus: rejoin a lagging archive by syncing proposals from peers
+
+## v2.1.0.22 (version .22) *(auto-generated)*
+- improved prover commands to show worker id
+- relaxed peerstore clearing interval
+- component-level logger tuning
+- prover management TUI adds manual management tracking and specifies joins by worker id
+- optimized TUI performance
+- fixed dbscan compiler error
+- log shard allocation join confirm/reject and plan leave details
+- default archive peer list
+- fixed prover eviction bug
+- improved prover visibility when leaving is implicitly accepted
+- fixed prover leaving status in event distributor
+- renamed "pending" to "joining"
+- fixed merge spend marker
+- fixed sorting/ring position issues in TUI
+- fixed render width for [M] marker
+- timereel behavior now accepts new head immediately
+- added timeout for global frame fetch
+- added lru cache to getglobalframe handler
+- adjusted estimation behavior to properly calculate ring position and membership set
+- fixed worker TUI reward calculation and logical shard count
+- reduced bandwidth on app worker
+- auto-sized filters
+- optimized logging for plan/decide and confirm/reject for shard joins and leaves
+- fixed dynamic filter width
+- blossomsub improvements and estimate/hard calc changes
+- migration fixes for eviction issue
+- refactored global consensus engine into discrete components
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - reconcile old and new config paths
 - fix formatting/precision on prover reward data
-- fix possible peering issue
+- address peering issue
 - fix app shard lookups on mainnet
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
+- allow debug level to be set via environment variable
+- fix PebbleDB constructor config parameter
+- fix high CPU overhead in initial worker behaviors and ongoing sync
+- add extra data to node info and query metrics from command line
 - leave proposals for overcrowded shards
-- hub-and-spoke global message broadcasts
-- allow debug env var to be read
-- fix high CPU overhead in initial worker behaviors / ongoing sync
-- fix `newPebbleDB` constructor config param
-- add extra data to node info, and query metrics from command line
-- small tweaks to cli output for join frames
+- use hub-and-spoke for global message broadcasts
+- tweak CLI output for join frames
+
+## v2.1.0.19 (version .19) *(auto-generated)*
+- fix seniority marker join blocker and sync message size limit defaults
+- resolve signature failure
+- fix one-shot sync message size, app shard TC signature size, collector/hotstuff race condition, and expired joins blocking new joins due to pruning disable
+- remove compatibility with old 2.0.0 blossomsub
+- resolve abandoned prover joins and reload prover registry
+- fix stale worker proposal edge
+- add full sanity check on join before submission
+- resolve non-fallthrough condition that should be fallthrough
+- fix rare SIGFPE and orphan expired joins blocking worker reallocation
+- add reconnect fallback with variable reconnect time if no peers found
+- update base peer count to 1
+- fix expired prover join frames, starting port ranges, proposer getting stuck, and seniority on joins
+- fix panic on shutdown, libp2p discovery picking inaccessible peers, coverage event check not in shutdown logic, and amend app shard worker behavior for prover root reconciliation
+- fix shutdown scenario quirks and reload hanging
+- do not bailout early on shutdown of coverage check
+- force registry refresh on worker waiting for registration
+- fix worker manager refreshing filter on allocation and snapshots blocking close on shutdown
+- force shutdown after five seconds for app worker
+- don't loop when shutting down
+- fix slight reordering and add named workers to trace hanging shutdowns
+- use deterministic key for peer id of workers to stop flagging workers as sybil attacks
+- remove pubsub stop from app consensus engine and integrate shutdown context to PerformSync
+- fix blossomsub pubsub interface not properly tracking subscription status
+- fix subscribe order to avoid nil panic
+- switch from dnsaddr to dns4
+- add missing quic-v1
+- fix dnsaddr to dns4 for blossomsub
+- apply sledgehammer to restart logic
+- fix restore proper respawn logic, fix frozen hypergraph post respawn, and unsubscribe from bitmask previously missing
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
