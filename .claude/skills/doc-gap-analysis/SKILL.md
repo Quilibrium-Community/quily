@@ -334,11 +334,22 @@ Template structure:
 - **Common use cases**: Practical applications
 - **FAQ section**: Likely user questions with clear answers
 - **What it cannot do / limitations**: Explicit non-capabilities
-- **Cross-references**: Links to related docs
+- **Cross-references**: cite inline, next to the claim each link supports. Do **not**
+  end the doc with a "Related docs" or "External sources" list. If the splitter leaves
+  that list isolated it spends a retrieval slot on something that can answer nothing,
+  and whether it isolates changes as the doc grows, so the rule is unconditional. If a
+  pointer to a sibling doc is worth keeping, write it as a sentence that states the
+  fact the sibling establishes, then name the file, and put it **in the body** rather
+  than in a new trailing section. `doc:lint` flags the obvious cases as
+  `link-appendix`, but it is a heuristic and a green run is not proof of compliance.
+  See the `add-doc` skill's "Write for the chunk" section for the full rule and the
+  known gaps.
 
 5. Write to `docs/custom/gap-analysis/` with a descriptive filename (e.g., `QStorage-Overview.md`)
-6. Update the audit log: mark all related official doc files as `status: "covered"` with a reference to the new custom doc
-7. Run `python "$HOME/.agents/skills/docs-manager/update-index.py" .`
+6. Run `yarn doc:lint docs/custom/gap-analysis/<file>.md` and fix anything it flags
+   (`one-sided-lead`, `link-appendix`) before moving on
+7. Update the audit log: mark all related official doc files as `status: "covered"` with a reference to the new custom doc
+8. Run `python "$HOME/.agents/skills/docs-manager/update-index.py" .`
 
 </process>
 

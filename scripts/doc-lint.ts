@@ -123,8 +123,19 @@ async function main() {
   } else {
     console.log(`${issues.length} issue(s):`);
     issues.forEach((x) => console.log(`  ⚠ chunk ${x.chunk}: ${x.message}`));
-    console.log('\nUsual fix: put a compact both-sides summary near the top, inside a single');
-    console.log('table row or paragraph, so any chunk that surfaces carries the whole claim.');
+
+    // Advice is per-kind. A single generic line taught the wrong fix for whichever
+    // issue the reader did not have.
+    if (issues.some((x) => x.kind === 'one-sided-lead')) {
+      console.log('\none-sided-lead → put a compact both-sides summary near the top, inside a');
+      console.log('single table row or paragraph, so any chunk that surfaces carries the whole claim.');
+    }
+    if (issues.some((x) => x.kind === 'link-appendix')) {
+      console.log('\nlink-appendix → move each link next to the claim it supports, so it travels');
+      console.log('in the same chunk as the sentence it proves, and drop the standalone list. If');
+      console.log('pointers to sibling docs are still wanted, write them as sentences that state a');
+      console.log('fact, so the chunk teaches something even when it surfaces alone.');
+    }
   }
 
   process.exit(STRICT && issues.length > 0 ? 1 : 0);

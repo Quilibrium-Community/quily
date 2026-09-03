@@ -189,10 +189,65 @@ Practical rules:
   The lead chunk holds the title and is what broad queries land on first.
 - **Let topic-scoped sections be one-sided**, but have them point at the other
   side in their first line.
+- **Never end with a "Related docs" / "External sources" link list.** Cite inline
+  instead: put each link next to the claim it supports, so it travels in the same
+  chunk as the sentence it proves.
+
+> **Why the link appendix is a bug, not a tidy habit.** If the splitter leaves the
+> list isolated, that chunk spends one of the document's limited retrieval slots on
+> something that can answer nothing. And URLs are not semantically inert: a list
+> containing `getmonero.org/2024/04/27/fcmps.html` can outrank the section that
+> actually explains membership proofs, handing the model links instead of facts.
+> The failure is silent, because the bot just hedges.
+>
+> Measured 2026-09-03 while drafting `Privacy-Pools-vs-Quilibrium-Privacy.md`: its
+> appendix chunked out on its own with 39 words of prose against 9 links, the
+> lowest prose-to-link ratio of any chunk in the 59 authored docs.
+>
+> Sweeping the corpus for the same shape found 5 more docs ending in
+> `Related Topics`, `Related Documents` or `See Also` lists; all were rewritten.
+>
+> **Whether it isolates is luck, which is why the rule is unconditional.** The
+> splitter merges greedily, so a short list may be absorbed into the section above
+> it today and split off tomorrow when someone adds a paragraph. Do not reason about
+> whether your appendix "will" isolate. Just cite inline.
+>
+> If you still want pointers to sibling docs, **write them as sentences that state
+> the fact the sibling establishes**, then name the file. That chunk then teaches
+> something even when it surfaces alone.
 
 `yarn doc:lint` runs the real ingest chunker over the file and shows the chunks a
-retriever will actually see, flagging a lead chunk skewed toward "this does not
-work". Add `--full` to print whole chunk bodies, `--strict` to exit non-zero.
+retriever will actually see. It flags a lead chunk skewed toward "this does not
+work" (`one-sided-lead`) and a document that ends in a reference list
+(`link-appendix`). Add `--full` to print whole chunk bodies, `--strict` to exit
+non-zero.
+
+`link-appendix` reads the document's own section structure rather than the chunk
+layout, so its answer does not change when a paragraph above the appendix grows.
+
+**A green run is not proof of compliance.** It is a three-threshold heuristic, and
+these all pass it silently (measured 2026-09-03): an appendix written with setext
+headings (`Related docs` over `-----`); a blockquoted appendix; any short link-free
+section placed after the appendix, which stops the backwards walk; and a list whose
+glosses run past roughly twelve words per link. That last one matters, because
+padding glosses is the wrong way to satisfy this rule. The point is to move each
+link beside its claim, not to write longer labels.
+
+Its `one-sided-lead` sibling is noisier: it counts availability phrases, so a doc
+carrying a correct both-sides summary can still trip it when the "not live" half
+naturally uses more such phrases than the "live" half. Read the flagged chunk
+before acting on that one, and never reword accurate copy just to satisfy the
+counter.
+
+> **Do not replace an appendix with a new trailing prose section.** That is the trap
+> the first attempt at this fell into: rewriting `## Related docs` into a
+> `## Where to look next` paragraph cleared the lint while still leaving a pure
+> pointer section at the end, which then chunked out on its own and produced exactly
+> the dead retrieval slot the rule exists to prevent. It also pushed a one-chunk doc
+> to two chunks, creating the problem where none had existed. Put each link **in the
+> body**, beside the sentence it supports. Most of the time the link is already
+> there and the appendix was pure duplication: of the five docs cleaned up on
+> 2026-09-03, three had every appendix link already cited inline.
 
 You do not have to remember to run it: `yarn ingest:run` reports the same thing
 across every hand-authored doc on every run. It never blocks ingestion.

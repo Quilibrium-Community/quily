@@ -18,6 +18,34 @@ function hashContent(content: string): string {
 }
 
 /**
+ * Character ranges covered by fenced code blocks, as [start, end) offsets into the
+ * original content. Offsets are preserved rather than stripping the fences, because
+ * buildHeadingMap keys its results by position in the untouched string.
+ */
+function fencedRanges(content: string): [number, number][] {
+  const ranges: [number, number][] = [];
+  let fence: string | null = null;
+  let fenceStart = 0;
+  let offset = 0;
+  for (const line of content.split('\n')) {
+    const m = line.match(/^\s{0,3}(`{3,}|~{3,})/);
+    if (fence === null) {
+      if (m) {
+        fence = m[1];
+        fenceStart = offset;
+      }
+    } else if (m && m[1][0] === fence[0] && m[1].length >= fence.length) {
+      ranges.push([fenceStart, offset + line.length + 1]);
+      fence = null;
+    }
+    offset += line.length + 1; // +1 for the newline consumed by split
+  }
+  // An unterminated fence runs to the end of the document.
+  if (fence !== null) ranges.push([fenceStart, content.length]);
+  return ranges;
+}
+
+/**
  * Extract heading hierarchy from markdown content
  * Returns a map of content position -> heading path
  */
@@ -25,9 +53,17 @@ function buildHeadingMap(content: string): Map<number, string> {
   const headingMap = new Map<number, string>();
   const headingStack: { level: number; text: string }[] = [];
   const headingRegex = /^(#{1,6})\s+(.+)$/gm;
+  const fenced = fencedRanges(content);
 
   let match;
   while ((match = headingRegex.exec(content)) !== null) {
+    // A `# comment` inside a shell block is not a heading. Without this, the stored
+    // heading_path for Cluster-Configuration-Guide.md read "On each worker machine,
+    // start the worker with --core > Important Notes". prompt.ts falls back to
+    // heading_path for a chunk's source label when frontmatter has no title, so this
+    // is user-visible for any doc lacking one.
+    if (fenced.some(([start, end]) => match!.index >= start && match!.index < end)) continue;
+
     const level = match[1].length;
     const text = match[2].trim();
 
