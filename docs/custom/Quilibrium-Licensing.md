@@ -188,9 +188,11 @@ own LICENSE file: it may be considerably more permissive than the repository-lev
 
 ## Klearu's Additional Terms
 
-Klearu is the one project that departs meaningfully from standard AGPL. It is AGPL-3.0 **plus
-additional terms under Section 7 of the AGPL**, which the license states shall prevail in the event of
-conflict. The repository's own README summarises it as:
+Klearu (described in the official docs under
+[network intrinsics](https://docs.quilibrium.com/docs/learn/network-intrinsics/klearu)) is the one
+project that departs meaningfully from standard AGPL. It is AGPL-3.0 **plus additional terms under
+Section 7 of the AGPL**, which the license states shall prevail in the event of conflict. The
+repository's own README summarises it as:
 
 > "AGPL-3.0 with additional terms. Commercial use is restricted to the Quilibrium mainnet. Automated
 > reproduction (including LLM-assisted 'clean room' reimplementation) for commercial substitutes is
@@ -254,11 +256,5 @@ it over a network and you do not distribute it, AGPL imposes no publication obli
 Quilibrium node participates in the network by definition, and the official docs treat client
 modifications by node operators as carrying an upstream contribution obligation.
 
-## Related Topics
-
-- **Where the source lives**: [Quilibrium Public Repositories](https://github.com/Quilibrium-Community/quily/blob/main/docs/custom/Quilibrium-Public-Repositories.md)
-- **Klearu overview**: [Klearu](https://docs.quilibrium.com/docs/learn/network-intrinsics/klearu)
-- **Why open governance matters**: [The Illusion of Decentralization in Crypto](https://docs.quilibrium.com/docs/discover/the-illusion-of-decentralization-in-crypto-and-quilibriums-radical-alternative)
-
 ---
-*Last updated: 2026-08-11*
+*Last updated: 2026-09-03*

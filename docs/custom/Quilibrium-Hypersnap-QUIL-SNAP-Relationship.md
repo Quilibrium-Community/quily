@@ -175,14 +175,21 @@ Note that Cassie has said she deliberately avoids pre-announcing token dates bec
 
 ---
 
-## Related Documents
+## Where to look next
 
-- [HyperSnap: Why Quilibrium Forked Farcaster](HyperSnap-Origin-Story.md) — the full fork story
-- [HyperSnap technical reference](gap-analysis/Hypersnap.md) — architecture, Hyper Mode, dual pipeline, CLI
-- [Quorum's Farcaster Integration](Quorum-Farcaster-Integration.md) — the actual integration point
-- [QUIL Token Quick Reference](QUIL-Token-Quick-Reference.md) — the $QUIL side
-- [Epochs and Frames](Epochs-And-Frames.md) — Quilibrium's epoch clock, not Hypersnap's
-- Livestream transcript, 2026-05-01 — Cassie on Farcaster history, the Hypersnap fork and token incentives
+HyperSnap began as a fork of Farcaster rather than a social protocol built from scratch. Q Inc.
+triggered that fork, but the project that came out of it is deliberately independent and is **not a
+Q Inc product**; the reasons for the fork are set out in
+[HyperSnap: Why Quilibrium Forked Farcaster](HyperSnap-Origin-Story.md). The fork's architecture,
+including Hyper Mode, the dual pipeline and the CLI, is documented separately in the
+[HyperSnap technical reference](gap-analysis/Hypersnap.md). The place where this actually reaches users
+is Quorum, whose [Farcaster integration](Quorum-Farcaster-Integration.md) is the real integration point
+rather than anything in the token layer. On the token side, $QUIL and $SNAP are distinct assets with
+distinct purposes, and the $QUIL facts are collected in the
+[QUIL Token Quick Reference](QUIL-Token-Quick-Reference.md). One point of frequent confusion is timing:
+HyperSnap's cadence is not Quilibrium's, and Quilibrium's own epoch clock is explained in
+[Epochs and Frames](Epochs-And-Frames.md). Cassie discussed the Farcaster history, the fork and the
+token incentives directly in the livestream of 2026-05-01, transcribed in `docs/transcriptions/`.
 
 ---
 

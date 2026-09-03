@@ -91,8 +91,14 @@ These are the relevant `config.yml` engine settings for cluster deployments:
 - Port ranges must be opened on firewalls for all worker machines.
 - Follow the 1:2:4 golden ratio (1 thread : 2 GB RAM : 4 GB storage) when sizing workers per machine.
 
-## See Also
+## Where to look next
 
-- [Advanced Configuration](https://docs.quilibrium.com/run-node/advanced-configuration) — full engine section reference
-- [System Requirements](https://docs.quilibrium.com/run-node/system-requirements) — hardware sizing and worker count guidance
-- [Port Range Change](https://docs.quilibrium.com/run-node/port-range-change) — port migration details for 2.1.0.19+
+The `engine` section of the config file carries many more keys than the cluster-relevant ones listed
+above, and the complete reference is in
+[Advanced Configuration](https://docs.quilibrium.com/run-node/advanced-configuration). How many workers
+a given machine should run follows from the 1:2:4 ratio noted above applied to that machine's actual
+hardware, and the sizing guidance is in
+[System Requirements](https://docs.quilibrium.com/run-node/system-requirements). Nodes on 2.1.0.19 and
+later use different default port ranges than earlier releases, so an existing cluster's firewall rules
+may need migrating; that change is described in
+[Port Range Change](https://docs.quilibrium.com/run-node/port-range-change).

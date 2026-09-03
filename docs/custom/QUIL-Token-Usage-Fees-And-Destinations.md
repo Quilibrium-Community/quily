@@ -130,7 +130,9 @@ This is a common source of confusion. QConsole services are priced in **USD**, n
 | F(x) | Requests | Free |
 
 There is a **5 GB free storage tier with no time limit.** Payment is accepted in wQUIL, USDC, or fiat
-by credit card, with crypto converted at the market rate at time of billing.
+by credit card, with crypto converted at the market rate at time of billing; the mechanics of adding
+funds to an account are described in
+[QConsole Account Credits and Deposits](https://github.com/Quilibrium-Community/quily/blob/main/docs/custom/QConsole-Account-Credits-Deposits.md).
 
 Because pricing is USD-denominated, **there is no fixed "QUIL cost" for a QConsole service** — the QUIL
 amount for a given workload moves with the market price. This is a different mechanism from protocol
@@ -149,18 +151,13 @@ gas fees, which are denominated in QUIL directly.
 - **Circulating supply** was approximately 1.3 billion as of the figure published in the official
   tokenomics page; projected inflation to 1.6–1.7 billion by 2033. See the
   [dashboard](https://dashboard.quilibrium.com/) for the live number.
-- **wQUIL** is the Ethereum-bridged form, contract `0x8143182a775C54578c8B7b3Ef77982498866945D`.
+- **wQUIL** is the Ethereum-bridged form, contract `0x8143182a775C54578c8B7b3Ef77982498866945D`. The
+  exchange listings and market trackers for it are collected in the
+  [QUIL Token Quick Reference](https://github.com/Quilibrium-Community/quily/blob/main/docs/custom/QUIL-Token-Quick-Reference.md)
+  rather than repeated here.
 
 QUIL is a utility token. Quilibrium Inc. does not endorse or facilitate trading activity in QUIL or
 wQUIL.
-
-## Related Topics
-
-- **Token quick facts, contract address, exchanges**: [QUIL Token — Quick Reference](https://github.com/Quilibrium-Community/quily/blob/main/docs/custom/QUIL-Token-Quick-Reference.md)
-- **Full emissions model and generations**: [Quilibrium Tokenomics](https://docs.quilibrium.com/docs/discover/quilibrium-tokenomics)
-- **Fee market detail**: [Gas Fees and Dynamic Fee Market](https://docs.quilibrium.com/docs/discover/gas-fees-and-dynamic-fee-market-on-quilibrium)
-- **Service pricing and worked cost examples**: [QConsole Pricing and Website Hosting Cost Estimates](https://github.com/Quilibrium-Community/quily/blob/main/docs/custom/QStorage-Pricing-Estimates.md)
-- **Funding a QConsole account**: [QConsole Account Credits and Deposits](https://github.com/Quilibrium-Community/quily/blob/main/docs/custom/QConsole-Account-Credits-Deposits.md)
 
 ---
 *Last updated: 2026-08-11*
