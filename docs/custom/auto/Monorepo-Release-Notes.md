@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-09-03
+date: 2026-09-04
 type: release_notes
 topics:
   - release notes
@@ -16,64 +16,68 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** September 3, 2026
+**Last updated:** September 4, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
 ## v2.1.0.24 (version .24) *(auto-generated)*
-- fix race condition where initial sync failout leaves workers idle until reboot
-- fix transaction safety for hypergraph store writes, making lazy-tree commit retry-safe and compute_shard_root read-only
-- handle leaving scenario with store wipe
+- fix: transaction safety for hypergraph store writes – uses actual RocksDB transactions throughout, aborted transactions no longer leak partial writes to disk
+- fix: make LazyVectorCommitmentTree::commit retry-safe – defers dirty-state clearing until after the surrounding transaction commits, allowing safe retries on abort
+- fix: make compute_shard_root read-only – extracts read-only root computation from commit, preventing accidental writes during master-stream sync
+- refactor: require RocksTxn for hypergraph store writes – removes silent direct-write fallback that masked transaction bugs
+- fix: resolve sync race condition where initial failout of sync doomed workers to idle forever until reboot
+- fix: handle leaving scenario with store wipe
 - reduce score differential basis for flagging leave-to-join opportunities, extend scoring-based leave window to a full cycle
-- adjust margins on decisions and thresholds for decides and joins
-- adjust snapshotting to use actual rocksdb snapshots
-- resolve unsynced leave issuance condition
-- reapply docker build optimizations to Dockerfile.source
-- enable a lagging archive to rejoin consensus by syncing proposals from peers
+- adjust margins on thresholds for decides and joins
+- adjust snapshotting to use actual RocksDB snapshots
+- fix: resolve unsynced leave issuance condition
+- reapply docker build optimizations to Dockerfile.source – consolidates gen stages into one, restores cargo/Go cache mounts
+- consensus: implement rejoin for lagging archives by syncing proposals from peers – ports Go node's catch-up path, adds GetGlobalProposal endpoint, triggers orphan resolution via SyncTriggerHook
 
-## v2.1.0.23 (version .23) *(auto-generated)*
-- fix docker build issue
-- force static linking for flint/mpfr and libchannel builds
-- fix standalone worker connection string derivation and worker logging to own files
-- resolve domain separation bug causing invalid signatures
-- fix leaving prover bug in worker allocator
-- resolve worker storage location bug
-- handle orphaned allocations and allocations on zero byte shards
-- fix shard store discrepancy and stale 0 frame data response
-- fix expired leaves not treated as confirmed in proposal logic and worker allocator
-- resolve race condition with overlapping join submissions
-- fix propose skip on coverage halts
-- fix halt risk calculation, 67% barrier, and leave planning issues
-- resolve worker persistence issue
-- add missing worker_ids field
-- fix autonat bug crashing worker threads
-- fix too many streams and kad-dht stream connection issues
-- adjust blossomsub parameters
-- use sha3 for prover join vdf verifier
-- support archive endpoints config in rust node
-- support white spaces in genesis seed for testnets
-- fix TUI quirks and manual mode message submission
-- cache requests so available shards don't flash
-- fix peer info canonicalization and key-to-address inconsistencies
-- propagate errors from subsystems
-- fix memory OOM by adjusting stores and allocator
-- improve rust and docker build times
+## v2.1.0.22 (version .22) *(auto-generated)*
+- improved prover commands, show worker id
+- relaxed peerstore clearing interval
+- component-level logger tuning
+- prover management TUI adds manual management tracking and specifies joins by worker id
+- optimized TUI performance
+- fixed dbscan compiler error
+- log shard allocation join confirm/reject and plan leave details
+- default archive peer list
+- fixed prover eviction bug
+- prover visibility improvements when leaving is implicitly accepted
+- fixed prover leaving status in event distributor
+- renamed pending to joining
+- fixed merge spend marker
+- fixed sorting/ring position issues in TUI
+- fixed render width for [M] marker
+- timereel behavior accepts new head immediately
+- added timeout for global frame fetch
+- added lru cache to getglobalframe handler
+- adjusted estimation behavior for ring position and membership set
+- worker TUI reward calc and logical shard count fixes, bandwidth reduction on app worker
+- auto-sized filters
+- optimized logging for shard join and leave plan/decide/confirm/reject
+- fixed dynamic filter width
+- blossomsub improvements, estimate/hard calc changes
+- migration fixes for eviction issue
+- refactored global consensus engine into discrete components, updated tests
+- adjusted rpc/worker ring display
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - reconcile old and new config paths
 - fix formatting/precision on prover reward data
-- apply possible solution to peering issue
+- address peering issue
 - fix app shard lookups on mainnet
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
-- allow debug environment variable to be read
-- fix configuration parameter for new pebble db constructor
-- fix high cpu overhead in initial worker behaviors and ongoing sync
+- enable debug output via `DEBUG` environment variable
+- fix PebbleDB constructor configuration parameter
+- fix high CPU overhead in initial worker behaviors and ongoing sync
 - add extra data to node info and query metrics from command line
 - leave proposals for overcrowded shards
 - implement hub-and-spoke global message broadcasts
-- tweak cli output for join frames
+- tweak CLI output for join frames
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
