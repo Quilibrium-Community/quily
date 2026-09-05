@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-09-04
+date: 2026-09-05
 type: release_notes
 topics:
   - release notes
@@ -16,68 +16,66 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** September 4, 2026
+**Last updated:** September 5, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
 ## v2.1.0.24 (version .24) *(auto-generated)*
-- fix: transaction safety for hypergraph store writes – uses actual RocksDB transactions throughout, aborted transactions no longer leak partial writes to disk
-- fix: make LazyVectorCommitmentTree::commit retry-safe – defers dirty-state clearing until after the surrounding transaction commits, allowing safe retries on abort
-- fix: make compute_shard_root read-only – extracts read-only root computation from commit, preventing accidental writes during master-stream sync
-- refactor: require RocksTxn for hypergraph store writes – removes silent direct-write fallback that masked transaction bugs
-- fix: resolve sync race condition where initial failout of sync doomed workers to idle forever until reboot
-- fix: handle leaving scenario with store wipe
-- reduce score differential basis for flagging leave-to-join opportunities, extend scoring-based leave window to a full cycle
-- adjust margins on thresholds for decides and joins
-- adjust snapshotting to use actual RocksDB snapshots
-- fix: resolve unsynced leave issuance condition
-- reapply docker build optimizations to Dockerfile.source – consolidates gen stages into one, restores cargo/Go cache mounts
-- consensus: implement rejoin for lagging archives by syncing proposals from peers – ports Go node's catch-up path, adds GetGlobalProposal endpoint, triggers orphan resolution via SyncTriggerHook
+- fix race where initial failout of sync leaves workers permanently idle (until reboot)
+- fix patch number sync with config
+- fix transaction safety for hypergraph store writes – aborted transactions no longer persist partial writes
+- make lazy tree commit retry-safe – a failed transaction no longer leaves the in-memory tree inconsistent, allowing safe retry
 
-## v2.1.0.22 (version .22) *(auto-generated)*
-- improved prover commands, show worker id
-- relaxed peerstore clearing interval
-- component-level logger tuning
-- prover management TUI adds manual management tracking and specifies joins by worker id
-- optimized TUI performance
-- fixed dbscan compiler error
-- log shard allocation join confirm/reject and plan leave details
-- default archive peer list
-- fixed prover eviction bug
-- prover visibility improvements when leaving is implicitly accepted
-- fixed prover leaving status in event distributor
-- renamed pending to joining
-- fixed merge spend marker
-- fixed sorting/ring position issues in TUI
-- fixed render width for [M] marker
-- timereel behavior accepts new head immediately
-- added timeout for global frame fetch
-- added lru cache to getglobalframe handler
-- adjusted estimation behavior for ring position and membership set
-- worker TUI reward calc and logical shard count fixes, bandwidth reduction on app worker
-- auto-sized filters
-- optimized logging for shard join and leave plan/decide/confirm/reject
-- fixed dynamic filter width
-- blossomsub improvements, estimate/hard calc changes
-- migration fixes for eviction issue
-- refactored global consensus engine into discrete components, updated tests
-- adjusted rpc/worker ring display
+## v2.1.0.23 (version .23) *(auto-generated)*
+- fix docker build issue with static linking
+- resolve standalone worker connection string derivation
+- fix too many joins, invalid signature in qclient, standalone worker mode bugs, workers not logging to own files
+- fix keys file handling, reduce excess joins/leaves
+- resolve domain separation bug for invalid signature
+- fix tokio thread issue with logging
+- fix leaving prover bug in worker allocator
+- resolve worker storage location bug and reduce log noise
+- fix prover shard choices and ring number calculation
+- fix TUI quirks for manual mode
+- forcibly adjust halt risk shards as primary selection criteria
+- address blackswan reports 1, 2, 3
+- fix worker persistence and missing lock update
+- fix shard store discrepancy
+- use different source for current frame number
+- cache requests to prevent available shards from flashing
+- resolve stale 0 frame data response, adjust blossomsub parameters
+- refactor tree behaviors to skip stale data effects
+- handle orphaned allocations and allocations on zero byte shards
+- fix autonat bug crashing worker threads
+- fix too many streams issue
+- address edge case with delegate address, resolve stream connection issue with kad-dht
+- fix build script to force static link on libchannel
+- fix quil-engine unit tests and router validator tests
+- support white spaces in genesis seed for testnets
+- fix propose skip on coverage halts
+- fix vdf link order and enable tests in CI
+- support archive endpoints config in rust node
+- use sha3 for prover join vdf verifier
+- fix rust node initialization issues
+- refactor quil-node main into submodules (storage, keys, engines, frame_pipeline, networking, runtime_state, peer_info_publisher, worker_manager, allocator_and_lifecycle, message_loop, archive_sync, grpc)
+- fix canonicalization bug for peer info
+- propagate errors from subsystems
+- reduce logging noise on noisy connection events
+- increase duration between peer info and key registry publishes
+- fix OOM from unbounded stores, add memory profiling and allocator swap
+- fix proposal bug using joining count as part of halt risk calculation
+- handle 67% barrier for halt risk
+- fix off by one on leave planning
+- fix TUI manage submission of messages
+- fix expired leaves not treated as confirmed leaves in proposal logic and worker allocator
+- resolve loop of
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - reconcile old and new config paths
 - fix formatting/precision on prover reward data
-- address peering issue
+- include possible solution to peering issue
 - fix app shard lookups on mainnet
-
-## v2.1.0.20 (version .20) *(auto-generated)*
-- enable debug output via `DEBUG` environment variable
-- fix PebbleDB constructor configuration parameter
-- fix high CPU overhead in initial worker behaviors and ongoing sync
-- add extra data to node info and query metrics from command line
-- leave proposals for overcrowded shards
-- implement hub-and-spoke global message broadcasts
-- tweak CLI output for join frames
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
