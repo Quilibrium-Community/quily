@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-09-05
+date: 2026-09-06
 type: release_notes
 topics:
   - release notes
@@ -16,66 +16,30 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** September 5, 2026
+**Last updated:** September 6, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
-## v2.1.0.24 (version .24) *(auto-generated)*
-- fix race where initial failout of sync leaves workers permanently idle (until reboot)
-- fix patch number sync with config
-- fix transaction safety for hypergraph store writes – aborted transactions no longer persist partial writes
-- make lazy tree commit retry-safe – a failed transaction no longer leaves the in-memory tree inconsistent, allowing safe retry
-
 ## v2.1.0.23 (version .23) *(auto-generated)*
-- fix docker build issue with static linking
-- resolve standalone worker connection string derivation
-- fix too many joins, invalid signature in qclient, standalone worker mode bugs, workers not logging to own files
-- fix keys file handling, reduce excess joins/leaves
-- resolve domain separation bug for invalid signature
-- fix tokio thread issue with logging
-- fix leaving prover bug in worker allocator
-- resolve worker storage location bug and reduce log noise
-- fix prover shard choices and ring number calculation
-- fix TUI quirks for manual mode
-- forcibly adjust halt risk shards as primary selection criteria
-- address blackswan reports 1, 2, 3
-- fix worker persistence and missing lock update
-- fix shard store discrepancy
-- use different source for current frame number
-- cache requests to prevent available shards from flashing
-- resolve stale 0 frame data response, adjust blossomsub parameters
-- refactor tree behaviors to skip stale data effects
-- handle orphaned allocations and allocations on zero byte shards
-- fix autonat bug crashing worker threads
-- fix too many streams issue
-- address edge case with delegate address, resolve stream connection issue with kad-dht
-- fix build script to force static link on libchannel
-- fix quil-engine unit tests and router validator tests
-- support white spaces in genesis seed for testnets
-- fix propose skip on coverage halts
-- fix vdf link order and enable tests in CI
-- support archive endpoints config in rust node
-- use sha3 for prover join vdf verifier
-- fix rust node initialization issues
-- refactor quil-node main into submodules (storage, keys, engines, frame_pipeline, networking, runtime_state, peer_info_publisher, worker_manager, allocator_and_lifecycle, message_loop, archive_sync, grpc)
-- fix canonicalization bug for peer info
-- propagate errors from subsystems
-- reduce logging noise on noisy connection events
-- increase duration between peer info and key registry publishes
-- fix OOM from unbounded stores, add memory profiling and allocator swap
-- fix proposal bug using joining count as part of halt risk calculation
-- handle 67% barrier for halt risk
-- fix off by one on leave planning
-- fix TUI manage submission of messages
-- fix expired leaves not treated as confirmed leaves in proposal logic and worker allocator
-- resolve loop of
+- fix domain separation bug causing invalid signatures
+- fix too many joins, invalid signature in qclient, standalone worker mode bugs, workers not logging to own files, and various additional bugs
+- fix
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - reconcile old and new config paths
 - fix formatting/precision on prover reward data
-- include possible solution to peering issue
+- address possible peering issue
 - fix app shard lookups on mainnet
+
+## v2.1.0.20 (version .20) *(auto-generated)*
+- allow debug mode to be enabled via environment variable
+- fix pebble database constructor configuration parameter
+- fix high CPU overhead during initial worker behaviors and ongoing sync
+- add extra data to node info and query metrics from command line
+- leave proposals for overcrowded shards
+- switch global message broadcasts to hub-and-spoke model
+- tweak CLI output for join frames
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
