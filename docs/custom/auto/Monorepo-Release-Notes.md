@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-09-06
+date: 2026-09-07
 type: release_notes
 topics:
   - release notes
@@ -16,30 +16,51 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** September 6, 2026
+**Last updated:** September 7, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
-## v2.1.0.23 (version .23) *(auto-generated)*
-- fix domain separation bug causing invalid signatures
-- fix too many joins, invalid signature in qclient, standalone worker mode bugs, workers not logging to own files, and various additional bugs
-- fix
+## v2.1.0.22 (version .22) *(auto-generated)*
+- qol: improved prover commands, show worker id
+- fix: relax peerstore clearing interval
+- qol: component-level logger tuning
+- qol: prover management TUI adds manual management tracking and specifies joins by worker id
+- optimize TUI - round 2
+- log shard allocation join confirm/reject + plan leave details
+- default archive peer list
+- fix: prover eviction bug
+- qol: small tweaks around prover visibility when leaving is implicitly accepted
+- fix: prover leaving status in event distributor
+- qol: rename pending to joining
+- fix: merge spend marker
+- fix: sorting/ring position issues in TUI, render width for [M] marker
+- fix: timereel behavior should accept new head immediately
+- fix: add timeout for global frame fetch, lru cache to handler
+- fix: adjust estimation behavior to properly calculate ring position and membership set
+- fix: worker TUI reward calc/logical shard count, bandwidth reduction on app worker
+- qol: auto-sized filters
+- optimize logging for plan/decide and confirm/reject for shard joins and leaves
+- fix: dynamic filter width
+- fix: blossomsub improvements, estimate/hard calc changes
+- fix: migration + improved logging, resolve eviction issue
+- refactor global consensus engine into discrete components, update tests
+- adjust rpc/worker ring display
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - reconcile old and new config paths
 - fix formatting/precision on prover reward data
-- address possible peering issue
+- possible solution to peering issue
 - fix app shard lookups on mainnet
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
-- allow debug mode to be enabled via environment variable
-- fix pebble database constructor configuration parameter
-- fix high CPU overhead during initial worker behaviors and ongoing sync
+- allow debug mode via environment variable
+- fix pebble database constructor config parameter
+- fix high cpu overhead in initial worker behaviors and ongoing sync
 - add extra data to node info and query metrics from command line
 - leave proposals for overcrowded shards
-- switch global message broadcasts to hub-and-spoke model
-- tweak CLI output for join frames
+- implement hub-and-spoke global message broadcasts
+- tweak cli output for join frames
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
