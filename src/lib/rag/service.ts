@@ -24,6 +24,12 @@ export interface PrepareQueryOptions {
   cohereApiKey?: string;
   /** Operator-configured form of address for this user. Discord only. */
   addressAs?: string;
+  /**
+   * Cancels in-flight generation (and prevents the retry / fallback chain from
+   * starting new ones). The Discord handler races processQuery against a timer;
+   * without this the losing generation kept running and being billed.
+   */
+  abortSignal?: AbortSignal;
 }
 
 export interface PreparedQuery {
@@ -41,6 +47,11 @@ export interface ProcessQueryResult {
   followUpQuestions: string[] | null;
   toolCalls: Array<{ toolName: string; input: Record<string, string> }>;
   ragQuality: RelevanceQuality;
+  finishReason: string;
+  /** 1 normally; 2 when the first generation came back with no text and no tool call and was retried. */
+  attempts: number;
+  /** Model that produced `text`. Differs from the primary when the fallback chain was used. */
+  model: string;
 }
 
 export async function prepareQuery(options: PrepareQueryOptions): Promise<PreparedQuery> {
@@ -78,7 +89,29 @@ const CHUTES_DEFAULT_MODEL = 'chutes-deepseek-ai-deepseek-v3-2-tee';
 // providers by preferring fast fp8/fp4 backends. allow_fallbacks=false makes
 // the request fail fast when pinned providers are unavailable, so the caller's
 // timeout handler triggers quickly instead of stalling on a slow fallback.
-const OPENROUTER_PRIMARY_PROVIDER_ORDER = ['SiliconFlow', 'DeepInfra'];
+export const OPENROUTER_PRIMARY_PROVIDER_ORDER = ['SiliconFlow', 'DeepInfra'];
+
+// Output budget. Whenever reasoning is ON this cap is SHARED with the thinking
+// phase, and deepseek-v4-flash exhausts it before writing a single visible
+// character on any non-trivial question (scripts/empty-reply-probe.ts,
+// 2026-09-08: 11 of 15 runs empty or truncated at 1000; at 4000 the model
+// reasoned for 16k chars and still returned nothing). Reasoning is disabled on
+// the OpenRouter path below; it is NOT disabled on the Chutes path (that SDK
+// exposes no switch), so with BOT_LLM_PROVIDER=chutes or OPENROUTER_REASONING=on
+// the sharing problem is back. Sized from the same probe: the longest good
+// answer with reasoning off used ~800 tokens (arm B).
+export const MAX_OUTPUT_TOKENS = 1500;
+
+/**
+ * Reasoning toggle, same env switch as app/api/chat/route.ts. Default OFF.
+ * The July 2026 A/B (see .agents/reports/2026-07-11-reasoning-ab.md) found no
+ * quality loss for this facts-from-RAG bot; on the Discord path reasoning also
+ * competes with the answer for MAX_OUTPUT_TOKENS, which is what produced the
+ * bare-👀 replies in GitHub #122. Set OPENROUTER_REASONING=on to re-enable.
+ */
+function isReasoningEnabled(): boolean {
+  return /^(on|true|1)$/i.test(process.env.OPENROUTER_REASONING ?? 'off');
+}
 
 const DEFAULT_FALLBACK_MODELS: Record<string, string[]> = {
   openrouter: [
@@ -126,6 +159,7 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
 
   const modelsToTry = [primaryModel, ...getFallbackModels(llmProvider)];
   let lastError: unknown;
+  let lastEmpty: ProcessQueryResult | undefined;
 
   for (const model of modelsToTry) {
     try {
@@ -142,41 +176,88 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
           ? { order: OPENROUTER_PRIMARY_PROVIDER_ORDER, allow_fallbacks: false }
           : undefined
       );
+      // `reasoning` is passed as a raw setting: the SDK type wants max_tokens/effort
+      // even for the pure-disable case, which the OpenRouter API does not.
+      const openrouterSettings: Record<string, unknown> = {};
+      if (providerRouting) openrouterSettings.provider = providerRouting;
+      if (!isReasoningEnabled()) openrouterSettings.reasoning = { enabled: false };
+      const openrouter = createOpenRouter({ apiKey: options.llmApiKey });
       const aiModel = llmProvider === 'chutes'
         ? createChutes({ apiKey: options.llmApiKey })(modelId) as Parameters<typeof generateText>[0]['model']
-        : createOpenRouter({ apiKey: options.llmApiKey })(
-            modelId,
-            providerRouting ? { provider: providerRouting } : undefined
-          );
-      const t1 = Date.now();
-      const result = await generateText({
-        model: aiModel,
-        system: prepared.systemPrompt,
-        messages,
-        tools: ragTools,
-        maxOutputTokens: 1000,
-      });
-      console.log(`[processQuery] generateText (${model}) took ${Date.now() - t1}ms`);
+        : openrouter(modelId, openrouterSettings as Parameters<typeof openrouter>[1]);
 
-      const { cleanText, questions } = parseFollowUpQuestions(result.text);
-
-      const toolCalls = (result.toolCalls || []).map((tc) => ({
-        toolName: tc.toolName,
-        input: tc.input as Record<string, string>,
-      }));
-
-      return {
-        text: cleanText,
-        sources: prepared.sources,
-        followUpQuestions: questions,
-        toolCalls,
-        ragQuality: prepared.ragQuality,
+      const generateOnce = async (attempt: number) => {
+        const t1 = Date.now();
+        const result = await generateText({
+          model: aiModel,
+          system: prepared.systemPrompt,
+          messages,
+          tools: ragTools,
+          maxOutputTokens: MAX_OUTPUT_TOKENS,
+          abortSignal: options.abortSignal,
+        });
+        const { cleanText, questions } = parseFollowUpQuestions(result.text);
+        const toolCalls = (result.toolCalls || []).map((tc) => ({
+          toolName: tc.toolName,
+          input: tc.input as Record<string, string>,
+        }));
+        // The flat `reasoningTokens` is deprecated but some provider paths may
+        // still populate only that one; this line is the production instrument
+        // for the #122 failure mode, so it must not read 0 when reasoning is on.
+        const reasonTok = result.usage.outputTokenDetails?.reasoningTokens
+          ?? result.usage.reasoningTokens ?? 0;
+        console.log(
+          `[processQuery] generateText (${model}) attempt=${attempt} took ${Date.now() - t1}ms ` +
+          `finish=${result.finishReason} text=${cleanText.trim().length}ch tools=${toolCalls.length} ` +
+          `outTok=${result.usage.outputTokens ?? '?'} reasonTok=${reasonTok}`,
+        );
+        return { cleanText, questions, toolCalls, finishReason: String(result.finishReason) };
       };
+
+      const isEmpty = (g: Awaited<ReturnType<typeof generateOnce>>) =>
+        !g.cleanText.trim() && g.toolCalls.length === 0;
+
+      // A reply with no text and no tool call is undeliverable (the Discord
+      // handler renders it as a placeholder). Sampling is non-deterministic (in
+      // production the same prompt failed four times, then answered in full),
+      // so one retry on the same model is cheap insurance before moving on.
+      let gen = await generateOnce(1);
+      let attempts = 1;
+      if (isEmpty(gen) && !options.abortSignal?.aborted) {
+        console.warn(`[processQuery] empty reply from ${model} (finish=${gen.finishReason}), retrying once`);
+        gen = await generateOnce(2);
+        attempts = 2;
+      }
+
+      const out: ProcessQueryResult = {
+        text: gen.cleanText,
+        sources: prepared.sources,
+        followUpQuestions: gen.questions,
+        toolCalls: gen.toolCalls,
+        ragQuality: prepared.ragQuality,
+        finishReason: gen.finishReason,
+        attempts,
+        model,
+      };
+
+      // Two empties in a row is a failure of this model, just not a thrown one:
+      // hand over to the fallback chain like an exception would. If every model
+      // comes back empty, return the last empty result rather than throwing, so
+      // the handler can still say something honest.
+      if (isEmpty(gen) && !options.abortSignal?.aborted) {
+        console.warn(`[processQuery] ${model} returned empty twice, trying next fallback`);
+        lastEmpty = out;
+        continue;
+      }
+      return out;
     } catch (error) {
+      // A cancelled request must not cascade into three more paid attempts.
+      if (options.abortSignal?.aborted) throw error;
       lastError = error;
       console.error(`Model ${model} failed, ${modelsToTry.indexOf(model) < modelsToTry.length - 1 ? 'trying next fallback...' : 'no more fallbacks'}`);
     }
   }
 
+  if (lastEmpty) return lastEmpty;
   throw lastError;
 }
