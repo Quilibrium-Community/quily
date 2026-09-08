@@ -50,9 +50,18 @@ load_dotenv()
 # ─── Current Models (mirror of what's in the codebase) ─────────────────────
 
 CURRENT_LLM_MODELS = {
+    # The two providers diverged on 2026-06: OpenRouter moved to V4 Flash
+    # (src/lib/rag/service.ts:74), Chutes stayed on V3.2 (service.ts:75) because
+    # V4 Flash is not hosted there. The dict key is the Chutes slug; openrouter_id
+    # must track the OpenRouter primary, since it sets the price baseline and the
+    # "already in use" filter in the OpenRouter report.
+    #
+    # The `~` prefix is OpenRouter's auto-updating alias. Keep this pointing at the
+    # alias rather than a dated snapshot: pinning a snapshot here is precisely how
+    # this entry went stale for three months (it still claimed V3.2 in 2026-09).
     "chutes-deepseek-ai-deepseek-v3-2-tee": {
-        "display": "DeepSeek V3.2",
-        "openrouter_id": "deepseek/deepseek-v3.2",
+        "display": "DeepSeek V4 Flash (OR) / V3.2 (Chutes)",
+        "openrouter_id": "~deepseek/deepseek-v4-flash-latest",
         "role": "primary",
     },
     "chutes-deepseek-ai-deepseek-r1-tee": {
@@ -148,7 +157,12 @@ def is_reasoning_model(model_id_or_name: str) -> bool:
 
 def is_open_source(model_id: str) -> bool:
     """Heuristic: check if a model ID belongs to a known open-source org."""
-    mid = model_id.lower()
+    # OpenRouter's auto-updating aliases are prefixed with "~" (e.g.
+    # "~deepseek/deepseek-v4-flash-latest"). Strip it before the org check,
+    # otherwise no prefix ever matches and every alias is silently dropped —
+    # which also blanks the "vs Primary" column, since the primary's price is
+    # looked up in this same candidate list.
+    mid = model_id.lower().lstrip("~")
     # Exclude proprietary first
     for prefix in PROPRIETARY_PREFIXES:
         if mid.startswith(prefix):

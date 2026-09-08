@@ -1,0 +1,111 @@
+name: Monthly Model Scout
+
+# Answers one question once a month: "is our LLM still the right choice?"
+#
+# Why this exists: between 2026-04 and 2026-09 the OpenRouter primary sat on a
+# stale build because nobody thought to look. The config now uses OpenRouter's
+# auto-updating `~...-latest` alias, which fixes staleness within a model family
+# but says nothing about a *different* model becoming clearly better. This job
+# covers that second question.
+#
+# Deliberately cheap: the scout only reads OpenRouter's public /models endpoint,
+# so this needs NO API key and costs nothing. Quality evaluation is NOT run here
+# on purpose. The judge-based eval calls a paid model per criterion (~$0.40-0.50
+# a run, see scripts/eval/judge.ts), and quality checks are run locally against
+# the Max subscription instead.
+
+on:
+  schedule:
+    # 08:00 UTC on the 1st of each month. Offset from sync-docs (06:00 daily) and
+    # sync-techtree (07:00 Mondays) so the jobs never race pushing to main.
+    - cron: '0 8 1 * *'
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  scout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          # scripts/model-scout.py is stdlib-only (urllib, json, argparse),
+          # so there is nothing to install.
+
+      - name: Run model scout
+        run: |
+          # Without pipefail a crash in the scout is masked by the grep that
+          # follows it, and the job would quietly commit a truncated report.
+          set -o pipefail
+          mkdir -p .github/model-scout
+          # Strip the "Generated:" timestamp line. Without this the file differs on
+          # every run and the change check below would fire every single month.
+          # PYTHONIOENCODING is pinned so the committed baseline (generated on
+          # Windows) and the CI output (Linux) are byte-identical. Without it the
+          # em dashes in the report differ and every run looks like a change.
+          PYTHONIOENCODING=utf-8 python scripts/model-scout.py --provider openrouter --type llm \
+            | grep -v 'Generated:' \
+            > .github/model-scout/report.txt
+
+      - name: Check for changes
+        id: check
+        run: |
+          if [ -n "$(git status --porcelain .github/model-scout/report.txt)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit updated scout report
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/model-scout/report.txt
+          git commit -m "chore: refresh monthly model scout report"
+          git push
+
+      - name: Open review issue
+        if: steps.check.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          gh issue create \
+            --title "Monthly model check: the OpenRouter landscape changed" \
+            --body "$(cat <<'EOF'
+          The monthly scout found changes since last month. Nothing has been switched
+          automatically; this is a prompt to look, not an alert that something broke.
+
+          **What changed:** see the diff on
+          `.github/model-scout/report.txt` in the commit just pushed.
+
+          **What to check**
+
+          1. Did a cheaper or clearly better model appear? The report ranks candidates
+             against the current primary and marks each CHEAPER / SIMILAR COST / PRICIER.
+          2. Did the DeepSeek V4 Flash family gain a newer snapshot? If so the
+             `~deepseek/deepseek-v4-flash-latest` alias already picks it up, so there is
+             nothing to change. Worth a local eval if the jump looks significant.
+          3. Did anything we depend on disappear? Check the fallback models in
+             `src/lib/rag/service.ts` are all still listed.
+
+          **If you want to verify quality**, run the eval locally (free — judged with the
+          Max subscription, not the paid API judge):
+
+              yarn eval:collect      # collect responses, ~$0.04 of RAG calls
+              # then judge the collected responses in a Claude Code session
+
+          Close this issue once reviewed.
+          EOF
+          )"

@@ -40,7 +40,7 @@ loadEnv({ path: '.env.local' }); // fallback; never overrides values already set
 const apiKey = process.env.OPENROUTER_API_KEY;
 if (!apiKey) { console.error('OPENROUTER_API_KEY not set'); process.exit(1); }
 
-const MODEL = process.env.BOT_MODEL || 'deepseek/deepseek-v4-flash';
+const MODEL = process.env.BOT_MODEL || '~deepseek/deepseek-v4-flash-latest';
 const RUNS = Number(process.env.PROBE_RUNS || 3);
 // Spurious tool calls on plain questions tolerated before the run fails.
 // Measured 2026-09-08 with reasoning off: 4/35 before the tool description

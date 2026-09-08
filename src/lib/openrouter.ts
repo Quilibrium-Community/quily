@@ -8,8 +8,25 @@
  * Open-source models are listed first, followed by proprietary options.
  */
 
-/** Default model ID — DeepSeek V4 Flash (cheapest path with quality parity vs V3.2, ~50% lower cost and 27% lower latency per 2026-06-03 benchmark). */
-export const DEFAULT_MODEL_ID = process.env.NEXT_PUBLIC_DEFAULT_MODEL_ID || 'deepseek/deepseek-v4-flash';
+/**
+ * Default model ID — DeepSeek V4 Flash, via OpenRouter's auto-updating alias.
+ *
+ * The `~` prefix is OpenRouter's alias namespace: it always routes to the newest
+ * revision in the V4 Flash family, so we don't silently sit on a stale build the
+ * way we did between 2026-04 and 2026-09 (the pinned `deepseek/deepseek-v4-flash`
+ * is the April release; a retrained `-0731` shipped in July and we never noticed).
+ *
+ * Tradeoff, accepted deliberately: the model can change under production without
+ * passing an eval first. We take that because the judge-based eval costs real API
+ * money and quality checks are run locally against the Max subscription instead.
+ * `.github/workflows/monthly-model-scout.yml` is the compensating control — it
+ * reports monthly on what the alias resolves to and what else has appeared.
+ *
+ * Verified 2026-09-08: resolves to `deepseek/deepseek-v4-flash-0731` and still
+ * honours the SiliconFlow/DeepInfra pin in rag/service.ts with allow_fallbacks:false.
+ */
+export const DEFAULT_MODEL_ID =
+  process.env.NEXT_PUBLIC_DEFAULT_MODEL_ID || '~deepseek/deepseek-v4-flash-latest';
 
 /**
  * The model used in free mode. Driven by NEXT_PUBLIC_FREE_MODE_DEFAULT_MODEL
@@ -17,7 +34,7 @@ export const DEFAULT_MODEL_ID = process.env.NEXT_PUBLIC_DEFAULT_MODEL_ID || 'dee
  * Matches FREE_MODE_DEFAULT_MODEL on the server side.
  */
 export const FREE_MODE_DEFAULT_MODEL_ID =
-  process.env.NEXT_PUBLIC_FREE_MODE_DEFAULT_MODEL || 'deepseek/deepseek-v4-flash';
+  process.env.NEXT_PUBLIC_FREE_MODE_DEFAULT_MODEL || '~deepseek/deepseek-v4-flash-latest';
 
 export interface ModelMetadata {
   id: string;
@@ -30,7 +47,7 @@ export interface ModelMetadata {
 const BASE_RECOMMENDED_MODELS: ModelMetadata[] = [
   // Open Source Models - Recommended
   {
-    id: 'deepseek/deepseek-v4-flash',
+    id: '~deepseek/deepseek-v4-flash-latest',
     name: 'DeepSeek V4 Flash',
     description: 'Best open-source value. Same quality as V3.2 at half the cost.',
     isOpenSource: true,

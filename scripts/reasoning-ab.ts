@@ -30,7 +30,7 @@ import { prepareQuery } from '../src/lib/rag/service';
 const apiKey = process.env.OPENROUTER_API_KEY;
 if (!apiKey) { console.error('OPENROUTER_API_KEY not set'); process.exit(1); }
 
-const MODEL = process.env.FREE_MODE_DEFAULT_MODEL || 'deepseek/deepseek-v4-flash';
+const MODEL = process.env.FREE_MODE_DEFAULT_MODEL || '~deepseek/deepseek-v4-flash-latest';
 const JUDGE_MODEL = process.env.REASONING_AB_JUDGE_MODEL || 'anthropic/claude-sonnet-4.5';
 const RUNS_PER_ARM = Number(process.env.REASONING_AB_RUNS || 2); // latency stability
 const FETCH_TIMEOUT_MS = 60000;

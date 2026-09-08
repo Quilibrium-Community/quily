@@ -1,0 +1,163 @@
+Model Scout — LLM Discovery (openrouter)
+  Price ceiling: $2.00/M in, $8.00/M out
+  Benchmark: No
+
+Phase 1: OpenRouter Discovery
+  Fetching OpenRouter models...
+  Found 428 total models
+  129 open-source candidates within price range
+
+==============================================================================================================
+  MODEL SCOUT REPORT — OpenRouter LLM Models
+==============================================================================================================
+
+  CURRENT LLM MODELS (in codebase)
+  ----------------------------------------------------------------------------------------------------------
+  Model                               Role         OpenRouter ID                                     
+  ----------------------------------------------------------------------------------------------------------
+  DeepSeek V4 Flash (OR) / V3.2 (Chutes) primary      ~deepseek/deepseek-v4-flash-latest
+  DeepSeek R1                         reasoning    deepseek/deepseek-r1
+  Kimi K2.5                           fallback     moonshotai/kimi-k2.5
+  Qwen 2.5 72B                        fallback     qwen/qwen-2.5-72b-instruct
+  Qwen 3 32B                          fallback     qwen/qwen3-32b
+  Mistral Small 3.2                   fallback     mistralai/mistral-small-3.2-24b-instruct
+  Hermes 4 70B                        fallback     nousresearch/hermes-4-70b
+
+  OPENROUTER CANDIDATES — ranked by capability (size, then context) (122 found)
+  Pricing is pay-as-you-go on OpenRouter ($/M tokens).
+  Current primary on OpenRouter: ~deepseek/deepseek-v4-flash-latest ($0.050/M in, $0.160/M out)
+  ----------------------------------------------------------------------------------------------------------
+  Model                                           Size    Ctx     $/M In     $/M Out  vs Primary
+  ----------------------------------------------------------------------------------------------------------
+  MoonshotAI: Kimi K2 Thinking                   1000B   262k $   0.600 $    2.500  PRICIER
+  MoonshotAI: Kimi K2 0905                       1000B   262k $   0.600 $    2.500  PRICIER
+  MoonshotAI: Kimi K2.7 Code                     1000B   262k $   0.710 $    3.500  PRICIER
+  MoonshotAI: Kimi K2.6                          1000B   262k $   0.950 $    4.000  PRICIER
+  MoonshotAI: Kimi K2 0711                       1000B   131k $   0.570 $    2.300  PRICIER
+  DeepSeek: DeepSeek V3.1                         685B   163k $   0.250 $    0.950  PRICIER
+  DeepSeek: DeepSeek V3.2                         685B   163k $   0.269 $    0.400  PRICIER
+  DeepSeek: DeepSeek V3.2 Exp                     685B   163k $   0.270 $    0.410  PRICIER
+  DeepSeek: DeepSeek V3.1 Terminus                685B   163k $   0.270 $    1.000  PRICIER
+  DeepSeek: DeepSeek V3 0324                      685B   163k $   0.290 $    1.140  PRICIER
+  DeepSeek: DeepSeek V3                           685B   163k $   0.320 $    0.890  PRICIER
+  DeepSeek: R1 0528                               685B   163k $   0.500 $    2.150  PRICIER
+  Qwen: Qwen3 Coder Next                          480B   262k $   0.120 $    0.800  PRICIER
+  Qwen: Qwen3 Coder 480B A35B                     480B   262k $   0.300 $    1.000  PRICIER
+  Nous: Hermes 3 405B Instruct                    405B   131k $   1.000 $    1.000  PRICIER
+  Nous: Hermes 4 405B                             405B   131k $   1.000 $    3.000  PRICIER
+  Qwen: Qwen3.5 397B A17B                         397B   262k $   0.550 $    3.500  PRICIER
+  Qwen: Qwen3 235B A22B Instruct 2507             235B   262k $   0.090 $    0.550  PRICIER
+  Qwen: Qwen3 VL 235B A22B Instruct               235B   262k $   0.210 $    1.900  PRICIER
+  Qwen: Qwen3 235B A22B Thinking 2507             235B   131k $   0.230 $    2.300  PRICIER
+  Qwen: Qwen3 VL 235B A22B Thinking               235B   131k $   0.400 $    4.000  PRICIER
+  Qwen: Qwen3 235B A22B                           235B   131k $   0.455 $    1.820  PRICIER
+  Qwen: Qwen3.5-122B-A10B                         122B   262k $   0.290 $    2.400  PRICIER
+  Qwen: Qwen3.8 2.4T A95B                          95B  1048k $   2.000 $    6.000  PRICIER
+  Qwen: Qwen3.8 2.4T A95B (batch)                  95B  1010k $   2.000 $    6.000  PRICIER
+  Qwen: Qwen3 Next 80B A3B Instruct                80B   262k $   0.100 $    1.100  PRICIER
+  Qwen: Qwen3 Next 80B A3B Thinking                80B   262k $   0.150 $    1.200  PRICIER
+  Qwen: Qwen2.5 VL 72B Instruct                    72B   128k $   0.800 $    1.000  PRICIER
+  Meta: Llama 3.3 70B Instruct                     70B   131k $   0.100 $    0.320  PRICIER
+  Meta: Llama 3.1 70B Instruct                     70B   131k $   0.400 $    0.400  PRICIER
+  Nous: Hermes 3 70B Instruct                      70B   131k $   0.700 $    0.700  PRICIER
+  DeepSeek: R1 Distill Llama 70B                   70B     8k $   0.800 $    0.800  PRICIER
+  Qwen: Qwen3.6 35B A3B                            35B   262k $   0.100 $    0.900  PRICIER
+  Qwen: Qwen3.5-35B-A3B                            35B   262k $   0.312 $    1.250  PRICIER
+  Qwen: Qwen3 VL 32B Instruct                      32B   131k $   0.104 $    0.416  PRICIER
+  Qwen2.5 Coder 32B Instruct                       32B    32k $   0.660 $    1.000  PRICIER
+  Google: Gemma 4 31B                              31B   262k $   0.090 $    0.340  PRICIER
+  Google: Gemma 4 31B (batch)                      31B   262k $   0.390 $    0.970  PRICIER
+  Qwen: Qwen3 30B A3B Instruct 2507                30B   262k $   0.048 $    0.193  SIMILAR COST
+  NVIDIA: Nemotron 3 Nano 30B A3B                  30B   262k $   0.050 $    0.200  SIMILAR COST
+  Qwen: Qwen3 Coder 30B A3B Instruct               30B   262k $   0.070 $    0.280  PRICIER
+  Qwen: Qwen3 VL 30B A3B Instruct                  30B   262k $   0.150 $    0.600  PRICIER
+  Qwen: Qwen3 VL 30B A3B Thinking                  30B   262k $   0.200 $    2.400  PRICIER
+  Qwen: Qwen3 30B A3B                              30B   131k $   0.120 $    0.500  PRICIER
+  Qwen: Qwen3 30B A3B Thinking 2507                30B    81k $   0.200 $    2.400  PRICIER
+  Qwen: Qwen3.8 27B                                27B  1000k $   0.420 $    3.000  PRICIER
+  Qwen: Qwen3.5-27B                                27B   262k $   0.195 $    1.560  PRICIER
+  Qwen: Qwen3.6 27B                                27B   262k $   0.300 $    2.000  PRICIER
+  Google: Gemma 3 27B                              27B   131k $   0.080 $    0.450  PRICIER
+  Google: Gemma 2 27B                              27B     8k $   0.650 $    0.650  PRICIER
+  Google: Gemma 4 26B A4B                          26B   262k $   0.070 $    0.340  PRICIER
+  Mistral: Mistral Small 3.1 24B                   24B   128k $   0.351 $    0.555  PRICIER
+  Mistral: Mistral Small 3                         24B    32k $   0.050 $    0.080  SIMILAR COST
+  Mistral: Voxtral Small 24B 2507                  24B    32k $   0.100 $    0.300  PRICIER
+  Mistral: Mixtral 8x22B Instruct                  22B    65k $   2.000 $    6.000  PRICIER
+  Mistral: Ministral 3 14B 2512                    14B   262k $   0.200 $    0.200  PRICIER
+  Qwen: Qwen3 14B                                  14B   131k $   0.227 $    0.910  PRICIER
+  Meta: Llama Guard 4 12B                          12B   163k $   0.180 $    0.180  PRICIER
+  Mistral: Mistral Nemo                            12B   131k $   0.019 $    0.030  CHEAPER
+  Google: Gemma 3 12B                              12B   131k $   0.050 $    0.150  SIMILAR COST
+  Qwen: Qwen3.5-9B                                  9B   262k $   0.100 $    0.150  PRICIER
+  Qwen: Qwen3.5-9B (batch)                          9B   262k $   0.170 $    0.250  PRICIER
+  Qwen: Qwen3 VL 8B Instruct                        8B   262k $   0.117 $    0.455  PRICIER
+  Mistral: Ministral 3 8B 2512                      8B   262k $   0.150 $    0.150  PRICIER
+  Meta: Llama 3.1 8B Instruct                       8B   131k $   0.050 $    0.080  SIMILAR COST
+  Qwen: Qwen3 8B                                    8B   131k $   0.117 $    0.455  PRICIER
+  Qwen: Qwen3 VL 8B Thinking                        8B   131k $   0.180 $    2.100  PRICIER
+  ByteDance: UI-TARS 7B                             7B   128k $   0.100 $    0.200  PRICIER
+  Qwen: Qwen2.5 7B Instruct                         7B    32k $   0.100 $    0.200  PRICIER
+  Google: Gemma 3 4B                                4B   131k $   0.050 $    0.100  SIMILAR COST
+  Meta: Llama 3.2 3B Instruct                       3B   131k $   0.050 $    0.330  SIMILAR COST
+  Mistral: Ministral 3 3B 2512                      3B   131k $   0.100 $    0.100  PRICIER
+  Meta: Llama 3.2 1B Instruct                       1B    60k $   0.027 $    0.201  CHEAPER
+  DeepSeek: DeepSeek V4 Flash 0731                   —  1310k $   0.065 $    0.180  PRICIER
+  Meta: Llama 4 Scout                                —  1310k $   0.100 $    0.300  PRICIER
+  Xiaomi: MiMo-V2.5                                  —  1050k $   0.140 $    0.280  PRICIER
+  Xiaomi: MiMo-V2.5-Pro                              —  1050k $   0.435 $    0.870  PRICIER
+  DeepSeek: DeepSeek V4 Flash 0423                   —  1048k $   0.089 $    0.177  PRICIER
+  DeepSeek: DeepSeek V4 Flash 0731 (batch)           —  1048k $   0.140 $    0.280  PRICIER
+  Meta: Llama 4 Maverick                             —  1048k $   0.200 $    0.696  PRICIER
+  DeepSeek: DeepSeek V4 Flash Vision Exp             —  1048k $   0.220 $    0.660  PRICIER
+  DeepSeek: DeepSeek V4 Pro 0423                     —  1048k $   0.955 $    1.911  PRICIER
+  DeepSeek: DeepSeek V4 Pro 0813                     —  1048k $   1.049 $    3.148  PRICIER
+  DeepSeek: DeepSeek V4 Pro 0813 (batch)             —  1048k $   1.320 $    3.960  PRICIER
+  Qwen: Qwen3.7 Flash                                —  1000k $   0.030 $    0.130  CHEAPER
+  Qwen: Qwen3.5-Flash                                —  1000k $   0.065 $    0.260  PRICIER
+  NVIDIA: Nemotron 3 Super                           —  1000k $   0.085 $    0.400  PRICIER
+  Qwen: Qwen3.8 Flash                                —  1000k $   0.150 $    0.470  PRICIER
+  Qwen: Qwen3.6 Flash                                —  1000k $   0.188 $    1.125  PRICIER
+  Qwen: Qwen3 Coder Flash                            —  1000k $   0.195 $    0.975  PRICIER
+  Qwen: Qwen Plus 0728                               —  1000k $   0.260 $    0.780  PRICIER
+  Qwen: Qwen-Plus                                    —  1000k $   0.260 $    0.780  PRICIER
+  Qwen: Qwen3.5 Plus 2026-02-15                      —  1000k $   0.260 $    1.560  PRICIER
+  Qwen: Qwen3.5 Plus 2026-04-20                      —  1000k $   0.300 $    1.800  PRICIER
+  Amazon: Nova 2 Lite                                —  1000k $   0.300 $    2.500  PRICIER
+  Qwen: Qwen3.7 Plus                                 —  1000k $   0.320 $    1.280  PRICIER
+  Qwen: Qwen3.6 Plus                                 —  1000k $   0.325 $    1.950  PRICIER
+  Qwen: Qwen3 Coder Plus                             —  1000k $   0.650 $    3.250  PRICIER
+  Qwen: Qwen3.7 Max                                  —  1000k $   1.475 $    4.425  PRICIER
+  Qwen: Qwen3.8 Max (0902)                           —  1000k $   2.000 $    6.000  PRICIER
+  Amazon: Nova Lite 1.0                              —   300k $   0.060 $    0.240  PRICIER
+  Amazon: Nova Pro 1.0                               —   300k $   0.800 $    3.200  PRICIER
+  NVIDIA: Nemotron 3.5 Lightning                     —   262k $   0.080 $    0.200  PRICIER
+  Mistral: Mistral Small 4                           —   262k $   0.150 $    0.600  PRICIER
+  Mistral: Devstral 2 2512                           —   262k $   0.400 $    2.000  PRICIER
+  Mistral: Mistral Large 3 2512                      —   262k $   0.500 $    1.500  PRICIER
+  NVIDIA: Nemotron 3 Ultra                           —   262k $   0.625 $    3.125  PRICIER
+  Mistral: Mistral Medium 3.5 (batch)                —   262k $   0.750 $    3.750  PRICIER
+  Qwen: Qwen3 Max Thinking                           —   262k $   0.780 $    3.900  PRICIER
+  Qwen: Qwen3 Max                                    —   262k $   0.780 $    3.900  PRICIER
+  Qwen: Qwen3.6 Max Preview                          —   262k $   1.027 $    6.162  PRICIER
+  Mistral: Mistral Medium 3.5                        —   262k $   1.500 $    7.500  PRICIER
+  Mistral: Codestral 2508                            —   256k $   0.300 $    0.900  PRICIER
+  NVIDIA: Nemotron 3.5 Content Safety                —   131k $   0.200 $    0.200  PRICIER
+  Mistral: Mistral Medium 3.1                        —   131k $   0.400 $    2.000  PRICIER
+  Mistral: Mistral Medium 3                          —   131k $   0.400 $    2.000  PRICIER
+  Mistral Large 2407                                 —   131k $   2.000 $    6.000  PRICIER
+  Amazon: Nova Micro 1.0                             —   128k $   0.035 $    0.140  CHEAPER
+  Venice: Uncensored                                 —   128k $   0.200 $    0.900  PRICIER
+  Mistral Large                                      —   128k $   2.000 $    6.000  PRICIER
+  Mistral: Saba                                      —    32k $   0.200 $    0.600  PRICIER
+  Microsoft: Phi 4                                   —    16k $   0.070 $    0.140  PRICIER
+
+==============================================================================================================
+  Notes:
+  - OpenRouter pricing is pay-as-you-go, billed per token.
+  - Sorted by model size (capability proxy), then context, then price.
+  - Size = total parameters (MoE models show total, e.g. 235B-A22B = 235B total).
+  - Open-source filter applied (proprietary models like GPT/Claude/Gemini excluded).
+  - Free-tier (:free / :extended) variants excluded — rate-limited, not production-grade.
+==============================================================================================================
+

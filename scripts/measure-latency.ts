@@ -38,7 +38,7 @@ async function ttftOpenRouter(pinned: boolean): Promise<void> {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: process.env.NEXT_PUBLIC_DEFAULT_MODEL_ID || 'deepseek/deepseek-v4-flash',
+      model: process.env.NEXT_PUBLIC_DEFAULT_MODEL_ID || '~deepseek/deepseek-v4-flash-latest',
       messages: [{ role: 'user', content: QUERY }],
       stream: true,
       max_tokens: 16,

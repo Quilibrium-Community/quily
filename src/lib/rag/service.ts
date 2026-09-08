@@ -81,8 +81,11 @@ export async function prepareQuery(options: PrepareQueryOptions): Promise<Prepar
   };
 }
 
-// Default models per provider
-const OPENROUTER_DEFAULT_MODEL = 'deepseek/deepseek-v4-flash';
+// Default models per provider.
+// The `~` prefix is OpenRouter's alias namespace: it always resolves to the newest
+// revision in the DeepSeek V4 Flash family. See src/lib/openrouter.ts for why we
+// accept an auto-updating primary and what compensates for it.
+const OPENROUTER_DEFAULT_MODEL = '~deepseek/deepseek-v4-flash-latest';
 const CHUTES_DEFAULT_MODEL = 'chutes-deepseek-ai-deepseek-v3-2-tee';
 
 // OpenRouter provider pinning for the primary model: avoid slow/expensive

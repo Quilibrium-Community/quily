@@ -9,7 +9,7 @@ import 'dotenv/config';
 
 const apiKey = process.env.OPENROUTER_API_KEY;
 if (!apiKey) { console.error('OPENROUTER_API_KEY not set'); process.exit(1); }
-const model = process.env.FREE_MODE_DEFAULT_MODEL || 'deepseek/deepseek-v4-flash';
+const model = process.env.FREE_MODE_DEFAULT_MODEL || '~deepseek/deepseek-v4-flash-latest';
 
 const log = (s: string) => process.stdout.write(s + '\n');
 
