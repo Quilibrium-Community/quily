@@ -57,6 +57,7 @@ This is the main index for all documentation, bug reports, and task management.
 - 🐛 [sync-docs: locally deleted docs are never detected or restored](issues/.open/2026-07-29-sync-docs-silent-file-loss.md)
 - 🐛 [Bot presents outdated docs as current news](issues/.open/2026-08-11-latest-news-recency-workflow.md)
 - 🐛 [ingest:status and --clean read a truncated file list once the table exceeds 1000 rows](issues/.open/2026-09-03-ingest-status-truncated-by-postgrest-row-cap.md)
+- 🐛 [Empty model replies surface as a bare 👀 on real questions](issues/.open/2026-09-08-empty-model-replies-surface-as-eyes-emoji.md)
 - 📋 [Keep the knowledge base current with the v2.1.0.25 post-quantum migration](issues/.open/2026-08-23-stale-crypto-docs-after-pqc-migration.md)
 
 ## ✅ Completed Issues
@@ -154,4 +155,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-09-03 20:37:40
+**Last Updated**: 2026-09-08 14:07:41

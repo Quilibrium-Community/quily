@@ -1,7 +1,7 @@
 ---
 title: "Epochs and Frames: How Quilibrium's Protocol Clock Works"
-source: Community reference (epoch.qstorage.quilibrium.com) via Issue #112
-date: 2026-08-21
+source: Community reference (epoch.qstorage.quilibrium.com) via Issue #112; frame-to-epoch worked examples via Issue #118
+date: 2026-09-08
 type: technical_reference
 topics:
   - epoch
@@ -21,6 +21,13 @@ topics:
   - current epoch
   - how do I calculate the epoch
   - epoch formula
+  - frame to epoch
+  - convert frame to epoch
+  - what epoch is frame
+  - which epoch is a frame in
+  - frame number to epoch number
+  - epoch of frame 754000
+  - reset frame 754000
   - protocol clock
   - three-epoch pipeline
   - propose settle effect
@@ -66,6 +73,22 @@ The guiding principle from the reference: nothing on Quilibrium happens instantl
 
 ---
 
+## Converting a Frame Number to an Epoch
+
+This is exact arithmetic, not an estimate. Divide the frame number by 720 and discard the remainder. The epoch's first frame is `epoch × 720`, and its last is `epoch × 720 + 719`.
+
+| Frame | `floor(frame / 720)` | Epoch | Epoch spans frames |
+|-------|----------------------|-------|--------------------|
+| 747,000 | 1037.5 | **1037** | 746,640 – 747,359 |
+| 753,840 | 1047.0 | **1047** | 753,840 – 754,559 |
+| 754,000 | 1047.2 | **1047** | 753,840 – 754,559 |
+
+Never quote a frame-to-epoch conversion with a tilde or an "approximately". The conversion is deterministic once the frame number is known. What is *not* fixed is how much wall-clock **time** an epoch takes, because frame time is an observed network condition (see above).
+
+> **Correction on record (Issue #118, 2026-09-08):** the network reset frame 754,000 discussed in the August 2026 recaps is in **Epoch 1047**, not epoch 1045. Any source stating "frame 754,000, epoch ~1045" is wrong; 754,000 sits 160 frames into epoch 1047. Epoch 1045 covers frames 752,400 – 753,119 and does not contain it.
+
+---
+
 ## Epoch Boundaries
 
 Epoch size is fixed. **How far you are from the next boundary is not.** Because frame numbers run continuously, the distance to the next boundary depends entirely on where in the current epoch you currently sit:
@@ -105,7 +128,7 @@ This is why a node can look stuck on `Joining` for a while and still be perfectl
 | `ExpiredJoin` | The E+1 confirmation window was missed and the join expired. |
 | `Leaving` | A leave request is working through the same E to E+2 sequence. |
 | `ExpiredLeave` | The leave sequence lapsed. |
-| `Paused` / `Rejected` / `Kicked` | Terminal or administrative states. |
+| `Paused` / `Rejected` / `Kicked` | Terminal or administrative states. For what a kick is and how it differs from inactivity eviction, see [Prover Kicks and Evictions](Prover-Kicks-And-Evictions.md). |
 
 **Re-confirmation is recurring, not one-time.** For data-shard participation, if `registeredEpoch < currentEpoch` you must re-confirm each epoch. This is an ongoing obligation, not something you do once at join time.
 
@@ -179,7 +202,7 @@ State these as unknown rather than guessing:
 - Frame duration is not defined as a protocol constant anywhere in this source. The 10s figure is observed network behaviour reported in Discord during August 2026.
 - The full list of events that fire at an epoch boundary beyond the join/leave/confirm pipeline.
 - How shard **enrollment** (choosing which shard to cover) interacts with the epoch clock. For enrollment mechanics see the [official shard enrollment process](../quilibrium-official/run-node/shard-enrollment-process.md).
-- Any command or tool for querying the current epoch directly.
+- Any command or tool for querying the current epoch directly. (The frame-to-epoch *conversion* above is fully documented; only live lookup of the current frame is not.)
 - A formal definition of how seniority is accumulated or scored.
 
 ---
@@ -190,4 +213,4 @@ State these as unknown rather than guessing:
 
 ---
 
-*Last updated: 2026-08-21*
+*Last updated: 2026-09-08*
