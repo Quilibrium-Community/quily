@@ -130,6 +130,10 @@ export function registerMentionHandler(client: Client): void {
         ? process.env.CHUTES_API_KEY
         : process.env.OPENROUTER_API_KEY;
 
+      // Losing the race must also cancel the generation. Before this, the
+      // in-flight request (and, since the retry landed, a second one) kept
+      // running and being billed after the user had been told it timed out.
+      const abort = new AbortController();
       const queryPromise = processQuery({
         query,
         conversationHistory: history,
@@ -140,28 +144,49 @@ export function registerMentionHandler(client: Client): void {
         embeddingApiKey: process.env.OPENROUTER_API_KEY,
         cohereApiKey: process.env.COHERE_API_KEY,
         addressAs: getNickname(message.author.id) ?? undefined,
+        abortSignal: abort.signal,
       });
 
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('TIMEOUT')), TIMEOUT_MS)
-      );
+      let timeoutHandle: NodeJS.Timeout | undefined;
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutHandle = setTimeout(() => {
+          abort.abort();
+          reject(new Error('TIMEOUT'));
+        }, TIMEOUT_MS);
+      });
 
-      const result = await Promise.race([queryPromise, timeoutPromise]);
+      let result;
+      try {
+        result = await Promise.race([queryPromise, timeoutPromise]);
+      } finally {
+        clearTimeout(timeoutHandle);
+      }
 
       typing = false;
 
-      // If the model produced only a tool call with no text, provide a default.
+      // Guarded on a tool call actually having fired: an unguarded fallback
+      // turned any empty reply into "Thanks for the correction!", which reads
+      // as though a correction had been accepted and filed.
       //
-      // Guarded on a tool call actually having fired. The model can return a
-      // genuinely empty reply — under the Provocation rules it will shrink its
-      // answers to nothing when a user is just making noise — and an unguarded
-      // fallback turned that silence into "Thanks for the correction!", which
-      // reads as though a correction had been accepted and filed.
+      // The no-tool-call branch is only reachable after processQuery has
+      // retried and walked the fallback chain, so every model returned nothing.
+      // Say so plainly: the previous 👀 placeholder was indistinguishable from
+      // a deliberate brush-off and got read as trolling (GitHub #122). Kept flat
+      // and non-inviting on purpose, because the same branch is hit when the
+      // persona goes quiet under provocation, and "try again" is the wrong cue
+      // there.
       const issueToolFired = result.toolCalls?.some(
         (tc) => tc.toolName === 'create_knowledge_issue',
       );
       let responseText =
-        result.text || (issueToolFired ? 'Thanks for the correction!' : '👀');
+        result.text ||
+        (issueToolFired
+          ? 'Thanks for the correction!'
+          : 'Nothing useful came out that time.');
+      // What goes into conversation memory. Diverges from responseText only
+      // when an issue was filed: the model should know it filed one, but not
+      // see a GitHub URL it could later fabricate without a tool call.
+      let memoryText = responseText;
 
       // Handle auto-correction tool call
       if (result.toolCalls?.length) {
@@ -257,10 +282,12 @@ export function registerMentionHandler(client: Client): void {
               );
               responseText +=
                 `\n\n*I've opened a [GitHub issue](${issueUrl}) with your correction for the maintainers to review. Thanks for helping me get smarter.*`;
+              memoryText += '\n\n(I filed a GitHub issue for this.)';
             } catch (err) {
               console.error('[auto-issue] Failed to create GitHub issue:', err);
               responseText +=
                 `\n\n*I couldn't auto-create the issue — you can open one manually at https://github.com/Quilibrium-Community/quily/issues*`;
+              memoryText += '\n\n(I could not file a GitHub issue for this.)';
             }
           }
         }
@@ -277,8 +304,12 @@ export function registerMentionHandler(client: Client): void {
         }
       }
 
+      // Record what was actually SENT, not the raw model text. Storing
+      // `result.text` meant an empty reply went into memory as an empty
+      // assistant turn, so the bot had no idea it had said nothing and once
+      // answered a sarcastic "very helpful, thanks" with "Glad it landed."
       const chunkIds = result.sources.map((s) => s.id);
-      addExchange(message.author.id, message.channelId, query, result.text, chunkIds);
+      addExchange(message.author.id, message.channelId, query, memoryText, chunkIds);
 
     } catch (error: unknown) {
       typing = false;
@@ -292,6 +323,9 @@ export function registerMentionHandler(client: Client): void {
 
       try {
         await message.reply(errorMessage);
+        // Same rule as the success path: the bot said this, so it should
+        // remember saying it.
+        addExchange(message.author.id, message.channelId, message.content.slice(0, 2000), errorMessage);
       } catch {
         // Can't reply
       }
