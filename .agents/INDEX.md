@@ -57,7 +57,6 @@ This is the main index for all documentation, bug reports, and task management.
 - 🐛 [sync-docs: locally deleted docs are never detected or restored](issues/.open/2026-07-29-sync-docs-silent-file-loss.md)
 - 🐛 [Bot presents outdated docs as current news](issues/.open/2026-08-11-latest-news-recency-workflow.md)
 - 🐛 [ingest:status and --clean read a truncated file list once the table exceeds 1000 rows](issues/.open/2026-09-03-ingest-status-truncated-by-postgrest-row-cap.md)
-- 🐛 [Empty model replies surface as a bare 👀 on real questions](issues/.open/2026-09-08-empty-model-replies-surface-as-eyes-emoji.md)
 - 📋 [Keep the knowledge base current with the v2.1.0.25 post-quantum migration](issues/.open/2026-08-23-stale-crypto-docs-after-pqc-migration.md)
 
 ## ✅ Completed Issues
@@ -65,6 +64,7 @@ This is the main index for all documentation, bug reports, and task management.
 - 🐛 [RAG retrieval surfaces outdated sharding/milestone info despite recency improvements](issues/.done/2026-03-21-rag-outdated-sharding-sources.md)
 - 🐛 [Broad-query retrieval collapse](issues/.done/2026-08-11-broad-query-retrieval-collapse.md)
 - 🐛 [All scheduled workflows failing after Yarn Berry migration](issues/.done/2026-08-11-ci-broken-after-yarn-berry-migration.md)
+- 🐛 [Discord bot answers real questions with a bare 👀](issues/.done/2026-09-08-empty-model-replies-surface-as-eyes-emoji.md)
 - 🐛 [Sidebar Scroll Snaps Back When Collapsible Nav Items Change Height](issues/.done/sidebar-scroll-snapback-collapsible-nav.md)
 - 🐛 [Turnstile Token Reuse Causes Verification Failure](issues/.done/turnstile-token-reuse-verification-failure.md)
 - 📋 [Design: Discord Bot Integration for Quily](issues/.done/2026-03-17-discord-bot-design.md)
@@ -139,6 +139,7 @@ This is the main index for all documentation, bug reports, and task management.
 - [Chat latency optimization — before/after report](reports/2026-07-10-chat-latency-optimization.md)
 - [Reasoning A/B — reasoning ON vs OFF (2026-07-11)](reports/2026-07-11-reasoning-ab.md)
 - [Quily as a Quorum bot — feasibility and chosen architecture](reports/2026-08-11-quily-in-quorum-feasibility.md)
+- [Model Scout — OpenRouter LLM Discovery](reports/2026-09-08-model-scout-openrouter.md)
 
 ### Archived
 - [LLM Provider Pricing Research](reports/archived/2026-01-30_llm-provider-pricing-research.md)
@@ -155,4 +156,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-09-08 14:07:41
+**Last Updated**: 2026-09-08 14:52:09
