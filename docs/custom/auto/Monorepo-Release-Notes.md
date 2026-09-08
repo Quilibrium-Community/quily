@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-09-07
+date: 2026-09-08
 type: release_notes
 topics:
   - release notes
@@ -16,46 +16,34 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** September 7, 2026
+**Last updated:** September 8, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
-## v2.1.0.22 (version .22) *(auto-generated)*
-- qol: improved prover commands, show worker id
-- fix: relax peerstore clearing interval
-- qol: component-level logger tuning
-- qol: prover management TUI adds manual management tracking and specifies joins by worker id
-- optimize TUI - round 2
-- log shard allocation join confirm/reject + plan leave details
-- default archive peer list
-- fix: prover eviction bug
-- qol: small tweaks around prover visibility when leaving is implicitly accepted
-- fix: prover leaving status in event distributor
-- qol: rename pending to joining
-- fix: merge spend marker
-- fix: sorting/ring position issues in TUI, render width for [M] marker
-- fix: timereel behavior should accept new head immediately
-- fix: add timeout for global frame fetch, lru cache to handler
-- fix: adjust estimation behavior to properly calculate ring position and membership set
-- fix: worker TUI reward calc/logical shard count, bandwidth reduction on app worker
-- qol: auto-sized filters
-- optimize logging for plan/decide and confirm/reject for shard joins and leaves
-- fix: dynamic filter width
-- fix: blossomsub improvements, estimate/hard calc changes
-- fix: migration + improved logging, resolve eviction issue
-- refactor global consensus engine into discrete components, update tests
-- adjust rpc/worker ring display
+## v2.1.0.24 (version .24) *(auto-generated)*
+- resolve sync race condition where initial failout of sync dooms workers to idle forever (until reboot)
+- fix patch number sync with config
+- fix transaction safety for hypergraph store writes (atomic writes with transactions)
+- make LazyVectorCommitmentTree::commit retry-safe by deferring dirty-state clearing until transaction commit
+- make compute_shard_root read-only (no longer writes to disk)
+- refactor hypergraph store writes to require RocksTxn (no silent fallback)
+- handle leaving scenario with store wipe
+- reduce score differential basis for flagging leave-to-join opportunities, extend scoring-based leave window to a full cycle
+- adjust margins on decisions and threshold for decides and joins
+- adjust snapshotting to use actual rocksdb snapshots
+- resolve unsynced leave issuance condition
+- reapply docker build optimizations to Dockerfile.source
+- consensus: rejoin a lagging archive by syncing proposals from peers (catch-up path)
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - reconcile old and new config paths
-- fix formatting/precision on prover reward data
-- possible solution to peering issue
+- fix formatting/precision on prover reward data and address peering issue
 - fix app shard lookups on mainnet
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
-- allow debug mode via environment variable
-- fix pebble database constructor config parameter
+- allow debug to be enabled via environment variable
+- fix pebble db constructor config parameter
 - fix high cpu overhead in initial worker behaviors and ongoing sync
 - add extra data to node info and query metrics from command line
 - leave proposals for overcrowded shards
