@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-09-08
+date: 2026-09-09
 type: release_notes
 topics:
   - release notes
@@ -16,39 +16,25 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** September 8, 2026
+**Last updated:** September 9, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
-## v2.1.0.24 (version .24) *(auto-generated)*
-- resolve sync race condition where initial failout of sync dooms workers to idle forever (until reboot)
-- fix patch number sync with config
-- fix transaction safety for hypergraph store writes (atomic writes with transactions)
-- make LazyVectorCommitmentTree::commit retry-safe by deferring dirty-state clearing until transaction commit
-- make compute_shard_root read-only (no longer writes to disk)
-- refactor hypergraph store writes to require RocksTxn (no silent fallback)
-- handle leaving scenario with store wipe
-- reduce score differential basis for flagging leave-to-join opportunities, extend scoring-based leave window to a full cycle
-- adjust margins on decisions and threshold for decides and joins
-- adjust snapshotting to use actual rocksdb snapshots
-- resolve unsynced leave issuance condition
-- reapply docker build optimizations to Dockerfile.source
-- consensus: rejoin a lagging archive by syncing proposals from peers (catch-up path)
-
-## v2.1.0.21 (version .21) *(auto-generated)*
-- reconcile old and new config paths
-- fix formatting/precision on prover reward data and address peering issue
-- fix app shard lookups on mainnet
-
-## v2.1.0.20 (version .20) *(auto-generated)*
-- allow debug to be enabled via environment variable
-- fix pebble db constructor config parameter
-- fix high cpu overhead in initial worker behaviors and ongoing sync
-- add extra data to node info and query metrics from command line
-- leave proposals for overcrowded shards
-- implement hub-and-spoke global message broadcasts
-- tweak cli output for join frames
+## v2.1.0.22 (version .22) *(auto-generated)*
+- improved prover commands to show worker id
+- relaxed peerstore clearing interval
+- added component-level logger tuning
+- prover management TUI tracks manual management and specifies joins by worker id
+- optimized TUI rendering (round 2)
+- log shard allocation join confirm/reject and plan leave details
+- set default archive peer list
+- fixed prover eviction bug
+- improved prover visibility when leaving is implicitly accepted
+- fixed prover leaving status in event distributor
+- renamed pending to joining
+- fixed merge spend marker
+- fixed sorting and
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
