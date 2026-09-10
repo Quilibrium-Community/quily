@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-09-09
+date: 2026-09-10
 type: release_notes
 topics:
   - release notes
@@ -16,25 +16,40 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** September 9, 2026
+**Last updated:** September 10, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
 ## v2.1.0.22 (version .22) *(auto-generated)*
-- improved prover commands to show worker id
-- relaxed peerstore clearing interval
-- added component-level logger tuning
-- prover management TUI tracks manual management and specifies joins by worker id
-- optimized TUI rendering (round 2)
-- log shard allocation join confirm/reject and plan leave details
-- set default archive peer list
+- improved prover commands, show worker id
+- prover management TUI adds worker-specific join tracking
 - fixed prover eviction bug
 - improved prover visibility when leaving is implicitly accepted
 - fixed prover leaving status in event distributor
-- renamed pending to joining
+- renamed pending status to joining
 - fixed merge spend marker
-- fixed sorting and
+- fixed TUI sorting and ring position issues
+- fixed [M] marker render width
+- timereel now accepts a new head immediately
+- added timeout and LRU cache for global frame fetch
+- fixed estimation behavior for ring position and membership set
+- fixed worker TUI reward calculation and logical shard count, reduced app worker bandwidth
+- auto-sized filters and fixed dynamic filter width
+- added logging for shard allocation join confirm/reject and plan leave details
+- optimized logging for plan/decide and confirm/reject shard joins and leaves
+- improved blossomsub with estimate/hard calc changes
+- added migrations to resolve eviction issue
+- relaxed peerstore clearing interval
+- tuned component-level logging
+- added default archive peer list
+- adjusted RPC/worker ring display
+
+## v2.1.0.21 (version .21) *(auto-generated)*
+- reconcile old and new config paths
+- fix formatting/precision on prover reward data
+- fix peering issue
+- fix app shard lookups on mainnet
 
 ## v2.1.0.18 (version .18)
 - resolve transaction missing from certain tree methods
