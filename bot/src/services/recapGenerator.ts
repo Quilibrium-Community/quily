@@ -2,7 +2,8 @@
 // Generates daily community recaps from Discord channel messages.
 // Ported from scripts/sync-discord/recap-filter.ts + recap-summarizer.ts
 
-import type { Message, TextChannel } from 'discord.js';
+import type { AnyThreadChannel, ForumChannel, Message, TextChannel } from 'discord.js';
+import { ChannelType, SnowflakeUtil } from 'discord.js';
 import { reasoningSettings } from '../../../src/lib/openrouter-reasoning';
 
 /** Cassie's Discord user ID — lead dev, messages bypass noise filters */
@@ -324,16 +325,12 @@ export async function summarizeForRecap(
 // Orchestrator
 // ---------------------------------------------------------------------------
 
-/**
- * Generate a recap for a single Discord channel.
- * Returns null if no substantive messages or LLM returns SKIP_EMPTY.
- */
-export async function generateChannelRecap(
-  channel: TextChannel,
-): Promise<ChannelRecapResult | null> {
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-  const allMessages: Message[] = [];
+/** Any channel we can page messages out of: a text channel, or a forum's thread. */
+type MessageBearing = { messages: TextChannel['messages'] };
 
+/** Page back through one channel's messages until the cutoff. */
+async function fetchSince(channel: MessageBearing, cutoff: number): Promise<Message[]> {
+  const out: Message[] = [];
   let lastId: string | undefined;
   while (true) {
     const batch = await channel.messages.fetch({ limit: 100, ...(lastId ? { before: lastId } : {}) });
@@ -345,18 +342,138 @@ export async function generateChannelRecap(
         reachedCutoff = true;
         break;
       }
-      allMessages.push(msg);
+      out.push(msg);
     }
 
     if (reachedCutoff || batch.size < 100) break;
     lastId = batch.last()!.id;
   }
+  return out;
+}
 
-  if (allMessages.length === 0) return null;
+/**
+ * Collect a forum channel's recent activity.
+ *
+ * A forum holds no messages of its own — each post is a thread — so the plain
+ * `channel.messages` path throws "not found or not a text channel" on it. That
+ * is why #treasury-ideas failed in the digest every single day since it was
+ * added to DISCORD_DIGEST_CHANNEL_IDS.
+ *
+ * Archived threads are included because a forum post goes quiet and auto-archives
+ * quickly; restricting to active threads would miss most of a day's discussion.
+ */
+export async function fetchForumRecapMessages(
+  channel: ForumChannel,
+  cutoff: number,
+): Promise<FilteredMessage[]> {
+  const threads: AnyThreadChannel[] = [];
+  let activeFailed = false;
+  let archivedFailed = false;
+  let archivedTruncated = false;
 
-  allMessages.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+  try {
+    const active = await channel.threads.fetchActive();
+    threads.push(...active.threads.values());
+  } catch (e) {
+    activeFailed = true;
+    console.warn(`[recap] #${channel.name}: could not list active threads:`, (e as Error).message);
+  }
+  try {
+    const archived = await channel.threads.fetchArchived({ type: 'public', limit: 50 });
+    threads.push(...archived.threads.values());
+    archivedTruncated = Boolean((archived as { hasMore?: boolean }).hasMore);
+  } catch (e) {
+    archivedFailed = true;
+    console.warn(`[recap] #${channel.name}: could not list archived threads:`, (e as Error).message);
+  }
 
-  const filtered = filterRecapMessages(allMessages);
+  // Neither listing worked: there is no data, which is NOT the same as a quiet
+  // forum. Returning [] here would surface as "no substantive content" — exactly
+  // the silent degradation this file was rewritten to remove.
+  if (activeFailed && archivedFailed) {
+    throw new Error(
+      `#${channel.name}: could not list any threads (active and archived both failed) — ` +
+      `check View Channel + Read Message History for the bot on this forum`,
+    );
+  }
+  if (archivedTruncated) {
+    console.warn(`[recap] #${channel.name}: archived thread list truncated at 50 — a very busy day may be under-reported`);
+  }
+
+  // Skip threads that cannot contain anything in the window, so a quiet forum
+  // costs two API calls instead of one per thread forever.
+  //
+  // `lastMessageId` is a snowflake, so its timestamp is readable without a fetch.
+  // Do NOT test it for mere existence: every thread has a starter message, so
+  // `Boolean(lastMessageId)` is always true and short-circuits the recency test
+  // into dead code — which is what this filter did when first written.
+  const candidates = threads.filter((t) => {
+    const lastMs = t.lastMessageId ? Number(SnowflakeUtil.timestampFrom(t.lastMessageId)) : 0;
+    // A post created today with no replies is still news.
+    return lastMs >= cutoff || (t.createdTimestamp ?? 0) >= cutoff;
+  });
+
+  const collected: FilteredMessage[] = [];
+  let unreadable = 0;
+  for (const thread of candidates) {
+    try {
+      const msgs = await fetchSince(thread, cutoff);
+      if (msgs.length === 0) continue;
+      msgs.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+      const filtered = filterRecapMessages(msgs);
+      if (filtered.length === 0) continue;
+
+      // The forum post TITLE is the proposal; it lives in no message body. Put it
+      // on this thread's first surviving message, and keep each thread's messages
+      // contiguous rather than sorting all threads together — otherwise the
+      // summarizer receives interleaved replies from unrelated proposals with
+      // nothing to attribute them to.
+      collected.push(
+        { ...filtered[0], content: `[forum post: ${thread.name}] ${filtered[0].content}` },
+        ...filtered.slice(1),
+      );
+    } catch (e) {
+      unreadable++;
+      console.warn(`[recap] #${channel.name}: thread "${thread.name}" unreadable:`, (e as Error).message);
+    }
+  }
+
+  // Every candidate failed to read: again a permissions problem, not a quiet day.
+  if (unreadable > 0 && collected.length === 0) {
+    throw new Error(
+      `#${channel.name}: all ${unreadable} of ${candidates.length} candidate threads were unreadable — ` +
+      `check View Channel + Read Message History for the bot on this forum`,
+    );
+  }
+
+  console.log(
+    `[recap] #${channel.name}: forum — ${threads.length} threads listed, ${candidates.length} in window, ` +
+    `${collected.length} messages kept, ${unreadable} unreadable`,
+  );
+  return collected;
+}
+
+/**
+ * Generate a recap for a single Discord channel.
+ * Returns null if no substantive messages or LLM returns SKIP_EMPTY.
+ */
+export async function generateChannelRecap(
+  channel: TextChannel | ForumChannel,
+): Promise<ChannelRecapResult | null> {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+
+  // Forums are filtered per-thread so each thread's messages stay contiguous and
+  // keep their post title; a text channel is one flat chronological stream.
+  let filtered: FilteredMessage[];
+  if (channel.type === ChannelType.GuildForum) {
+    filtered = await fetchForumRecapMessages(channel as ForumChannel, cutoff);
+  } else {
+    const allMessages = await fetchSince(channel as TextChannel, cutoff);
+    if (allMessages.length === 0) return null;
+    allMessages.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+    filtered = filterRecapMessages(allMessages);
+  }
+
   if (filtered.length === 0) return null;
 
   const todayStr = new Date().toISOString().slice(0, 10);

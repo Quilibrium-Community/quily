@@ -114,6 +114,13 @@ async function describeImage(imageUrl: string, apiKey: string, model: string): P
       ],
       max_tokens: 200,
       temperature: 0.2,
+      // 200 is the tightest budget in the repo, and max_tokens is shared with any
+      // thinking phase. This is a different model (BUG_TRIAGE_VISION_MODEL,
+      // gemini-flash-lite) than the one that caused the digest outage, so it is
+      // not known to reason here — sent precautionarily rather than because a
+      // failure was observed, because at 200 tokens there is no headroom to lose
+      // and the `|| '(no description)'` below would hide it.
+      ...reasoningSettings(),
     }),
   });
 
