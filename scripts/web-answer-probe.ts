@@ -37,7 +37,7 @@ import { config as loadEnv } from 'dotenv';
 import { streamText, stepCountIs, tool } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { prepareQuery } from '../src/lib/rag/service';
-import { parseFollowUpQuestions } from '../src/lib/rag/followUpParser';
+import { visibleAnswerText, leaksToolCallText, MIN_USABLE_ANSWER_CHARS } from '../src/lib/rag/visibleText';
 import { ragTools } from '../src/lib/rag/tools';
 import { withZdr } from '../src/lib/openrouter-routing';
 import { reasoningSettings } from '../src/lib/openrouter-reasoning';
@@ -108,7 +108,7 @@ interface Obs { caseId: string; arm: string; run: number; textLen: number; toolC
  * answer with no error shown. Counting textLen alone cannot see it, which is why
  * the first arm C result (0/30 dead) did not actually clear this configuration.
  */
-const leaksToolCall = (text: string) => text.includes('create_knowledge_issue');
+const leaksToolCall = leaksToolCallText;
 
 /**
  * Arm E's variant of the tool. Identical schema and description, but WITH an
@@ -156,14 +156,10 @@ async function streamOnce(system: string, query: string, opts: { tools: boolean;
  * as an empty bubble — as a delivered answer. Every "0/30 dead" figure produced
  * before this was measuring raw characters, not delivered answers.
  */
-function visibleLength(text: string): number {
-  return parseFollowUpQuestions(text).cleanText
-    .replace(/[^\n]*create_knowledge_issue[\s\S]*$/, '')
-    .trim().length;
-}
+const visibleLength = (text: string): number => visibleAnswerText(text).length;
 
-/** Matches the route's recovery trigger, so the harness scores what production does. */
-const DEAD_THRESHOLD = 10;
+/** Imported, not redeclared: a harness with its own threshold measures a system nobody ships. */
+const DEAD_THRESHOLD = MIN_USABLE_ANSWER_CHARS;
 
 async function runCell(c: Case, systems: { withTool: string; withoutTool: string }, arm: string, run: number): Promise<Obs> {
   // Arm C is the shipped production config: no tools passed AND a prompt that

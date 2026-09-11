@@ -11,6 +11,7 @@ import { ragTools } from '@/src/lib/rag/tools';
 import { createGitHubIssue } from '@/bot/src/utils/githubIssues';
 import type { RetrievedChunk, SourceReference } from '@/src/lib/rag/types';
 import { parseFollowUpQuestions } from '@/src/lib/rag/followUpParser';
+import { visibleAnswerText, leaksToolCallText, TOOL_CALL_TEXT_REGEX, MIN_USABLE_ANSWER_CHARS } from '@/src/lib/rag/visibleText';
 import { normalizeQuery } from '@/src/lib/rag/queryNormalizer';
 import { getOAuthConfig, refreshTokens, checkChutesBalance } from '@/src/lib/chutesAuth';
 import { validateApiKeyWithCredits } from '@/src/lib/openrouter';
@@ -1147,7 +1148,7 @@ export async function POST(request: Request) {
           fullResponseText.includes('create_knowledge_issue')
         );
         if (hasToolCall) {
-          const visibleText = fullResponseText.replace(/[^\n]*create_knowledge_issue[\s\S]*$/, '').trim();
+          const visibleText = fullResponseText.replace(TOOL_CALL_TEXT_REGEX, '').trim();
           if (!visibleText) {
             writer.write({
               type: 'text-delta',
@@ -1373,7 +1374,7 @@ export async function POST(request: Request) {
             // to the end of the message, so reporting this as a successful
             // recovery would suppress the error AND show nothing. Treat it as a
             // failure so the empty-response path still fires.
-            if (out.includes('create_knowledge_issue')) {
+            if (leaksToolCallText(out)) {
               console.error('[tool-only-retry] Recovery leaked a tool call into text — discarding');
               return '';
             }
@@ -1438,11 +1439,11 @@ export async function POST(request: Request) {
               // only the follow-up block, or only whitespace, has hundreds of raw
               // characters and renders as an empty bubble. Testing raw length let
               // both cases through with no answer and no error at all.
-              const visibleText = parseFollowUpQuestions(text).cleanText
-                .replace(/[^\n]*create_knowledge_issue[\s\S]*$/, '')
-                .trim();
+              const visibleText = visibleAnswerText(text);
               const attemptedRecovery =
-                visibleText.length < 10 && debugErrors.length === 0 && (tools?.length ?? 0) > 0;
+                visibleText.length < MIN_USABLE_ANSWER_CHARS
+                && debugErrors.length === 0
+                && (tools?.length ?? 0) > 0;
               if (attemptedRecovery) {
                 console.warn('[tool-only-retry] Turn produced only a tool call — re-asking without tools');
                 recovered = await retryWithoutTools();
@@ -1476,7 +1477,7 @@ export async function POST(request: Request) {
                 toolCallNames: (tools || []).map((t) => t.toolName),
                 toolOnlyRecoveredChars: recovered.length,
                 issueToolOffered: issueToolAvailable,
-                hasToolCallTextLeak: text.includes('create_knowledge_issue'),
+                hasToolCallTextLeak: leaksToolCallText(text),
                 errors: debugErrors,
               }, writer);
             } catch (e) {
