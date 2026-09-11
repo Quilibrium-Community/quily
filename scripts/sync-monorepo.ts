@@ -10,6 +10,7 @@
  */
 
 import 'dotenv/config';
+import { reasoningSettings } from '../src/lib/openrouter-reasoning.js';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
@@ -203,6 +204,11 @@ async function summarizeWithLLM(version: string, commitLines: string[]): Promise
       ],
       max_tokens: 500,
       temperature: 0.2,
+      // max_tokens is SHARED with the thinking phase, and 500 is the tightest
+      // budget of any call in the repo — the 0731 revision of V4 Flash routinely
+      // reasons past it and returns nothing, which the `|| ''` below turns into
+      // an empty release-notes list. Same root cause as the Discord digest.
+      ...reasoningSettings(),
     }),
   });
 

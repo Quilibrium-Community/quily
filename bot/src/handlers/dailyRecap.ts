@@ -1,32 +1,11 @@
 // bot/src/handlers/dailyRecap.ts
 // Multi-channel daily digest — posts to #daily-digest channel.
 
-import type { Client, TextChannel } from 'discord.js';
-import { createClient } from '@supabase/supabase-js';
-import { embed } from 'ai';
-import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { createHash } from 'crypto';
-import { mkdir, writeFile } from 'fs/promises';
-import { join } from 'path';
+import type { Client, ForumChannel, TextChannel } from 'discord.js';
+import { ChannelType } from 'discord.js';
 import { generateChannelRecap, type ChannelRecapResult } from '../services/recapGenerator';
 import { chunkMessage } from '../utils/messageChunker';
 import { suppressDiscordEmbeds } from '../formatter';
-
-const EMBEDDING_MODEL = 'baai/bge-m3';
-
-/**
- * Sanitize a Discord channel name for use as a directory name.
- * Strips emoji prefixes, lowercases, replaces non-alphanumeric with hyphens.
- */
-function sanitizeChannelName(name: string): string {
-  return name
-    .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}\u200d\ufe0f]/gu, '')
-    .replace(/^[\s\-︱│|]+/, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    || 'unknown';
-}
 
 /**
  * Start the daily scheduled multi-channel digest.
@@ -78,10 +57,29 @@ export function startDailyRecap(client: Client): void {
       const results = await Promise.allSettled(
         channelIds.map(async (id) => {
           const channel = await client.channels.fetch(id);
-          if (!channel || !('messages' in channel)) {
-            throw new Error(`Channel ${id} not found or not a text channel`);
+          if (!channel) {
+            throw new Error(`Channel ${id} not found — deleted, or the bot is not in that server`);
           }
-          return generateChannelRecap(channel as TextChannel);
+          // Forums carry no messages of their own; generateChannelRecap reads
+          // their threads instead. Before this, the `'messages' in channel` test
+          // rejected them outright and #treasury-ideas failed every single day.
+          const isForum = channel.type === ChannelType.GuildForum;
+          if (!isForum && !('messages' in channel)) {
+            throw new Error(`Channel ${id} is a ${ChannelType[channel.type] ?? channel.type}, which the digest cannot read`);
+          }
+          try {
+            return await generateChannelRecap(channel as TextChannel | ForumChannel);
+          } catch (e) {
+            // Name the fix in the log. "Missing Access" on its own reads like a
+            // bug in here; it is a Discord permission the bot has to be granted.
+            if ((e as { code?: number }).code === 50001) {
+              throw new Error(
+                `Channel ${id} (#${'name' in channel ? channel.name : '?'}): Missing Access — ` +
+                `grant the bot View Channel + Read Message History there, or remove the id from DISCORD_DIGEST_CHANNEL_IDS`,
+              );
+            }
+            throw e;
+          }
         }),
       );
 
@@ -146,13 +144,26 @@ export function startDailyRecap(client: Client): void {
 
       console.log('[digest] Daily digest posted successfully');
 
-      // Write markdown files + upsert to Supabase (best-effort)
-      try {
-        await persistRecaps(channelRecaps, titleDate, openrouterKey);
-        console.log('[digest] Markdown files written + Supabase upsert successful');
-      } catch (error) {
-        console.error('[digest] Persistence failed (digest was still posted):', error);
-      }
+      // NO persistence here on purpose. This handler used to write markdown and
+      // upsert chunks to Supabase, and all of it was dead work:
+      //
+      //   - the markdown went to `process.cwd()/docs/discord/`, and pm2 runs the
+      //     bot from `bot/`, so files landed in an untracked `bot/docs/...` that
+      //     is in no repo and no backup;
+      //   - the Supabase rows pointed at `docs/discord/recap-<channel>/...`,
+      //     which exists in no checkout, so the nightly `yarn ingest run --clean`
+      //     (.github/workflows/sync-docs.yml, 06:00 UTC) classified every one as
+      //     an orphan and deleted it. Measured 2026-09-11: zero surviving rows;
+      //   - and it could not be noticed, because persistRecaps awaited a
+      //     `Promise.allSettled` — which never rejects — so the caller logged
+      //     "Supabase upsert successful" no matter what happened inside.
+      //
+      // RAG ingestion of recaps belongs to the GitHub Action, which writes into
+      // a real checkout and commits. Do not reintroduce a second writer here
+      // without also giving it a path that survives the orphan sweep.
+      //
+      // Known gap, deliberate: the Action only recaps #general, so the other
+      // digest channels are not in the knowledge base. They never were.
     } catch (error) {
       console.error('[digest] Failed to generate/post daily digest:', error);
     }
@@ -172,93 +183,4 @@ function parseDigestChannelIds(): string[] {
   const generalId = process.env.DISCORD_GENERAL_CHANNEL_ID || '1212446222367985726';
   console.log('[digest] DISCORD_DIGEST_CHANNEL_IDS not set — falling back to single channel');
   return [generalId];
-}
-
-/**
- * Write markdown files to disk and upsert to Supabase for each channel recap.
- */
-async function persistRecaps(
-  recaps: ChannelRecapResult[],
-  titleDate: string,
-  openrouterKey: string,
-): Promise<void> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !supabaseKey) {
-    console.log('[digest] Supabase credentials not configured — skipping persistence');
-    return;
-  }
-
-  const openrouter = createOpenRouter({ apiKey: openrouterKey });
-  const supabase = createClient(supabaseUrl, supabaseKey);
-
-  // Base path for recap files (relative to project root, alongside announcements/dev-updates)
-  const docsBase = join(process.cwd(), 'docs', 'discord');
-
-  await Promise.allSettled(
-    recaps.map(async (recap) => {
-      const sanitized = sanitizeChannelName(recap.channelName);
-      const dirName = `recap-${sanitized}`;
-      const dirPath = join(docsBase, dirName);
-      const fileName = `${recap.date}.md`;
-      const filePath = join(dirPath, fileName);
-      const sourceFile = `docs/discord/${dirName}/${fileName}`;
-
-      // Write markdown file
-      const markdownContent = [
-        '---',
-        `title: "Daily Recap - #${sanitized} - ${titleDate}"`,
-        'type: discord_recap',
-        `channel: ${sanitized}`,
-        `date: ${recap.date}`,
-        '---',
-        '',
-        `# Daily Recap - #${sanitized}`,
-        '',
-        recap.content,
-        '',
-      ].join('\n');
-
-      await mkdir(dirPath, { recursive: true });
-      await writeFile(filePath, markdownContent, 'utf-8');
-
-      // Generate embedding
-      const embeddingContent = `Daily Recap - #${sanitized} - ${titleDate}\n\n${recap.content}`;
-      const { embedding: vector } = await embed({
-        model: openrouter.textEmbeddingModel(EMBEDDING_MODEL),
-        value: embeddingContent,
-        maxRetries: 2,
-      });
-
-      const contentHash = createHash('sha256').update(markdownContent).digest('hex');
-      const tokenCount = Math.ceil(markdownContent.length / 4);
-
-      // Upsert to Supabase
-      const { error } = await supabase
-        .from('document_chunks_chutes')
-        .upsert(
-          {
-            content: embeddingContent,
-            embedding: vector,
-            source_file: sourceFile,
-            heading_path: null,
-            chunk_index: 0,
-            token_count: tokenCount,
-            version: recap.date,
-            content_hash: contentHash,
-            doc_type: 'discord_recap',
-            published_date: recap.date,
-            title: `Daily Recap - #${sanitized} - ${titleDate}`,
-            source_url: null,
-          },
-          { onConflict: 'source_file,chunk_index' },
-        );
-
-      if (error) {
-        throw new Error(`Supabase upsert for #${sanitized}: ${error.message}`);
-      }
-
-      console.log(`[digest] Persisted recap for #${sanitized} → ${sourceFile}`);
-    }),
-  );
 }

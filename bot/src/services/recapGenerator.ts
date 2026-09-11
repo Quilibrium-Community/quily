@@ -2,7 +2,8 @@
 // Generates daily community recaps from Discord channel messages.
 // Ported from scripts/sync-discord/recap-filter.ts + recap-summarizer.ts
 
-import type { Message, TextChannel } from 'discord.js';
+import type { AnyThreadChannel, ForumChannel, Message, TextChannel } from 'discord.js';
+import { ChannelType } from 'discord.js';
 import { reasoningSettings } from '../../../src/lib/openrouter-reasoning';
 
 /** Cassie's Discord user ID — lead dev, messages bypass noise filters */
@@ -324,16 +325,12 @@ export async function summarizeForRecap(
 // Orchestrator
 // ---------------------------------------------------------------------------
 
-/**
- * Generate a recap for a single Discord channel.
- * Returns null if no substantive messages or LLM returns SKIP_EMPTY.
- */
-export async function generateChannelRecap(
-  channel: TextChannel,
-): Promise<ChannelRecapResult | null> {
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-  const allMessages: Message[] = [];
+/** Any channel we can page messages out of: a text channel, or a forum's thread. */
+type MessageBearing = { messages: TextChannel['messages'] };
 
+/** Page back through one channel's messages until the cutoff. */
+async function fetchSince(channel: MessageBearing, cutoff: number): Promise<Message[]> {
+  const out: Message[] = [];
   let lastId: string | undefined;
   while (true) {
     const batch = await channel.messages.fetch({ limit: 100, ...(lastId ? { before: lastId } : {}) });
@@ -345,12 +342,75 @@ export async function generateChannelRecap(
         reachedCutoff = true;
         break;
       }
-      allMessages.push(msg);
+      out.push(msg);
     }
 
     if (reachedCutoff || batch.size < 100) break;
     lastId = batch.last()!.id;
   }
+  return out;
+}
+
+/**
+ * Collect a forum channel's recent activity.
+ *
+ * A forum holds no messages of its own — each post is a thread — so the plain
+ * `channel.messages` path throws "not found or not a text channel" on it. That
+ * is why #treasury-ideas failed in the digest every single day since it was
+ * added to DISCORD_DIGEST_CHANNEL_IDS.
+ *
+ * Archived threads are included because a forum post goes quiet and auto-archives
+ * quickly; restricting to active threads would miss most of a day's discussion.
+ */
+async function fetchForumMessages(channel: ForumChannel, cutoff: number): Promise<Message[]> {
+  const threads: AnyThreadChannel[] = [];
+  try {
+    const active = await channel.threads.fetchActive();
+    threads.push(...active.threads.values());
+  } catch (e) {
+    console.warn(`[recap] #${channel.name}: could not list active threads:`, (e as Error).message);
+  }
+  try {
+    const archived = await channel.threads.fetchArchived({ type: 'public', limit: 50 });
+    threads.push(...archived.threads.values());
+  } catch (e) {
+    console.warn(`[recap] #${channel.name}: could not list archived threads:`, (e as Error).message);
+  }
+
+  // Only threads that could contain something inside the window. A thread's own
+  // creation counts: a post made today with no replies is still news.
+  const candidates = threads.filter(
+    (t) => (t.lastMessageId ? true : false) || (t.createdTimestamp ?? 0) >= cutoff,
+  );
+
+  const collected: Message[] = [];
+  for (const thread of candidates) {
+    try {
+      const msgs = await fetchSince(thread, cutoff);
+      // Prefix the thread title onto its opening message so the summarizer knows
+      // which proposal a comment belongs to. Forum post titles carry most of the
+      // meaning and are not part of any message body.
+      collected.push(...msgs);
+    } catch (e) {
+      console.warn(`[recap] #${channel.name}: thread "${thread.name}" unreadable:`, (e as Error).message);
+    }
+  }
+  console.log(`[recap] #${channel.name}: forum — ${candidates.length} threads checked, ${collected.length} messages in window`);
+  return collected;
+}
+
+/**
+ * Generate a recap for a single Discord channel.
+ * Returns null if no substantive messages or LLM returns SKIP_EMPTY.
+ */
+export async function generateChannelRecap(
+  channel: TextChannel | ForumChannel,
+): Promise<ChannelRecapResult | null> {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+
+  const allMessages: Message[] = channel.type === ChannelType.GuildForum
+    ? await fetchForumMessages(channel as ForumChannel, cutoff)
+    : await fetchSince(channel as TextChannel, cutoff);
 
   if (allMessages.length === 0) return null;
 

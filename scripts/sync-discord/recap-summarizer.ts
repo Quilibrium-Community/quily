@@ -1,5 +1,6 @@
 // scripts/sync-discord/recap-summarizer.ts
 import type { FilteredMessage } from './recap-filter.js';
+import { reasoningSettings } from '../../src/lib/openrouter-reasoning.js';
 
 const DEFAULT_MODEL = '~deepseek/deepseek-v4-flash-latest';
 const MAX_INPUT_CHARS = 60_000; // ~15,000 tokens
@@ -110,6 +111,14 @@ export async function summarizeMessages(
       ],
       max_tokens: 1500,
       temperature: 0.3,
+      // max_tokens is SHARED with the thinking phase. Without this, the 0731
+      // revision of V4 Flash spent the whole budget reasoning and returned
+      // nothing, which the `|| 'No recap generated.'` below turned into a
+      // 102-character placeholder. That is exactly what landed in the knowledge
+      // base for 2026-09-09 and 2026-09-10 — two days the bot then could not
+      // answer questions about. Same root cause as the Discord digest; see
+      // bot/src/services/recapGenerator.ts.
+      ...reasoningSettings(),
     }),
   });
 
@@ -119,10 +128,35 @@ export async function summarizeMessages(
   }
 
   const data = (await response.json()) as {
-    choices: { message: { content: string } }[];
+    model?: string;
+    choices?: { message?: { content?: string }; finish_reason?: string }[];
+    usage?: { completion_tokens?: number; completion_tokens_details?: { reasoning_tokens?: number } };
   };
 
-  let recap = data.choices[0]?.message?.content?.trim() || 'No recap generated.';
+  const choice = data.choices?.[0];
+  const finishReason = String(choice?.finish_reason ?? 'unknown');
+  const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
+  console.log(
+    `[recap] model=${data.model ?? model} finish=${finishReason} ` +
+    `chars=${choice?.message?.content?.trim().length ?? 0} ` +
+    `compTok=${data.usage?.completion_tokens ?? 0} reasonTok=${reasoningTokens}`,
+  );
+
+  // Throw rather than substituting a placeholder. A silent 'No recap generated.'
+  // is indistinguishable from a genuinely quiet day once it is in the knowledge
+  // base, and it gets committed and ingested as if it were real content. Failing
+  // the workflow run is recoverable; a placeholder is not.
+  if (!choice?.message?.content?.trim()) {
+    throw new Error(
+      `Recap model returned no text (finish=${finishReason}, reasoningTokens=${reasoningTokens}). ` +
+      `If reasoningTokens is near 1500, thinking consumed the output budget.`,
+    );
+  }
+  if (finishReason === 'length') {
+    console.warn(`[recap] output hit the 1500-token cap (reasonTok=${reasoningTokens}) — recap may be truncated`);
+  }
+
+  let recap = choice.message.content.trim();
   // Strip any remaining @username mentions to avoid Discord notifications
   recap = recap.replace(/@(\w+)/g, '$1');
   return recap;
