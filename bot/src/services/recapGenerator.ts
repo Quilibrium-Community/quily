@@ -371,6 +371,8 @@ export async function fetchForumRecapMessages(
 ): Promise<FilteredMessage[]> {
   const threads: AnyThreadChannel[] = [];
   let archivedFailed = false;
+  let archivedDenied = false;
+  let archivedError = '';
   let archivedTruncated = false;
 
   try {
@@ -389,7 +391,11 @@ export async function fetchForumRecapMessages(
     archivedTruncated = Boolean((archived as { hasMore?: boolean }).hasMore);
   } catch (e) {
     archivedFailed = true;
-    console.warn(`[recap] #${channel.name}: could not list archived threads:`, (e as Error).message);
+    // Keep the reason, not just the fact. A 500 and a Missing Access both end up
+    // here, and the alarm below must not describe one as the other.
+    archivedDenied = (e as { code?: number }).code === 50001;
+    archivedError = (e as Error).message;
+    console.warn(`[recap] #${channel.name}: could not list archived threads:`, archivedError);
   }
 
   if (archivedTruncated) {
@@ -449,9 +455,14 @@ export async function fetchForumRecapMessages(
   // auto-archive quickly, that combination is the normal shape of a
   // misconfigured forum, not an edge case.
   if (archivedFailed && collected.length === 0) {
+    // Say which it was. Telling an operator to fix permissions that are already
+    // correct is its own kind of false alarm, and a 500 lands in the same catch
+    // as a denial.
     throw new Error(
-      `#${channel.name}: archived thread listing failed and nothing was read — ` +
-      `check View Channel + Read Message History for the bot on this forum`,
+      archivedDenied
+        ? `#${channel.name}: archived thread listing returned Missing Access and nothing was read — ` +
+          `grant the bot View Channel + Read Message History on this forum`
+        : `#${channel.name}: archived thread listing failed and nothing was read (${archivedError})`,
     );
   }
   // Only claim a permissions problem when every failure actually said so. A

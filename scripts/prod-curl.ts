@@ -28,7 +28,10 @@ const value = (name: string, def: string) => {
   // default. `--url` typed without one used to target PRODUCTION and splice the
   // stray `--url` token into the question text. Defaulting to prod by accident
   // is never acceptable in this script.
-  if (i >= 0 && i + 1 >= args.length) {
+  // Also rejects `--url --provider chutes`, where a next token exists but is
+  // plainly another flag: consuming it would silently make "--provider" the
+  // target URL and push "chutes" into the question text.
+  if (i >= 0 && (i + 1 >= args.length || args[i + 1].startsWith('--'))) {
     console.error(`[prod-curl] --${name} was given with no value.`);
     process.exit(1);
   }

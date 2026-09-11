@@ -1328,6 +1328,9 @@ export async function POST(request: Request) {
          *
          * Returns the recovered text, or '' if recovery itself failed.
          */
+        // Recovery-stream errors, kept out of `debugErrors` so they cannot
+        // suppress the empty-response gate. Surfaced in the debug payload.
+        const retryErrors: string[] = [];
         const retryWithoutTools = async (): Promise<string> => {
           // onFinish fires on client disconnect too (the SDK calls it from the
           // stream's cancel() as well as its flush()), so without this check a
@@ -1350,10 +1353,17 @@ export async function POST(request: Request) {
               // streamText's default onError only console.errors. Without this
               // handler a 429 or a dropped stream during recovery would end the
               // for-await quietly, return '', and leave no trace anywhere.
+              //
+              // Collected SEPARATELY from debugErrors on purpose. The empty
+              // response gate below is guarded on `debugErrors.length === 0`
+              // (meaning "no error has been shown to the user yet"), so pushing a
+              // recovery failure into that same array suppressed the gate: the
+              // retry produced no text AND no error was written, leaving total
+              // silence — the exact failure this recovery exists to prevent.
               onError: (error) => {
                 const msg = error.error instanceof Error ? error.error.message : String(error.error);
                 console.error('[tool-only-retry] Recovery stream error:', msg);
-                debugErrors.push(`tool-only-retry: ${msg}`);
+                retryErrors.push(`tool-only-retry: ${msg}`);
               },
             });
             const id = `text-retry-${Date.now()}`;
@@ -1459,9 +1469,15 @@ export async function POST(request: Request) {
               // also covers the cases recovery never sees: a whitespace-only or
               // follow-up-JSON-only reply with NO tool call now produces an
               // error instead of a silent empty bubble.
+              //
               // `attemptedRecovery` stays in the condition so a short reply whose
               // recovery FAILED still surfaces an error rather than leaving the
               // user with an answer-shaped nothing and no explanation.
+              //
+              // `debugErrors` here means "an error has already been shown to the
+              // user", which is why recovery-stream failures go to `retryErrors`
+              // instead. Mixing them let a failed recovery suppress this branch
+              // and produce total silence.
               if ((visibleText.length === 0 || attemptedRecovery) && !recovered && debugErrors.length === 0) {
                 writeError(
                   writer,
@@ -1479,6 +1495,7 @@ export async function POST(request: Request) {
                 issueToolOffered: issueToolAvailable,
                 hasToolCallTextLeak: leaksToolCallText(text),
                 errors: debugErrors,
+                retryErrors,
               }, writer);
             } catch (e) {
               writeDebug({ phase: 'stream-finished', error: String(e), errors: debugErrors }, writer);
