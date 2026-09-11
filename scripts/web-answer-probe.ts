@@ -18,9 +18,13 @@
  *   B  two-step     tools, stopWhen stepCountIs(2)    (model answers AND files)
  *   C  no-tool      tools omitted                     (model must answer)
  *   D  retry        as-shipped + one retry on empty   (cheapest patch)
+ *   E  exec-tool    tools WITH an execute fn + two-step
+ *   F  recovery     as-shipped + re-ask WITHOUT tools  (what route.ts ships)
  *
- * Pass condition: an arm is only a fix if it produced visible text in EVERY
- * run of every case. "Usually answers" is the bug.
+ * Pass condition: an arm is only a fix if EVERY run of every case delivered at
+ * least DEAD_THRESHOLD characters of VISIBLE text (after the client strips the
+ * follow-up block and any leaked tool call) and leaked nothing. "Usually
+ * answers" is the bug.
  *
  *   yarn tsx scripts/web-answer-probe.ts
  *   PROBE_RUNS=5 PROBE_ARMS=A,B npx tsx scripts/web-answer-probe.ts
@@ -33,6 +37,7 @@ import { config as loadEnv } from 'dotenv';
 import { streamText, stepCountIs, tool } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { prepareQuery } from '../src/lib/rag/service';
+import { visibleAnswerText, leaksToolCallText, MIN_USABLE_ANSWER_CHARS } from '../src/lib/rag/visibleText';
 import { ragTools } from '../src/lib/rag/tools';
 import { withZdr } from '../src/lib/openrouter-routing';
 import { reasoningSettings } from '../src/lib/openrouter-reasoning';
@@ -45,7 +50,11 @@ if (!apiKey) { console.error('OPENROUTER_API_KEY not set'); process.exit(1); }
 // Same resolution order as app/api/chat/route.ts getFreeModeModel().
 const MODEL = process.env.FREE_MODE_DEFAULT_MODEL || '~deepseek/deepseek-v4-flash-latest';
 const RUNS = Number(process.env.PROBE_RUNS || 5);
-const ARM_FILTER = (process.env.PROBE_ARMS || 'A,B,C,D').split(',').map((s) => s.trim().toUpperCase());
+// F is in the default set because it is the arm that matches the SHIPPED
+// recovery. Leaving it out meant the documented invocation never exercised the
+// configuration production actually runs, and the "0/30" cited to justify the
+// recovery was really arm C's number for a different configuration.
+const ARM_FILTER = (process.env.PROBE_ARMS || 'A,B,C,D,F').split(',').map((s) => s.trim().toUpperCase());
 
 interface Case { id: string; query: string; note: string }
 
@@ -99,7 +108,7 @@ interface Obs { caseId: string; arm: string; run: number; textLen: number; toolC
  * answer with no error shown. Counting textLen alone cannot see it, which is why
  * the first arm C result (0/30 dead) did not actually clear this configuration.
  */
-const leaksToolCall = (text: string) => text.includes('create_knowledge_issue');
+const leaksToolCall = leaksToolCallText;
 
 /**
  * Arm E's variant of the tool. Identical schema and description, but WITH an
@@ -138,6 +147,20 @@ async function streamOnce(system: string, query: string, opts: { tools: boolean;
   return { text: text.trim(), toolCalls: toolCalls.length, finish: String(await result.finishReason), inputs };
 }
 
+/**
+ * What the USER actually sees, which is the only thing worth scoring.
+ *
+ * The client strips the follow-up JSON block and everything from a leaked tool
+ * call onward before rendering. Scoring raw stream length instead counted a
+ * reply consisting only of the follow-up block — hundreds of characters, renders
+ * as an empty bubble — as a delivered answer. Every "0/30 dead" figure produced
+ * before this was measuring raw characters, not delivered answers.
+ */
+const visibleLength = (text: string): number => visibleAnswerText(text).length;
+
+/** Imported, not redeclared: a harness with its own threshold measures a system nobody ships. */
+const DEAD_THRESHOLD = MIN_USABLE_ANSWER_CHARS;
+
 async function runCell(c: Case, systems: { withTool: string; withoutTool: string }, arm: string, run: number): Promise<Obs> {
   // Arm C is the shipped production config: no tools passed AND a prompt that
   // does not describe the tool. Measuring it against the tool-describing prompt
@@ -156,16 +179,20 @@ async function runCell(c: Case, systems: { withTool: string; withoutTool: string
 
     let r = await streamOnce(system, c.query, cfg);
     // Arm D: the minimal patch — one retry when the turn produced no text.
-    if (arm === 'D' && !r.text) r = await streamOnce(system, c.query, cfg);
-    // Arm F: the tool-aware fallback. When the turn spent itself on a tool call,
-    // regenerate WITHOUT tools, which is the only configuration measured at 0
-    // dead runs. The tool call is still captured, so nothing is lost.
-    if (arm === 'F' && !r.text && r.toolCalls > 0) {
-      const retry = await streamOnce(system, c.query, { tools: false, twoStep: false });
-      r = { text: retry.text, toolCalls: r.toolCalls, finish: `${r.finish}->${retry.finish}`, inputs: r.inputs };
+    if (arm === 'D' && visibleLength(r.text) === 0) r = await streamOnce(system, c.query, cfg);
+    // Arm F is the SHIPPED recovery, and must mirror route.ts exactly or it
+    // measures something production does not do:
+    //   - trigger on visible length < 10, not on raw emptiness
+    //   - retry with the NO-TOOL prompt, because re-asking with the
+    //     tool-describing one is what makes the model leak the call as prose
+    //   - discard a leaked recovery rather than counting it as delivered
+    if (arm === 'F' && visibleLength(r.text) < DEAD_THRESHOLD && r.toolCalls > 0) {
+      const retry = await streamOnce(systems.withoutTool, c.query, { tools: false, twoStep: false });
+      const recovered = leaksToolCall(retry.text) ? '' : retry.text;
+      r = { text: recovered, toolCalls: r.toolCalls, finish: `${r.finish}->${retry.finish}`, inputs: r.inputs };
     }
 
-    return { caseId: c.id, arm, run, textLen: r.text.length, toolCalls: r.toolCalls, finish: r.finish, ms: Date.now() - t0, inputs: r.inputs, leaked: leaksToolCall(r.text) };
+    return { caseId: c.id, arm, run, textLen: visibleLength(r.text), toolCalls: r.toolCalls, finish: r.finish, ms: Date.now() - t0, inputs: r.inputs, leaked: leaksToolCall(r.text) };
   } catch (e) {
     return { caseId: c.id, arm, run, textLen: 0, toolCalls: 0, finish: 'ERROR', ms: Date.now() - t0, error: e instanceof Error ? e.message.slice(0, 140) : String(e) };
   }
@@ -186,36 +213,40 @@ async function main() {
       embeddingProvider: 'openrouter' as const,
       embeddingApiKey: apiKey!,
     };
-    // Two prompts per case: the tool-describing one and the one the route now
-    // builds when GITHUB_TOKEN is absent. Arm C must use the latter or it tests
-    // a configuration production never sends.
+    // Both prompt variants, from ONE retrieval. prepareQuery now returns the
+    // no-tool render alongside the normal one, so this no longer pays for a
+    // second identical embedding round-trip just to get a differently-worded
+    // section.
     const prepared = await prepareQuery({ ...base, issueToolAvailable: true });
-    const preparedNoTool = await prepareQuery({ ...base, issueToolAvailable: false });
-    const systems = { withTool: prepared.systemPrompt, withoutTool: preparedNoTool.systemPrompt };
+    const systems = { withTool: prepared.systemPrompt, withoutTool: prepared.systemPromptNoTool };
 
     console.log(`### ${c.id} — ${c.note}`);
-    console.log(`  retrieval: ${prepared.retrievedChunks.length} chunks, quality=${prepared.ragQuality}, prompt ${prepared.systemPrompt.length} chars (${preparedNoTool.systemPrompt.length} without the tool section)`);
+    console.log(`  retrieval: ${prepared.retrievedChunks.length} chunks, quality=${prepared.ragQuality}, prompt ${prepared.systemPrompt.length} chars (${prepared.systemPromptNoTool.length} without the tool section)`);
 
-    for (const arm of ARM_FILTER) {
-      for (let run = 1; run <= RUNS; run++) {
+    // Interleave arms within each run rather than running all of arm A, then all
+    // of arm B. With `sort: 'latency'` provider selection, running arms in blocks
+    // confounds arm identity with wall-clock time and with whichever backend
+    // happened to be fastest during that block.
+    for (let run = 1; run <= RUNS; run++) {
+      for (const arm of ARM_FILTER) {
         const o = await runCell(c, systems, arm, run);
         all.push(o);
-        const flag = o.textLen === 0
-          ? '   <-- NO ANSWER (user sees an error)'
+        const flag = o.textLen < DEAD_THRESHOLD
+          ? '   <-- NO USABLE ANSWER'
           : o.leaked ? '   <-- TOOL-CALL LEAK (client strips to end of message)' : '';
-        console.log(`  ${o.arm}#${run} text=${String(o.textLen).padStart(5)} tools=${o.toolCalls} finish=${o.finish.padEnd(11)} ${o.ms}ms${o.error ? ' ERR ' + o.error : ''}${flag}`);
+        console.log(`  ${o.arm}#${run} visible=${String(o.textLen).padStart(5)} tools=${o.toolCalls} finish=${o.finish.padEnd(11)} ${o.ms}ms${o.error ? ' ERR ' + o.error : ''}${flag}`);
         for (const inp of o.inputs ?? []) console.log(`        tool args: ${inp.slice(0, 400)}`);
       }
     }
     console.log('');
   }
 
-  console.log('### Summary — runs with NO visible answer (lower is better)');
+  console.log(`### Summary — runs with under ${DEAD_THRESHOLD} chars of VISIBLE answer (lower is better)`);
   console.log(`case            ${ARM_FILTER.map((a) => `arm ${a}`.padEnd(14)).join('')}`);
   for (const c of CASES) {
     const cells = ARM_FILTER.map((a) => {
       const obs = all.filter((o) => o.caseId === c.id && o.arm === a);
-      const dead = obs.filter((o) => o.textLen === 0).length;
+      const dead = obs.filter((o) => o.textLen < DEAD_THRESHOLD).length;
       const leak = obs.filter((o) => o.leaked).length;
       return `${dead} dead, ${leak} leak /${obs.length}`.padEnd(18);
     });
@@ -228,7 +259,7 @@ async function main() {
   console.log('\n### Verdict — an arm is a fix only at 0 dead AND 0 leaked');
   for (const a of ARM_FILTER) {
     const obs = all.filter((o) => o.arm === a);
-    const dead = obs.filter((o) => o.textLen === 0).length;
+    const dead = obs.filter((o) => o.textLen < DEAD_THRESHOLD).length;
     const leak = obs.filter((o) => o.leaked).length;
     const ok = dead === 0 && leak === 0;
     console.log(`  arm ${a}: ${dead}/${obs.length} no answer, ${leak}/${obs.length} tool-call leak  ${ok ? '<-- always delivered a usable answer' : ''}`);

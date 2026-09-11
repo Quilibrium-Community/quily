@@ -7,7 +7,7 @@ import { normalizeQuery } from './queryNormalizer';
 import { parseFollowUpQuestions } from './followUpParser';
 import { ragTools } from './tools';
 import { withZdr } from '../openrouter-routing';
-import { isReasoningEnabled } from '../openrouter-reasoning';
+import { reasoningSettings } from '../openrouter-reasoning';
 import type { RetrievedChunk, RetrievalOptions, SourceReference } from './types';
 import type { RelevanceQuality } from './prompt';
 
@@ -42,6 +42,17 @@ export interface PrepareQueryOptions {
 
 export interface PreparedQuery {
   systemPrompt: string;
+  /**
+   * The same prompt with the issue-tool section omitted.
+   *
+   * For re-asking WITHOUT tools after a turn spent itself on a tool call. Reusing
+   * `systemPrompt` there would describe a tool the model is not being given,
+   * which is the configuration that makes it write the call as visible prose —
+   * and the client strips from that text to the end of the message, erasing the
+   * very answer the retry was meant to recover. Always identical to
+   * `systemPrompt` when the caller passed `issueToolAvailable: false`.
+   */
+  systemPromptNoTool: string;
   retrievedChunks: RetrievedChunk[];
   normalizedQuery: string;
   ragQuality: RelevanceQuality;
@@ -78,16 +89,18 @@ export async function prepareQuery(options: PrepareQueryOptions): Promise<Prepar
   const { context, quality, avgSimilarity } = buildContextBlock(chunks);
   // The prompt must only describe the issue tool when the caller will actually
   // pass it. Defaults to true: the Discord path always passes ragTools.
-  const systemPrompt = buildSystemPrompt(
-    context,
-    chunks.length,
-    options.addressAs,
-    options.issueToolAvailable ?? true,
-  );
+  const issueToolAvailable = options.issueToolAvailable ?? true;
+  const systemPrompt = buildSystemPrompt(context, chunks.length, options.addressAs, issueToolAvailable);
+  // Only a second render when the tool was described; otherwise it is the same
+  // string and building it twice would waste tokens for nothing.
+  const systemPromptNoTool = issueToolAvailable
+    ? buildSystemPrompt(context, chunks.length, options.addressAs, false)
+    : systemPrompt;
   const sources = formatSourcesForClient(chunks);
 
   return {
     systemPrompt,
+    systemPromptNoTool,
     retrievedChunks: chunks,
     normalizedQuery,
     ragQuality: quality,
@@ -190,7 +203,7 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
       // even for the pure-disable case, which the OpenRouter API does not.
       const openrouterSettings: Record<string, unknown> = {};
       if (providerRouting) openrouterSettings.provider = providerRouting;
-      if (!isReasoningEnabled()) openrouterSettings.reasoning = { enabled: false };
+      Object.assign(openrouterSettings, reasoningSettings());
       const openrouter = createOpenRouter({ apiKey: options.llmApiKey });
       const aiModel = llmProvider === 'chutes'
         ? createChutes({ apiKey: options.llmApiKey })(modelId) as Parameters<typeof generateText>[0]['model']
@@ -202,7 +215,11 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
           model: aiModel,
           system: prepared.systemPrompt,
           messages,
-          tools: ragTools,
+          // Honour the flag rather than hardcoding. `issueToolAvailable: false`
+          // previously type-checked here and silently produced the mismatch in
+          // the opposite direction: a prompt saying "you have no issue-filing
+          // tool" while the model was handed one. The two must never disagree.
+          ...(options.issueToolAvailable ?? true ? { tools: ragTools } : {}),
           maxOutputTokens: MAX_OUTPUT_TOKENS,
           abortSignal: options.abortSignal,
         });

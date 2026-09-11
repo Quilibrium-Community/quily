@@ -11,6 +11,7 @@ import { ragTools } from '@/src/lib/rag/tools';
 import { createGitHubIssue } from '@/bot/src/utils/githubIssues';
 import type { RetrievedChunk, SourceReference } from '@/src/lib/rag/types';
 import { parseFollowUpQuestions } from '@/src/lib/rag/followUpParser';
+import { visibleAnswerText, leaksToolCallText, TOOL_CALL_TEXT_REGEX, MIN_USABLE_ANSWER_CHARS } from '@/src/lib/rag/visibleText';
 import { normalizeQuery } from '@/src/lib/rag/queryNormalizer';
 import { getOAuthConfig, refreshTokens, checkChutesBalance } from '@/src/lib/chutesAuth';
 import { validateApiKeyWithCredits } from '@/src/lib/openrouter';
@@ -871,6 +872,9 @@ export async function POST(request: Request) {
 
         let chunks: RetrievedChunk[] = [];
         let systemPrompt = 'You are a helpful assistant that answers questions about Quilibrium.';
+        // Used only by the tool-only recovery below, which re-asks WITHOUT tools
+        // and must not be handed a prompt that describes one.
+        let systemPromptNoTool = systemPrompt;
         let ragQuality: 'high' | 'low' | 'none' = 'none';
         let formattedSources: SourceReference[] = [];
 
@@ -892,7 +896,7 @@ export async function POST(request: Request) {
             });
             phases.rag = Date.now() - tRag;
 
-            ({ systemPrompt, retrievedChunks: chunks, ragQuality, sources: formattedSources } = prepared);
+            ({ systemPrompt, systemPromptNoTool, retrievedChunks: chunks, ragQuality, sources: formattedSources } = prepared);
             const maxSim = chunks.length > 0 ? Math.max(...chunks.map(c => c.similarity)).toFixed(3) : '0';
             console.log(
               `RAG retrieval: ${chunks.length} chunks, uiQuality=${ragQuality}, maxSimilarity=${maxSim}, avgSimilarity=${prepared.avgSimilarity.toFixed(3)}, model=${model}, provider=${provider}`
@@ -1144,7 +1148,7 @@ export async function POST(request: Request) {
           fullResponseText.includes('create_knowledge_issue')
         );
         if (hasToolCall) {
-          const visibleText = fullResponseText.replace(/[^\n]*create_knowledge_issue[\s\S]*$/, '').trim();
+          const visibleText = fullResponseText.replace(TOOL_CALL_TEXT_REGEX, '').trim();
           if (!visibleText) {
             writer.write({
               type: 'text-delta',
@@ -1324,20 +1328,42 @@ export async function POST(request: Request) {
          *
          * Returns the recovered text, or '' if recovery itself failed.
          */
+        // Recovery-stream errors, kept out of `debugErrors` so they cannot
+        // suppress the empty-response gate. Surfaced in the debug payload.
+        const retryErrors: string[] = [];
         const retryWithoutTools = async (): Promise<string> => {
+          // onFinish fires on client disconnect too (the SDK calls it from the
+          // stream's cancel() as well as its flush()), so without this check a
+          // disconnect would start a whole second generation that nobody
+          // receives and that still gets billed.
+          if (request.signal.aborted) return '';
           try {
             const retry = streamText({
               model: streamModel,
-              system: systemPrompt,
+              // NOT `systemPrompt`. Recovery only runs when the tool WAS offered,
+              // so systemPrompt describes a tool we are deliberately not passing
+              // here — the one configuration that makes the model write the call
+              // as visible prose, which the client then strips to the end of the
+              // message. Using it would let the retry erase the answer it exists
+              // to rescue.
+              system: systemPromptNoTool,
               messages: llmMessages,
+              abortSignal: request.signal,
               // textStream silently DROPS error parts rather than throwing, and
               // streamText's default onError only console.errors. Without this
               // handler a 429 or a dropped stream during recovery would end the
               // for-await quietly, return '', and leave no trace anywhere.
+              //
+              // Collected SEPARATELY from debugErrors on purpose. The empty
+              // response gate below is guarded on `debugErrors.length === 0`
+              // (meaning "no error has been shown to the user yet"), so pushing a
+              // recovery failure into that same array suppressed the gate: the
+              // retry produced no text AND no error was written, leaving total
+              // silence — the exact failure this recovery exists to prevent.
               onError: (error) => {
                 const msg = error.error instanceof Error ? error.error.message : String(error.error);
                 console.error('[tool-only-retry] Recovery stream error:', msg);
-                debugErrors.push(`tool-only-retry: ${msg}`);
+                retryErrors.push(`tool-only-retry: ${msg}`);
               },
             });
             const id = `text-retry-${Date.now()}`;
@@ -1353,6 +1379,15 @@ export async function POST(request: Request) {
               writer.write({ type: 'text-delta', id, delta: chunk });
             }
             if (started) writer.write({ type: 'text-end', id });
+            // Belt and braces on top of using the no-tool prompt. If the model
+            // still leaked a tool call into prose, the client deletes from there
+            // to the end of the message, so reporting this as a successful
+            // recovery would suppress the error AND show nothing. Treat it as a
+            // failure so the empty-response path still fires.
+            if (leaksToolCallText(out)) {
+              console.error('[tool-only-retry] Recovery leaked a tool call into text — discarding');
+              return '';
+            }
             return out;
           } catch (e) {
             console.error('[tool-only-retry] Recovery failed:', e);
@@ -1364,6 +1399,7 @@ export async function POST(request: Request) {
           model: streamModel,
           system: systemPrompt,
           messages: llmMessages,
+          abortSignal: request.signal,
           ...(issueToolAvailable ? { tools: ragTools } : {}),
           onChunk: () => logTiming(),
           onError: (error) => {
@@ -1400,13 +1436,24 @@ export async function POST(request: Request) {
               // reply alongside the tool call, which reaches the user as an
               // answer-shaped nothing.
               //
-              // What keeps this off the persona's deliberate one-word deflections
-              // (see personality.ts, "when the honest answer is silence, send a
-              // single word") is the tool-call conjunct, NOT the number — a terse
-              // reply with no tool call is never touched.
-              const usableText = text.trim();
+              // INFERRED, not measured: what is believed to keep this off the
+              // persona's deliberate one-word deflections (see personality.ts,
+              // "when the honest answer is silence, send a single word") is the
+              // tool-call conjunct, NOT the number — a terse reply with no tool
+              // call is never touched. A deflection that coincides with a
+              // `kind: "behavior"` filing would still be overwritten.
+              //
+              // Measure what the USER SEES, not the raw stream. The client strips
+              // the follow-up JSON block and everything from a leaked tool call
+              // onward before rendering (see MessageBubble), so a reply that is
+              // only the follow-up block, or only whitespace, has hundreds of raw
+              // characters and renders as an empty bubble. Testing raw length let
+              // both cases through with no answer and no error at all.
+              const visibleText = visibleAnswerText(text);
               const attemptedRecovery =
-                usableText.length < 10 && debugErrors.length === 0 && (tools?.length ?? 0) > 0;
+                visibleText.length < MIN_USABLE_ANSWER_CHARS
+                && debugErrors.length === 0
+                && (tools?.length ?? 0) > 0;
               if (attemptedRecovery) {
                 console.warn('[tool-only-retry] Turn produced only a tool call — re-asking without tools');
                 recovered = await retryWithoutTools();
@@ -1417,12 +1464,21 @@ export async function POST(request: Request) {
               // empty turn, which was wrong in the common case and sent users to
               // switch model in Settings over a prompt bug.
               //
-              // `attemptedRecovery` is in the condition so that a 2-char reply
-              // whose recovery FAILED still surfaces an error. Keying on
-              // `text.length === 0` alone left that case with no answer and no
-              // error at all — the two halves of this fix disagreeing about what
-              // counts as empty.
-              if ((text.length === 0 || attemptedRecovery) && !recovered && debugErrors.length === 0) {
+              // Keyed on `visibleText`, the same measure the recovery uses, so
+              // the two halves cannot disagree about what counts as empty. This
+              // also covers the cases recovery never sees: a whitespace-only or
+              // follow-up-JSON-only reply with NO tool call now produces an
+              // error instead of a silent empty bubble.
+              //
+              // `attemptedRecovery` stays in the condition so a short reply whose
+              // recovery FAILED still surfaces an error rather than leaving the
+              // user with an answer-shaped nothing and no explanation.
+              //
+              // `debugErrors` here means "an error has already been shown to the
+              // user", which is why recovery-stream failures go to `retryErrors`
+              // instead. Mixing them let a failed recovery suppress this branch
+              // and produce total silence.
+              if ((visibleText.length === 0 || attemptedRecovery) && !recovered && debugErrors.length === 0) {
                 writeError(
                   writer,
                   'empty-response',
@@ -1437,8 +1493,9 @@ export async function POST(request: Request) {
                 toolCallNames: (tools || []).map((t) => t.toolName),
                 toolOnlyRecoveredChars: recovered.length,
                 issueToolOffered: issueToolAvailable,
-                hasToolCallTextLeak: text.includes('create_knowledge_issue'),
+                hasToolCallTextLeak: leaksToolCallText(text),
                 errors: debugErrors,
+                retryErrors,
               }, writer);
             } catch (e) {
               writeDebug({ phase: 'stream-finished', error: String(e), errors: debugErrors }, writer);

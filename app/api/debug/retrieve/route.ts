@@ -189,7 +189,15 @@ export async function POST(request: Request) {
     );
 
     const { context: contextBlock } = buildContextBlock(top5Chunks);
-    const systemPrompt = buildSystemPrompt(contextBlock, top5Chunks.length);
+    // Mirror the chat route's gate. Without this the endpoint whose whole job is
+    // "show me what would be sent to the LLM" showed a ~2.5 KB tool section that
+    // production (which has no GITHUB_TOKEN) does not send.
+    const systemPrompt = buildSystemPrompt(
+      contextBlock,
+      top5Chunks.length,
+      undefined,
+      Boolean(process.env.GITHUB_TOKEN),
+    );
 
     const totalTime = Date.now() - startTime;
 

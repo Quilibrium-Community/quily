@@ -2,6 +2,7 @@
 
 import { memo, useMemo } from 'react';
 import { parseFollowUpQuestions } from '@/src/lib/rag/followUpParser';
+import { TOOL_CALL_TEXT_REGEX as SHARED_TOOL_CALL_TEXT_REGEX } from '@/src/lib/rag/visibleText';
 import { getCitedIndices } from '@/src/lib/rag/utils';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { SourcesCitation } from './SourcesCitation';
@@ -39,7 +40,10 @@ const PARTIAL_BARE_FOLLOW_UP_REGEX = /\n\s*(?:json\s*\n?\s*)?\["[^\]]*$/;
  *   "فتรfunction<｜tool▁sep｜>create_knowledge_issue json {"title": "..."}"
  *   "kontsultatua nostfunction<｜tool▁sep｜>create_knowledge_issue json {"title": "..."}"
  */
-const TOOL_CALL_TEXT_REGEX = /[^\n]*create_knowledge_issue[\s\S]*$/;
+// Imported, not redeclared. The server decides whether the user got an answer at
+// all using this same rule, so a second copy here would let the two drift and the
+// server would report success for text this component had already erased.
+const TOOL_CALL_TEXT_REGEX = SHARED_TOOL_CALL_TEXT_REGEX;
 
 /**
  * Partial tool call during streaming — catches the beginning of a tool call being typed.

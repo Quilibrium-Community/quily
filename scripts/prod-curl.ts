@@ -24,10 +24,20 @@ const args = process.argv.slice(2);
 const flag = (name: string) => args.includes(`--${name}`);
 const value = (name: string, def: string) => {
   const i = args.indexOf(`--${name}`);
+  // A flag given with no value is an error, never a silent fall-through to the
+  // default. `--url` typed without one used to target PRODUCTION and splice the
+  // stray `--url` token into the question text. Defaulting to prod by accident
+  // is never acceptable in this script.
+  // Also rejects `--url --provider chutes`, where a next token exists but is
+  // plainly another flag: consuming it would silently make "--provider" the
+  // target URL and push "chutes" into the question text.
+  if (i >= 0 && (i + 1 >= args.length || args[i + 1].startsWith('--'))) {
+    console.error(`[prod-curl] --${name} was given with no value.`);
+    process.exit(1);
+  }
   // Bounds check, not truthiness: `--url ""` is falsy, so a truthiness test left
-  // the flag and its empty value in `args`, joined them into the question text,
-  // and sent the request to PRODUCTION — the exact silent-prod-fallback below.
-  if (i >= 0 && i + 1 < args.length) {
+  // the flag and its empty value in `args` and joined them into the question.
+  if (i >= 0) {
     // splice REMOVES the flag and its value and returns them, so the value is
     // the second removed element. Reading args[i] after the splice read the
     // token that followed the pair instead: `--url http://localhost:3000` at the
