@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-09-10
+date: 2026-09-11
 type: release_notes
 topics:
   - release notes
@@ -16,39 +16,37 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** September 10, 2026
+**Last updated:** September 11, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
 
 ## v2.1.0.22 (version .22) *(auto-generated)*
-- improved prover commands, show worker id
-- prover management TUI adds worker-specific join tracking
-- fixed prover eviction bug
-- improved prover visibility when leaving is implicitly accepted
-- fixed prover leaving status in event distributor
-- renamed pending status to joining
-- fixed merge spend marker
-- fixed TUI sorting and ring position issues
-- fixed [M] marker render width
-- timereel now accepts a new head immediately
-- added timeout and LRU cache for global frame fetch
-- fixed estimation behavior for ring position and membership set
-- fixed worker TUI reward calculation and logical shard count, reduced app worker bandwidth
-- auto-sized filters and fixed dynamic filter width
-- added logging for shard allocation join confirm/reject and plan leave details
-- optimized logging for plan/decide and confirm/reject shard joins and leaves
-- improved blossomsub with estimate/hard calc changes
-- added migrations to resolve eviction issue
-- relaxed peerstore clearing interval
-- tuned component-level logging
-- added default archive peer list
-- adjusted RPC/worker ring display
+- improve prover commands and show worker id
+- add manual tracking and join by worker id to prover management TUI
+- fix prover eviction bug and leaving status in event distributor
+- rename pending to joining in prover TUI
+- fix TUI sorting/ring position and render width for [M] marker
+- auto-size TUI filters and fix dynamic filter width
+- optimize TUI performance
+- fix worker TUI reward calculation and logical shard count, reduce bandwidth on app worker
+- add timeout and lru cache for global frame fetch
+- fix timereel to accept new head immediately
+- adjust estimation to correctly calculate ring position and membership set
+- improve blossomsub and adjust estimate/hard calculations
+- add default archive peer list
+- fix merge spend marker
+- relax peerstore clearing interval
+- log shard allocation join confirm/reject and plan leave details
+- optimize logging for shard plan/decide and confirm/reject
+- add component-level logger tuning
+- adjust rpc/worker ring display
+- refactor global consensus engine into discrete components
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - reconcile old and new config paths
 - fix formatting/precision on prover reward data
-- fix peering issue
+- fix potential peering issue
 - fix app shard lookups on mainnet
 
 ## v2.1.0.18 (version .18)
