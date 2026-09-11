@@ -1366,28 +1366,38 @@ export async function POST(request: Request) {
                 retryErrors.push(`tool-only-retry: ${msg}`);
               },
             });
-            const id = `text-retry-${Date.now()}`;
+            // BUFFERED, not streamed through. The writer has no take-back, so
+            // anything written before the leak check below has already reached
+            // the client and cannot be discarded — "discard" would then only mean
+            // "don't count it", while the bytes still rendered. This is a rescue
+            // path that runs after a turn already failed, so correctness beats
+            // the few hundred milliseconds of streaming it costs.
             let out = '';
-            let started = false;
             for await (const chunk of retry.textStream) {
-              if (!chunk) continue;
-              if (!started) {
-                writer.write({ type: 'text-start', id });
-                started = true;
-              }
-              out += chunk;
-              writer.write({ type: 'text-delta', id, delta: chunk });
+              if (chunk) out += chunk;
             }
-            if (started) writer.write({ type: 'text-end', id });
+
             // Belt and braces on top of using the no-tool prompt. If the model
             // still leaked a tool call into prose, the client deletes from there
-            // to the end of the message, so reporting this as a successful
-            // recovery would suppress the error AND show nothing. Treat it as a
-            // failure so the empty-response path still fires.
+            // to the end of the message, so treating this as a success would
+            // suppress the error AND show nothing.
             if (leaksToolCallText(out)) {
               console.error('[tool-only-retry] Recovery leaked a tool call into text — discarding');
               return '';
             }
+            // Whitespace is not an answer. Returning it would be truthy at the
+            // caller and suppress the empty-response error, which is the same
+            // raw-truthiness mistake this file already fixed for the primary
+            // reply — one layer down.
+            if (!visibleAnswerText(out)) {
+              console.error('[tool-only-retry] Recovery produced no visible text — discarding');
+              return '';
+            }
+
+            const id = `text-retry-${Date.now()}`;
+            writer.write({ type: 'text-start', id });
+            writer.write({ type: 'text-delta', id, delta: out });
+            writer.write({ type: 'text-end', id });
             return out;
           } catch (e) {
             console.error('[tool-only-retry] Recovery failed:', e);
@@ -1478,7 +1488,13 @@ export async function POST(request: Request) {
               // user", which is why recovery-stream failures go to `retryErrors`
               // instead. Mixing them let a failed recovery suppress this branch
               // and produce total silence.
-              if ((visibleText.length === 0 || attemptedRecovery) && !recovered && debugErrors.length === 0) {
+              // `visibleAnswerText(recovered)`, NOT `!recovered`. Raw truthiness
+              // let a whitespace-only recovery ("   ") count as a success and
+              // suppress this branch, producing exactly the silence the recovery
+              // exists to prevent. Judge the recovery by the same measure as the
+              // primary reply: what the user would actually see.
+              const recoveredVisible = visibleAnswerText(recovered);
+              if ((visibleText.length === 0 || attemptedRecovery) && !recoveredVisible && debugErrors.length === 0) {
                 writeError(
                   writer,
                   'empty-response',
