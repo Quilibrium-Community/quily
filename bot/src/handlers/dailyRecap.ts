@@ -18,8 +18,9 @@ export function startDailyRecap(client: Client): void {
     return;
   }
 
-  const openrouterKey = process.env.OPENROUTER_API_KEY;
-  if (!openrouterKey) {
+  // Fail fast at startup rather than at 14:00 UTC. summarizeForRecap reads the
+  // key from the environment itself, so nothing here needs to hold the value.
+  if (!process.env.OPENROUTER_API_KEY) {
     console.log('[digest] OPENROUTER_API_KEY not set — daily digest disabled');
     return;
   }
@@ -56,26 +57,39 @@ export function startDailyRecap(client: Client): void {
       // Fetch and summarize all channels in parallel
       const results = await Promise.allSettled(
         channelIds.map(async (id) => {
-          const channel = await client.channels.fetch(id);
-          if (!channel) {
-            throw new Error(`Channel ${id} not found — deleted, or the bot is not in that server`);
-          }
-          // Forums carry no messages of their own; generateChannelRecap reads
-          // their threads instead. Before this, the `'messages' in channel` test
-          // rejected them outright and #treasury-ideas failed every single day.
-          const isForum = channel.type === ChannelType.GuildForum;
-          if (!isForum && !('messages' in channel)) {
-            throw new Error(`Channel ${id} is a ${ChannelType[channel.type] ?? channel.type}, which the digest cannot read`);
-          }
+          // The fetch is INSIDE the try on purpose. When the bot lacks View
+          // Channel outright — the most common cause of Missing Access — it is
+          // this call that throws, so a wrapper placed after it would never fire
+          // in the case it was written for.
+          let name = '?';
           try {
+            const channel = await client.channels.fetch(id);
+            if (!channel) {
+              throw new Error(`Channel ${id} not found — deleted, or the bot is not in that server`);
+            }
+            if ('name' in channel && channel.name) name = channel.name;
+
+            // Forums and media channels carry no messages of their own;
+            // generateChannelRecap reads their threads instead. Before this, the
+            // `'messages' in channel` test rejected them outright and
+            // #treasury-ideas failed in the digest every single day.
+            const isThreadOnly =
+              channel.type === ChannelType.GuildForum || channel.type === ChannelType.GuildMedia;
+            if (!isThreadOnly && !('messages' in channel)) {
+              throw new Error(
+                `Channel ${id} (#${name}) is a ${ChannelType[channel.type] ?? channel.type}, which the digest cannot read`,
+              );
+            }
             return await generateChannelRecap(channel as TextChannel | ForumChannel);
           } catch (e) {
-            // Name the fix in the log. "Missing Access" on its own reads like a
-            // bug in here; it is a Discord permission the bot has to be granted.
+            // Name the fix. "Missing Access" on its own reads like a bug in here;
+            // it is a Discord permission the bot has to be granted. `cause` keeps
+            // the original error and stack, which console.error prints.
             if ((e as { code?: number }).code === 50001) {
               throw new Error(
-                `Channel ${id} (#${'name' in channel ? channel.name : '?'}): Missing Access — ` +
-                `grant the bot View Channel + Read Message History there, or remove the id from DISCORD_DIGEST_CHANNEL_IDS`,
+                `Channel ${id} (#${name}): Missing Access — grant the bot View Channel + ` +
+                `Read Message History there, or remove the id from DISCORD_DIGEST_CHANNEL_IDS`,
+                { cause: e },
               );
             }
             throw e;
@@ -144,26 +158,17 @@ export function startDailyRecap(client: Client): void {
 
       console.log('[digest] Daily digest posted successfully');
 
-      // NO persistence here on purpose. This handler used to write markdown and
-      // upsert chunks to Supabase, and all of it was dead work:
+      // NO persistence here on purpose. A previous version wrote markdown and
+      // upserted chunks to Supabase; its rows referenced `docs/discord/recap-*`
+      // paths that exist in no checkout, so the nightly `yarn ingest run --clean`
+      // orphan sweep (sync-docs.yml, 06:00 UTC) deleted them all within hours.
       //
-      //   - the markdown went to `process.cwd()/docs/discord/`, and pm2 runs the
-      //     bot from `bot/`, so files landed in an untracked `bot/docs/...` that
-      //     is in no repo and no backup;
-      //   - the Supabase rows pointed at `docs/discord/recap-<channel>/...`,
-      //     which exists in no checkout, so the nightly `yarn ingest run --clean`
-      //     (.github/workflows/sync-docs.yml, 06:00 UTC) classified every one as
-      //     an orphan and deleted it. Measured 2026-09-11: zero surviving rows;
-      //   - and it could not be noticed, because persistRecaps awaited a
-      //     `Promise.allSettled` — which never rejects — so the caller logged
-      //     "Supabase upsert successful" no matter what happened inside.
-      //
-      // RAG ingestion of recaps belongs to the GitHub Action, which writes into
-      // a real checkout and commits. Do not reintroduce a second writer here
-      // without also giving it a path that survives the orphan sweep.
+      // Do not reintroduce a writer here without giving it a path that survives
+      // that sweep. RAG ingestion of recaps belongs to the GitHub Action, which
+      // writes into a real checkout and commits.
       //
       // Known gap, deliberate: the Action only recaps #general, so the other
-      // digest channels are not in the knowledge base. They never were.
+      // digest channels do not reach the knowledge base.
     } catch (error) {
       console.error('[digest] Failed to generate/post daily digest:', error);
     }

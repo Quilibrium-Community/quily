@@ -3,7 +3,7 @@
 // Ported from scripts/sync-discord/recap-filter.ts + recap-summarizer.ts
 
 import type { AnyThreadChannel, ForumChannel, Message, TextChannel } from 'discord.js';
-import { ChannelType } from 'discord.js';
+import { ChannelType, SnowflakeUtil } from 'discord.js';
 import { reasoningSettings } from '../../../src/lib/openrouter-reasoning';
 
 /** Cassie's Discord user ID — lead dev, messages bypass noise filters */
@@ -362,40 +362,94 @@ async function fetchSince(channel: MessageBearing, cutoff: number): Promise<Mess
  * Archived threads are included because a forum post goes quiet and auto-archives
  * quickly; restricting to active threads would miss most of a day's discussion.
  */
-async function fetchForumMessages(channel: ForumChannel, cutoff: number): Promise<Message[]> {
+export async function fetchForumRecapMessages(
+  channel: ForumChannel,
+  cutoff: number,
+): Promise<FilteredMessage[]> {
   const threads: AnyThreadChannel[] = [];
+  let activeFailed = false;
+  let archivedFailed = false;
+  let archivedTruncated = false;
+
   try {
     const active = await channel.threads.fetchActive();
     threads.push(...active.threads.values());
   } catch (e) {
+    activeFailed = true;
     console.warn(`[recap] #${channel.name}: could not list active threads:`, (e as Error).message);
   }
   try {
     const archived = await channel.threads.fetchArchived({ type: 'public', limit: 50 });
     threads.push(...archived.threads.values());
+    archivedTruncated = Boolean((archived as { hasMore?: boolean }).hasMore);
   } catch (e) {
+    archivedFailed = true;
     console.warn(`[recap] #${channel.name}: could not list archived threads:`, (e as Error).message);
   }
 
-  // Only threads that could contain something inside the window. A thread's own
-  // creation counts: a post made today with no replies is still news.
-  const candidates = threads.filter(
-    (t) => (t.lastMessageId ? true : false) || (t.createdTimestamp ?? 0) >= cutoff,
-  );
+  // Neither listing worked: there is no data, which is NOT the same as a quiet
+  // forum. Returning [] here would surface as "no substantive content" — exactly
+  // the silent degradation this file was rewritten to remove.
+  if (activeFailed && archivedFailed) {
+    throw new Error(
+      `#${channel.name}: could not list any threads (active and archived both failed) — ` +
+      `check View Channel + Read Message History for the bot on this forum`,
+    );
+  }
+  if (archivedTruncated) {
+    console.warn(`[recap] #${channel.name}: archived thread list truncated at 50 — a very busy day may be under-reported`);
+  }
 
-  const collected: Message[] = [];
+  // Skip threads that cannot contain anything in the window, so a quiet forum
+  // costs two API calls instead of one per thread forever.
+  //
+  // `lastMessageId` is a snowflake, so its timestamp is readable without a fetch.
+  // Do NOT test it for mere existence: every thread has a starter message, so
+  // `Boolean(lastMessageId)` is always true and short-circuits the recency test
+  // into dead code — which is what this filter did when first written.
+  const candidates = threads.filter((t) => {
+    const lastMs = t.lastMessageId ? Number(SnowflakeUtil.timestampFrom(t.lastMessageId)) : 0;
+    // A post created today with no replies is still news.
+    return lastMs >= cutoff || (t.createdTimestamp ?? 0) >= cutoff;
+  });
+
+  const collected: FilteredMessage[] = [];
+  let unreadable = 0;
   for (const thread of candidates) {
     try {
       const msgs = await fetchSince(thread, cutoff);
-      // Prefix the thread title onto its opening message so the summarizer knows
-      // which proposal a comment belongs to. Forum post titles carry most of the
-      // meaning and are not part of any message body.
-      collected.push(...msgs);
+      if (msgs.length === 0) continue;
+      msgs.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+      const filtered = filterRecapMessages(msgs);
+      if (filtered.length === 0) continue;
+
+      // The forum post TITLE is the proposal; it lives in no message body. Put it
+      // on this thread's first surviving message, and keep each thread's messages
+      // contiguous rather than sorting all threads together — otherwise the
+      // summarizer receives interleaved replies from unrelated proposals with
+      // nothing to attribute them to.
+      collected.push(
+        { ...filtered[0], content: `[forum post: ${thread.name}] ${filtered[0].content}` },
+        ...filtered.slice(1),
+      );
     } catch (e) {
+      unreadable++;
       console.warn(`[recap] #${channel.name}: thread "${thread.name}" unreadable:`, (e as Error).message);
     }
   }
-  console.log(`[recap] #${channel.name}: forum — ${candidates.length} threads checked, ${collected.length} messages in window`);
+
+  // Every candidate failed to read: again a permissions problem, not a quiet day.
+  if (unreadable > 0 && collected.length === 0) {
+    throw new Error(
+      `#${channel.name}: all ${unreadable} of ${candidates.length} candidate threads were unreadable — ` +
+      `check View Channel + Read Message History for the bot on this forum`,
+    );
+  }
+
+  console.log(
+    `[recap] #${channel.name}: forum — ${threads.length} threads listed, ${candidates.length} in window, ` +
+    `${collected.length} messages kept, ${unreadable} unreadable`,
+  );
   return collected;
 }
 
@@ -408,15 +462,18 @@ export async function generateChannelRecap(
 ): Promise<ChannelRecapResult | null> {
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
 
-  const allMessages: Message[] = channel.type === ChannelType.GuildForum
-    ? await fetchForumMessages(channel as ForumChannel, cutoff)
-    : await fetchSince(channel as TextChannel, cutoff);
+  // Forums are filtered per-thread so each thread's messages stay contiguous and
+  // keep their post title; a text channel is one flat chronological stream.
+  let filtered: FilteredMessage[];
+  if (channel.type === ChannelType.GuildForum) {
+    filtered = await fetchForumRecapMessages(channel as ForumChannel, cutoff);
+  } else {
+    const allMessages = await fetchSince(channel as TextChannel, cutoff);
+    if (allMessages.length === 0) return null;
+    allMessages.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+    filtered = filterRecapMessages(allMessages);
+  }
 
-  if (allMessages.length === 0) return null;
-
-  allMessages.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
-
-  const filtered = filterRecapMessages(allMessages);
   if (filtered.length === 0) return null;
 
   const todayStr = new Date().toISOString().slice(0, 10);

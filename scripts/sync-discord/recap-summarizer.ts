@@ -94,58 +94,85 @@ export async function summarizeMessages(
     return 'No substantive discussion in the general channel today.';
   }
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        {
-          role: 'user',
-          content: `Here are the messages from the Quilibrium Discord #general channel on ${date}. Write a concise recap:\n\n${messagesText}`,
-        },
-      ],
-      max_tokens: 1500,
-      temperature: 0.3,
-      // max_tokens is SHARED with the thinking phase. Without this, the 0731
-      // revision of V4 Flash spent the whole budget reasoning and returned
-      // nothing, which the `|| 'No recap generated.'` below turned into a
-      // 102-character placeholder. That is exactly what landed in the knowledge
-      // base for 2026-09-09 and 2026-09-10 — two days the bot then could not
-      // answer questions about. Same root cause as the Discord digest; see
-      // bot/src/services/recapGenerator.ts.
-      ...reasoningSettings(),
-    }),
-  });
+  const callModel = async (attempt: number) => {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          {
+            role: 'user',
+            content: `Here are the messages from the Quilibrium Discord #general channel on ${date}. Write a concise recap:\n\n${messagesText}`,
+          },
+        ],
+        max_tokens: 1500,
+        temperature: 0.3,
+        // max_tokens is SHARED with the thinking phase. Without this, the 0731
+        // revision of V4 Flash spent the whole budget reasoning and returned
+        // nothing, which a `|| 'No recap generated.'` then turned into a
+        // 102-character placeholder. That is what landed in the knowledge base
+        // for 2026-09-09 and 2026-09-10 — two days the bot could not answer
+        // questions about. Same root cause as the Discord digest; see
+        // bot/src/services/recapGenerator.ts.
+        ...reasoningSettings(),
+      }),
+    });
 
-  if (!response.ok) {
-    const body = await response.text().catch(() => '');
-    throw new Error(`OpenRouter API error ${response.status}: ${body}`);
-  }
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      throw new Error(`OpenRouter API error ${response.status}: ${body}`);
+    }
 
-  const data = (await response.json()) as {
-    model?: string;
-    choices?: { message?: { content?: string }; finish_reason?: string }[];
-    usage?: { completion_tokens?: number; completion_tokens_details?: { reasoning_tokens?: number } };
+    const data = (await response.json()) as {
+      model?: string;
+      choices?: { message?: { content?: string }; finish_reason?: string }[];
+      usage?: { completion_tokens?: number; completion_tokens_details?: { reasoning_tokens?: number } };
+    };
+
+    const c = data.choices?.[0];
+    const out = {
+      content: c?.message?.content?.trim() ?? '',
+      finishReason: String(c?.finish_reason ?? 'unknown'),
+      reasoningTokens: data.usage?.completion_tokens_details?.reasoning_tokens ?? 0,
+    };
+    console.log(
+      `[recap] attempt=${attempt} model=${data.model ?? model} finish=${out.finishReason} ` +
+      `chars=${out.content.length} compTok=${data.usage?.completion_tokens ?? 0} reasonTok=${out.reasoningTokens}`,
+    );
+    return out;
   };
 
-  const choice = data.choices?.[0];
-  const finishReason = String(choice?.finish_reason ?? 'unknown');
-  const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
-  console.log(
-    `[recap] model=${data.model ?? model} finish=${finishReason} ` +
-    `chars=${choice?.message?.content?.trim().length ?? 0} ` +
-    `compTok=${data.usage?.completion_tokens ?? 0} reasonTok=${reasoningTokens}`,
-  );
+  // One retry on an empty reply. This path writes the COMMITTED, ingested
+  // knowledge base and the result is permanent (see the throw below), so a second
+  // ~500-token call is cheap next to losing a day of the corpus. Sampling is
+  // non-deterministic: the same input has come back empty, then fine.
+  let result = await callModel(1);
+  if (!result.content) {
+    console.warn('[recap] no text returned, retrying once');
+    result = await callModel(2);
+  }
 
-  // Throw rather than substituting a placeholder. A silent 'No recap generated.'
-  // is indistinguishable from a genuinely quiet day once it is in the knowledge
-  // base, and it gets committed and ingested as if it were real content. Failing
-  // the workflow run is recoverable; a placeholder is not.
+  const choice = { message: { content: result.content } };
+  const finishReason = result.finishReason;
+  const reasoningTokens = result.reasoningTokens;
+
+  // Throw rather than substituting a placeholder. What this actually does: the
+  // caller (scripts/sync-discord/recap.ts) catches it and writes
+  // formatFallbackMarkdown() instead — the raw timestamped messages. That is a
+  // real, retrievable day of history; the old 'No recap generated.' placeholder
+  // was 102 characters of nothing that still got committed and ingested as if it
+  // were content (that is what landed for 2026-09-09 and 2026-09-10).
+  //
+  // It does NOT fail the workflow: the recap step carries continue-on-error, and
+  // the caller swallows this anyway. And the result is PERMANENT — recap.ts will
+  // not overwrite an existing dated file and advances the lastMessageId
+  // watermark regardless, so tomorrow's run cannot redo the day. Hence the retry
+  // above: it is the only chance to get a real summary.
   if (!choice?.message?.content?.trim()) {
     throw new Error(
       `Recap model returned no text (finish=${finishReason}, reasoningTokens=${reasoningTokens}). ` +

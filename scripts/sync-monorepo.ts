@@ -204,10 +204,9 @@ async function summarizeWithLLM(version: string, commitLines: string[]): Promise
       ],
       max_tokens: 500,
       temperature: 0.2,
-      // max_tokens is SHARED with the thinking phase, and 500 is the tightest
-      // budget of any call in the repo — the 0731 revision of V4 Flash routinely
-      // reasons past it and returns nothing, which the `|| ''` below turns into
-      // an empty release-notes list. Same root cause as the Discord digest.
+      // max_tokens is SHARED with the thinking phase, and 500 is a tight budget:
+      // the 0731 revision of V4 Flash can spend all of it reasoning and return
+      // nothing. Same root cause as the Discord digest.
       ...reasoningSettings(),
     }),
   });
@@ -218,10 +217,16 @@ async function summarizeWithLLM(version: string, commitLines: string[]): Promise
   }
 
   const data = (await response.json()) as {
-    choices: { message: { content: string } }[];
+    choices?: { message?: { content?: string } }[];
   };
 
-  const text = data.choices[0]?.message?.content?.trim() || '';
+  // Throw rather than `|| ''`. An empty string produces an empty bullet list, and
+  // the caller drops the whole version from the release notes on `length > 0` —
+  // silently. Throwing reaches the existing catch, which falls back to
+  // fallbackSummarize()'s heuristic. Disabling reasoning makes an empty reply
+  // unlikely, not impossible.
+  const text = data.choices?.[0]?.message?.content?.trim();
+  if (!text) throw new Error(`Monorepo summarizer returned no text for version ${version}`);
   return text
     .split('\n')
     .map(line => line.trim())
