@@ -87,9 +87,11 @@ export function startDailyRecap(client: Client): void {
 
       // Collect successful results, log failures
       const channelRecaps: ChannelRecapResult[] = [];
+      let failedCount = 0;
       for (let i = 0; i < results.length; i++) {
         const result = results[i];
         if (result.status === 'rejected') {
+          failedCount++;
           console.error(`[digest] Channel ${channelIds[i]} failed:`, result.reason);
         } else if (result.value) {
           channelRecaps.push(result.value);
@@ -97,7 +99,18 @@ export function startDailyRecap(client: Client): void {
       }
 
       if (channelRecaps.length === 0) {
-        console.log('[digest] No channels had substantive content — skipping post');
+        // Separate the two reasons. Reporting an all-errors run as "no
+        // substantive content" is what kept the 09-08/09-10 empty-reply failures
+        // invisible for two days.
+        if (failedCount === channelIds.length) {
+          console.error(
+            `[digest] All ${failedCount} source channels errored — nothing posted. See the per-channel errors above.`,
+          );
+        } else {
+          console.log(
+            `[digest] No channels had substantive content — skipping post (${failedCount} of ${channelIds.length} errored)`,
+          );
+        }
         return;
       }
 

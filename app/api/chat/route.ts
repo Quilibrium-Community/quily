@@ -16,6 +16,7 @@ import { getOAuthConfig, refreshTokens, checkChutesBalance } from '@/src/lib/chu
 import { validateApiKeyWithCredits } from '@/src/lib/openrouter';
 import { getProvider } from '@/src/lib/providers';
 import { withZdr } from '@/src/lib/openrouter-routing';
+import { reasoningSettings } from '@/src/lib/openrouter-reasoning';
 import { getCuratedModels, getChuteUrl } from '@/src/lib/chutes/chuteDiscovery';
 import {
   COOKIE_ACCESS_TOKEN,
@@ -787,6 +788,20 @@ export async function POST(request: Request) {
       accessToken: provider === 'chutes' ? chutesAccessToken || undefined : undefined,
     });
 
+    // A tool that cannot possibly run is worse than no tool at all: the model
+    // still spends whole turns calling it, and `create_knowledge_issue` has no
+    // execute function, so such a turn ends with zero visible text and the user
+    // gets an error instead of an answer (measured 5 of 30 runs on ordinary
+    // questions, scripts/web-answer-probe.ts). Production has no GITHUB_TOKEN,
+    // so createGitHubIssue() could never have filed anything from the web — the
+    // stray calls cost users their answer and produced nothing.
+    //
+    // Declared HERE, above prepareQuery, because the same flag must drive both
+    // the tool list AND the system prompt. Describing the tool while not passing
+    // it makes the model emit the call as visible text, which the client strips
+    // to the end of the message — a silent way to lose the whole answer.
+    const issueToolAvailable = Boolean(process.env.GITHUB_TOKEN);
+
     // Embedding configuration for RAG
     const embeddingProvider = useChutesEmbeddings ? 'chutes' : 'openrouter';
     const embeddingModel =
@@ -873,6 +888,7 @@ export async function POST(request: Request) {
               embeddingModel,
               cohereApiKey: process.env.COHERE_API_KEY,
               priorityDocIds,
+              issueToolAvailable,
             });
             phases.rag = Date.now() - tRag;
 
@@ -985,7 +1001,11 @@ export async function POST(request: Request) {
               model: modelProvider(modelUrl) as Parameters<typeof streamText>[0]['model'],
               system: systemPrompt,
               messages: llmMessages,
-              tools: ragTools,
+              // Same gate as the OpenRouter branch below. This path had the
+              // identical defect — an execute-less tool that can end a turn with
+              // no text — and additionally treats a tool-only turn as success
+              // (see the return below), so it has no recovery at all.
+              ...(issueToolAvailable ? { tools: ragTools } : {}),
               onError: (error) => {
                 // Capture error from onError callback (may not throw)
                 const errObj = error.error;
@@ -1275,21 +1295,76 @@ export async function POST(request: Request) {
         // Default OFF once the A/B confirmed no quality loss; OPENROUTER_REASONING="on"|"true"
         // re-enables it. Passed as a raw setting because the SDK type requires max_tokens/effort
         // even for the pure-disable case, which the OpenRouter API does not.
-        const reasoningEnabled = /^(on|true|1)$/i.test(process.env.OPENROUTER_REASONING ?? 'off');
         const modelSettings: Record<string, unknown> = {};
         if (openrouterRouting) modelSettings.provider = openrouterRouting;
-        if (!reasoningEnabled) modelSettings.reasoning = { enabled: false };
+        Object.assign(modelSettings, reasoningSettings());
         const openrouterModel = Object.keys(modelSettings).length > 0
           ? (modelProvider as ReturnType<typeof createOpenRouter>)(
               model,
               modelSettings as Parameters<ReturnType<typeof createOpenRouter>>[1]
             )
           : modelProvider(model);
+        const streamModel = openrouterModel as Parameters<typeof streamText>[0]['model'];
+
+        /**
+         * Recovery for a turn that produced only a tool call.
+         *
+         * Re-asks WITHOUT tools, which is the only configuration measured at zero
+         * dead runs (scripts/web-answer-probe.ts, 2026-09-11: as-shipped 5/30 with
+         * no answer, no-tools 0/30). Writes the text parts by hand rather than
+         * merging a second UI stream, because the outer stream is already closing
+         * by the time onFinish runs — same manual protocol the Chutes branch uses.
+         *
+         * DORMANT IN PRODUCTION TODAY. It can only fire when a tool call happened,
+         * which now requires GITHUB_TOKEN, which production does not set. The
+         * recovery measurements above were necessarily taken with that token
+         * present. In prod the gate alone is what fixes the defect; this is here
+         * for the deploy that adds the token, and for the Discord-shaped configs
+         * that do set it. Do not read a green prod as evidence this path works.
+         *
+         * Returns the recovered text, or '' if recovery itself failed.
+         */
+        const retryWithoutTools = async (): Promise<string> => {
+          try {
+            const retry = streamText({
+              model: streamModel,
+              system: systemPrompt,
+              messages: llmMessages,
+              // textStream silently DROPS error parts rather than throwing, and
+              // streamText's default onError only console.errors. Without this
+              // handler a 429 or a dropped stream during recovery would end the
+              // for-await quietly, return '', and leave no trace anywhere.
+              onError: (error) => {
+                const msg = error.error instanceof Error ? error.error.message : String(error.error);
+                console.error('[tool-only-retry] Recovery stream error:', msg);
+                debugErrors.push(`tool-only-retry: ${msg}`);
+              },
+            });
+            const id = `text-retry-${Date.now()}`;
+            let out = '';
+            let started = false;
+            for await (const chunk of retry.textStream) {
+              if (!chunk) continue;
+              if (!started) {
+                writer.write({ type: 'text-start', id });
+                started = true;
+              }
+              out += chunk;
+              writer.write({ type: 'text-delta', id, delta: chunk });
+            }
+            if (started) writer.write({ type: 'text-end', id });
+            return out;
+          } catch (e) {
+            console.error('[tool-only-retry] Recovery failed:', e);
+            return '';
+          }
+        };
+
         const result = streamText({
-          model: openrouterModel as Parameters<typeof streamText>[0]['model'],
+          model: streamModel,
           system: systemPrompt,
           messages: llmMessages,
-          tools: ragTools,
+          ...(issueToolAvailable ? { tools: ragTools } : {}),
           onChunk: () => logTiming(),
           onError: (error) => {
             const msg = error.error instanceof Error ? error.error.message : String(error.error);
@@ -1308,18 +1383,50 @@ export async function POST(request: Request) {
             return msg;
           },
           onFinish: async () => {
+            // Declared out here so the follow-up parsing below can fall back to it.
+            let recovered = '';
             // Debug snapshot after streaming completes
             try {
               const text = await result.text;
               const tools = await result.toolCalls;
 
-              // If the model produced no visible content AND no error was already
-              // surfaced, emit a synthetic empty-response error so the user sees something.
-              if (text.length === 0 && debugErrors.length === 0) {
+              // The model can end a turn on a tool call with no usable text.
+              // Measured against live prod 2026-09-11: 17% of runs on ordinary
+              // questions, including "What is Quilibrium?". Recover before saying
+              // anything went wrong — the user asked a question and is entitled to
+              // an answer, not an explanation.
+              //
+              // The threshold is not just `=== 0`: a local run produced a 2-char
+              // reply alongside the tool call, which reaches the user as an
+              // answer-shaped nothing.
+              //
+              // What keeps this off the persona's deliberate one-word deflections
+              // (see personality.ts, "when the honest answer is silence, send a
+              // single word") is the tool-call conjunct, NOT the number — a terse
+              // reply with no tool call is never touched.
+              const usableText = text.trim();
+              const attemptedRecovery =
+                usableText.length < 10 && debugErrors.length === 0 && (tools?.length ?? 0) > 0;
+              if (attemptedRecovery) {
+                console.warn('[tool-only-retry] Turn produced only a tool call — re-asking without tools');
+                recovered = await retryWithoutTools();
+              }
+
+              // Only now, with recovery exhausted, is this genuinely an empty
+              // response. The old copy blamed provider rate-limiting for every
+              // empty turn, which was wrong in the common case and sent users to
+              // switch model in Settings over a prompt bug.
+              //
+              // `attemptedRecovery` is in the condition so that a 2-char reply
+              // whose recovery FAILED still surfaces an error. Keying on
+              // `text.length === 0` alone left that case with no answer and no
+              // error at all — the two halves of this fix disagreeing about what
+              // counts as empty.
+              if ((text.length === 0 || attemptedRecovery) && !recovered && debugErrors.length === 0) {
                 writeError(
                   writer,
                   'empty-response',
-                  'The model returned no content. This usually means the upstream provider rate-limited the request, returned a malformed response, or silently dropped the stream. Try again, or switch model in Settings.'
+                  'The model returned no content. Try asking again — if it keeps happening, the upstream provider may be rate-limiting or dropping the stream, and you can switch model in Settings.'
                 );
               }
 
@@ -1328,6 +1435,8 @@ export async function POST(request: Request) {
                 outputLength: text.length,
                 outputPreview: text.slice(0, 300),
                 toolCallNames: (tools || []).map((t) => t.toolName),
+                toolOnlyRecoveredChars: recovered.length,
+                issueToolOffered: issueToolAvailable,
                 hasToolCallTextLeak: text.includes('create_knowledge_issue'),
                 errors: debugErrors,
               }, writer);
@@ -1357,9 +1466,13 @@ export async function POST(request: Request) {
               });
             }
 
-            // Parse and send follow-up questions
+            // Parse and send follow-up questions. Prefers the recovered text so a
+            // rescued turn still gets follow-up chips. `||` was wrong here: two of
+            // three measured recoveries had 2 chars of original text, which is
+            // truthy, so the chips were parsed from "Ok" and silently lost.
             try {
-              const fullText = await result.text;
+              const baseText = await result.text;
+              const fullText = recovered.length > baseText.length ? recovered : baseText;
               const { questions } = parseFollowUpQuestions(fullText);
               if (questions && questions.length > 0) {
                 writer.write({

@@ -24,9 +24,17 @@ const args = process.argv.slice(2);
 const flag = (name: string) => args.includes(`--${name}`);
 const value = (name: string, def: string) => {
   const i = args.indexOf(`--${name}`);
-  if (i >= 0 && args[i + 1]) {
-    args.splice(i, 2);
-    return args[i] ?? def; // index has shifted after splice
+  // Bounds check, not truthiness: `--url ""` is falsy, so a truthiness test left
+  // the flag and its empty value in `args`, joined them into the question text,
+  // and sent the request to PRODUCTION — the exact silent-prod-fallback below.
+  if (i >= 0 && i + 1 < args.length) {
+    // splice REMOVES the flag and its value and returns them, so the value is
+    // the second removed element. Reading args[i] after the splice read the
+    // token that followed the pair instead: `--url http://localhost:3000` at the
+    // end of the line yielded undefined and silently fell back to PRODUCTION,
+    // and mid-line it turned a word of the question into the target URL.
+    const [, v] = args.splice(i, 2);
+    return v ?? def;
   }
   return def;
 };
