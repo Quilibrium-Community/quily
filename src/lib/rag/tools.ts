@@ -17,7 +17,19 @@ export const ragTools = {
       'Use "knowledge" (default) when EITHER: (a) the user says or implies a prior answer about Quilibrium subject matter (protocol, products, commands, doc content) is wrong, outdated, or incomplete — file even if they do NOT supply the correct value (use a placeholder correction body); OR (b) the user says something SHOULD ALWAYS be stated about a Quilibrium topic that the docs do not cover (a forward-looking knowledge gap, e.g. "always warn about the security implications of X") — file even if the details are still coming. ' +
       'Use "behavior" for a specific, reproducible Quily misbehavior (wrong refusal, false disclaimer, broken instruction-following) where the user points to a concrete instance. ' +
       'NEVER call for a question, a how-to, a request for a tutorial, guide, explanation, comparison, wording or recommendation, or a greeting/joke/banter, generic disagreement with no factual claim, or complaints about your tone/persona/general style. A question is not a knowledge gap even when the docs do not fully answer it: answer what you can and say what is not documented. ' +
-      'A message qualifies only if the user ASSERTS that a prior answer or the docs are wrong, outdated or missing something, or explicitly asks you to log/report/file/track a problem. If it does, FILE IT — a missing value still files a placeholder.',
+      'A message qualifies only if the user ASSERTS that a prior answer or the docs are wrong, outdated or missing something, or explicitly asks you to log/report/file/track a problem. If it does, FILE IT — a missing value still files a placeholder. ' +
+      // Both clauses below are load-bearing and were added after measurement.
+      // A run of this tool on plain questions produced, verbatim:
+      //   {"title":"Demo: knowledge gap placeholder",
+      //    "correction":"Placeholder — no issue here, just tool demonstration."}
+      // The model was not misreading the user; it was exercising an available
+      // tool for its own sake. Naming that failure explicitly is what stops it.
+      'NEVER call this tool to demonstrate, test or exercise it, and never file a placeholder that says there is no real issue — if you would have to write "demo" or "no issue here", do not call it at all. ' +
+      // Deliberately phrased as an instruction without the web-specific reason.
+      // ragTools is shared, and on Discord a tool-only turn is NOT an error —
+      // mention.ts turns it into "Thanks for the correction!" on purpose. Stating
+      // the web consequence as a universal fact would be false there.
+      'ALWAYS write your answer to the user as well: never send a turn that contains only this tool call and no text.',
     inputSchema: zodSchema(
       z.object({
         title: z

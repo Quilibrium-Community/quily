@@ -3,6 +3,7 @@
 // Ported from scripts/sync-discord/recap-filter.ts + recap-summarizer.ts
 
 import type { Message, TextChannel } from 'discord.js';
+import { reasoningSettings } from '../../../src/lib/openrouter-reasoning';
 
 /** Cassie's Discord user ID — lead dev, messages bypass noise filters */
 const CASSIE_USER_ID = '597996105300705301';
@@ -81,6 +82,13 @@ export function filterRecapMessages(messages: Message[]): FilteredMessage[] {
 
 const DEFAULT_RECAP_MODEL = '~deepseek/deepseek-v4-flash-latest';
 const MAX_INPUT_CHARS = 60_000;
+
+// Output budget, SHARED with the thinking phase whenever reasoning is on. With
+// reasoning off a full recap costs ~400-500 completion tokens (measured against
+// real #general traffic, 2026-09-11), so 1500 is roomy. With reasoning on the
+// 0731 revision of V4 Flash spends 400-1650 of it thinking and regularly hands
+// back nothing at all — see the block comment on summarizeForRecap.
+const MAX_RECAP_OUTPUT_TOKENS = 1500;
 
 const SKIP_EMPTY_RULE = `
 
@@ -163,6 +171,96 @@ function formatMessagesForLLM(filtered: FilteredMessage[]): string {
   return allFormatted.join('\n');
 }
 
+interface RecapCompletion {
+  content: string;
+  finishReason: string;
+  completionTokens: number;
+  reasoningTokens: number;
+  resolvedModel: string;
+}
+
+/** One OpenRouter call. Reports what came back rather than coercing it. */
+async function callRecapModel(
+  apiKey: string,
+  model: string,
+  systemPrompt: string,
+  userContent: string,
+): Promise<RecapCompletion> {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userContent },
+      ],
+      max_tokens: MAX_RECAP_OUTPUT_TOKENS,
+      temperature: 0.3,
+      // Same OPENROUTER_REASONING switch as the chat path.
+      ...reasoningSettings(),
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => '');
+    throw new Error(`OpenRouter API error ${response.status}: ${body}`);
+  }
+
+  const data = (await response.json()) as {
+    model?: string;
+    choices?: { message?: { content?: string }; finish_reason?: string }[];
+    usage?: {
+      completion_tokens?: number;
+      completion_tokens_details?: { reasoning_tokens?: number };
+    };
+  };
+
+  const choice = data.choices?.[0];
+  return {
+    content: choice?.message?.content?.trim() ?? '',
+    finishReason: String(choice?.finish_reason ?? 'unknown'),
+    completionTokens: data.usage?.completion_tokens ?? 0,
+    reasoningTokens: data.usage?.completion_tokens_details?.reasoning_tokens ?? 0,
+    resolvedModel: data.model ?? model,
+  };
+}
+
+/**
+ * True only for the model's deliberate "nothing worth recapping" verdict.
+ * Tolerates the model wrapping the sentinel in markdown or a trailing period.
+ *
+ * Do NOT strip `_` here: the sentinel itself contains one, so a character class
+ * including `_` reduces "SKIP_EMPTY" to "SKIPEMPTY" and the comparison can never
+ * be true. That bug shipped in review and would have posted a digest section
+ * whose entire body was the literal text `**SKIP_EMPTY**`.
+ */
+function isSkipSentinel(content: string): boolean {
+  return /^skip[_\s]?empty$/i.test(content.replace(/[*`.]/g, '').trim());
+}
+
+/**
+ * Summarize a channel's filtered messages.
+ *
+ * Returns SKIP_EMPTY only when the MODEL SAID SO. An empty API reply is a
+ * failure and throws, so the caller logs it instead of dropping the digest
+ * silently.
+ *
+ * This distinction is the whole bug. The old code was
+ * `content?.trim() || SKIP_EMPTY`, which made "the model returned nothing"
+ * indistinguishable from "the model judged this to be banter". When the
+ * `~deepseek/deepseek-v4-flash-latest` alias started resolving to the 0731
+ * revision (2026-09-08), reasoning began eating the shared token budget:
+ * measured against real #general traffic on 2026-09-11, reasoning consumed
+ * 392-1650 of the 1500-token cap, producing either zero visible characters or
+ * a recap cut off mid-sentence. Production logged that as
+ * "No channels had substantive content" on 09-08 and 09-10, and wrote a
+ * 407-byte truncated recap on 09-09. Reasoning off: 3/3 clean full recaps at
+ * ~400-500 completion tokens.
+ */
 export async function summarizeForRecap(
   filtered: FilteredMessage[],
   date: string,
@@ -179,40 +277,47 @@ export async function summarizeForRecap(
   }
 
   const systemPrompt = getSystemPrompt(channelName);
+  const userContent = `Here are the messages from the Quilibrium Discord #${channelName} channel on ${date}. Write a concise recap:\n\n${messagesText}`;
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        {
-          role: 'user',
-          content: `Here are the messages from the Quilibrium Discord #${channelName} channel on ${date}. Write a concise recap:\n\n${messagesText}`,
-        },
-      ],
-      max_tokens: 1500,
-      temperature: 0.3,
-    }),
-  });
-
-  if (!response.ok) {
-    const body = await response.text().catch(() => '');
-    throw new Error(`OpenRouter API error ${response.status}: ${body}`);
-  }
-
-  const data = (await response.json()) as {
-    choices: { message: { content: string } }[];
+  const attempt = async (n: number): Promise<RecapCompletion> => {
+    const r = await callRecapModel(apiKey, model, systemPrompt, userContent);
+    console.log(
+      `[recap] #${channelName} attempt=${n} model=${r.resolvedModel} finish=${r.finishReason} ` +
+      `chars=${r.content.length} compTok=${r.completionTokens} reasonTok=${r.reasoningTokens}`,
+    );
+    return r;
   };
 
-  let content = data.choices[0]?.message?.content?.trim() || SKIP_EMPTY;
+  // Sampling is non-deterministic — the same input went empty, then SKIP_EMPTY,
+  // then truncated across three consecutive probe runs — so one retry is cheap
+  // insurance even with reasoning off.
+  let result = await attempt(1);
+  if (!result.content) {
+    console.warn(`[recap] #${channelName}: no text returned, retrying once`);
+    result = await attempt(2);
+  }
+
+  if (!result.content) {
+    throw new Error(
+      `Recap model returned no text for #${channelName} after 2 attempts ` +
+      `(finish=${result.finishReason}, reasoningTokens=${result.reasoningTokens}). ` +
+      `If reasoningTokens is near ${MAX_RECAP_OUTPUT_TOKENS}, thinking consumed the output budget.`,
+    );
+  }
+
+  if (result.finishReason === 'length') {
+    // Posting a partial recap beats posting nothing, but this must be visible:
+    // with reasoning off it should not happen at all.
+    console.warn(
+      `[recap] #${channelName}: output hit the ${MAX_RECAP_OUTPUT_TOKENS}-token cap ` +
+      `(reasonTok=${result.reasoningTokens}) — posting a truncated recap`,
+    );
+  }
+
+  if (isSkipSentinel(result.content)) return SKIP_EMPTY;
+
   // Strip any remaining @username mentions to avoid Discord notifications
-  content = content.replace(/@(\w+)/g, '$1');
-  return content;
+  return result.content.replace(/@(\w+)/g, '$1');
 }
 
 // ---------------------------------------------------------------------------

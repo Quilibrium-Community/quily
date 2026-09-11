@@ -7,6 +7,7 @@ import { normalizeQuery } from './queryNormalizer';
 import { parseFollowUpQuestions } from './followUpParser';
 import { ragTools } from './tools';
 import { withZdr } from '../openrouter-routing';
+import { isReasoningEnabled } from '../openrouter-reasoning';
 import type { RetrievedChunk, RetrievalOptions, SourceReference } from './types';
 import type { RelevanceQuality } from './prompt';
 
@@ -24,6 +25,13 @@ export interface PrepareQueryOptions {
   cohereApiKey?: string;
   /** Operator-configured form of address for this user. Discord only. */
   addressAs?: string;
+  /**
+   * Whether the caller will pass `create_knowledge_issue` to the model.
+   * Must match the caller's actual tool list — see buildSystemPrompt's docs for
+   * what goes wrong when the prompt describes a tool the model doesn't have.
+   * Defaults to true.
+   */
+  issueToolAvailable?: boolean;
   /**
    * Cancels in-flight generation (and prevents the retry / fallback chain from
    * starting new ones). The Discord handler races processQuery against a timer;
@@ -68,7 +76,14 @@ export async function prepareQuery(options: PrepareQueryOptions): Promise<Prepar
 
   const chunks = await retrieveWithReranking(normalizedQuery, retrievalOptions);
   const { context, quality, avgSimilarity } = buildContextBlock(chunks);
-  const systemPrompt = buildSystemPrompt(context, chunks.length, options.addressAs);
+  // The prompt must only describe the issue tool when the caller will actually
+  // pass it. Defaults to true: the Discord path always passes ragTools.
+  const systemPrompt = buildSystemPrompt(
+    context,
+    chunks.length,
+    options.addressAs,
+    options.issueToolAvailable ?? true,
+  );
   const sources = formatSourcesForClient(chunks);
 
   return {
@@ -105,16 +120,8 @@ export const OPENROUTER_PRIMARY_PROVIDER_ORDER = ['SiliconFlow', 'DeepInfra'];
 // answer with reasoning off used ~800 tokens (arm B).
 export const MAX_OUTPUT_TOKENS = 1500;
 
-/**
- * Reasoning toggle, same env switch as app/api/chat/route.ts. Default OFF.
- * The July 2026 A/B (see .agents/reports/2026-07-11-reasoning-ab.md) found no
- * quality loss for this facts-from-RAG bot; on the Discord path reasoning also
- * competes with the answer for MAX_OUTPUT_TOKENS, which is what produced the
- * bare-👀 replies in GitHub #122. Set OPENROUTER_REASONING=on to re-enable.
- */
-function isReasoningEnabled(): boolean {
-  return /^(on|true|1)$/i.test(process.env.OPENROUTER_REASONING ?? 'off');
-}
+// Reasoning toggle lives in src/lib/openrouter-reasoning.ts so the bot's digest
+// services can share it without importing this module's Supabase chain.
 
 const DEFAULT_FALLBACK_MODELS: Record<string, string[]> = {
   openrouter: [

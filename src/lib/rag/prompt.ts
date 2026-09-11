@@ -172,15 +172,74 @@ function getTitleFromPath(filePath: string): string {
  * @param chunkCount - Number of sources available for citation
  * @param addressAs - Operator-configured form of address for this specific user.
  *   Discord only; the web client has no user identity, so it never passes one.
+ * @param issueToolAvailable - Whether `create_knowledge_issue` is actually in the
+ *   model's tool list for this call. MUST match what the caller passes to
+ *   generateText/streamText. Describing a tool the model hasn't been given makes
+ *   DeepSeek emit tool-call syntax as plain text instead, and the client strips
+ *   from that text to the end of the message (MessageBubble's TOOL_CALL_TEXT_REGEX),
+ *   so a leak on the first line erases the whole answer with no error shown.
  * @returns Complete system prompt for LLM
  */
 export function buildSystemPrompt(
   context: string,
   chunkCount: number,
   addressAs?: string,
+  issueToolAvailable = true,
 ): string {
   const maxCitation = chunkCount > 0 ? chunkCount : 0;
   const personality = buildPersonalityBlock();
+
+  // Describing `create_knowledge_issue` is only safe when the caller actually
+  // passed the tool. Otherwise the model is told to call something it has no
+  // handle for, and emits the call as visible text instead — which the client
+  // then strips from that line to the end of the message, silently erasing the
+  // answer. When the tool is absent, say what to do WITHOUT it.
+  //
+  // The wording below replaced a tiebreak that read "lean toward filing; a stray
+  // issue is cheaper than a lost correction." That premise was false on the web:
+  // `create_knowledge_issue` has no execute function, so a turn spent on it ends
+  // with zero visible text and the user gets an error instead of an answer.
+  // Be careful what you conclude from this rewrite: it was measured NOT to help
+  // on its own (5 of 70 runs still produced no answer, versus 7 of 70 before —
+  // scripts/web-answer-probe.ts, 2026-09-11). It is kept because it removes a
+  // genuine self-contradiction with the "plain question" exclusion, NOT because
+  // it fixes the defect. The fix is the tool gate in app/api/chat/route.ts.
+  const correctionSection = issueToolAvailable
+    ? `## Error & Correction Handling
+
+\`create_knowledge_issue\` files a GitHub issue so maintainers can fix or extend the knowledge base. **Users almost never say "open an issue" — don't wait for that phrase.** Infer the intent from what they're doing. Three signals trigger a call (two file as "knowledge", one as "behavior"); everything else is on the short don't-call list. Decide which case applies, then act; do not re-derive the boundary each time.
+
+**CALL \`kind: "knowledge"\` when EITHER of these is true:**
+
+1. **Correction** — the user says (or clearly implies) that a prior answer about **Quilibrium subject matter** (protocol, products, commands, doc content) is wrong, outdated, or incomplete. File whether or not they give the correct value. If they don't give it, file a placeholder: put the topic in the title and write the correction body as "User reports the above is wrong; correct value to follow / needs maintainer research." Do NOT refuse just because the right answer isn't supplied yet.
+2. **Knowledge gap / addition** — the user says something **should always** be stated about a Quilibrium topic that the docs don't currently cover (e.g. "if you mention Quilscan Node Manager, always warn about the security implications"). This is a valid knowledge issue even though it's forward-looking and even if the specifics ("I'll send details later") haven't arrived. File a placeholder with the topic and the gap they described.
+   **The trigger is the USER asserting what the docs ought to say — never your own impression that the retrieved context is thin.** "I asked something and the docs don't fully answer it" is not a gap signal, it is an ordinary question. Answer it and say plainly which parts aren't documented.
+
+**CALL \`kind: "behavior"\`** — a specific, reproducible misbehavior in your OWN responses (wrong refusal, false disclaimer, broken instruction-following) where the user points to a concrete instance and you can state what you should have done instead. Example: "you disclaimed about a URL I never wrote."
+
+**DO NOT call (any kind) for:**
+- A plain **question** you can just answer, greeting, joke, or banter.
+- **Generic disagreement** with no factual claim ("I don't think that's right" and nothing else) — ask what specifically is wrong.
+- Complaints about your **tone, persona, or general style** ("be friendlier", "your prompt seems too strict") — these are not knowledge or behavior issues.
+
+If a message is a correction or a knowledge-gap about a real Quilibrium topic, FILE IT — being right about a topic but giving no value still files a placeholder. Briefly tell the user you've opened it. Do NOT output tool-call JSON in your visible reply, and do NOT proactively file when the user gave no correction or gap signal at all.
+
+**When a message is a QUESTION, answer it. Never file instead.** A question stays a question however poorly the docs cover it — thin context is a reason to say what isn't documented, never a reason to open an issue. Filing requires the user to ASSERT that a prior answer or the docs are wrong, to state what the docs SHOULD say, or to explicitly ask you to log/report/file something.
+
+**Never spend a turn on a tool call alone.** Always write the answer; file alongside it if the message genuinely warrants it. A reply containing only a tool call gives the user nothing to read.
+
+---
+`
+    : `## Error & Correction Handling
+
+You have no issue-filing tool available on this request. When a user reports that a prior answer or the docs are wrong, outdated or incomplete, or asks you to log or report something: acknowledge it plainly, answer whatever you can, and point them to https://github.com/Quilibrium-Community/quily/issues to open it themselves.
+
+**Never claim you have logged, filed, opened or reported anything** — you have not, and saying "Logged." when nothing was recorded is a lie the user will act on. Say that you can't file it yourself and that they should open it at the link.
+
+**Never** write a tool call, a function call, or JSON resembling one into your reply — you have no tool to call, and doing so corrupts the message the user sees. Always answer the question in front of you.
+
+---
+`;
 
   // Placed immediately after the personality block, adjacent to the Provocation
   // rules it overrides, and stated as operator configuration rather than as a
@@ -257,25 +316,7 @@ That list is illustrative, not exhaustive. The test is the mission, not membersh
 
 ---
 
-## Error & Correction Handling
-
-\`create_knowledge_issue\` files a GitHub issue so maintainers can fix or extend the knowledge base. **Users almost never say "open an issue" — don't wait for that phrase.** Infer the intent from what they're doing. Three signals trigger a call (two file as "knowledge", one as "behavior"); everything else is on the short don't-call list. Decide which case applies, then act; do not re-derive the boundary each time.
-
-**CALL \`kind: "knowledge"\` when EITHER of these is true:**
-
-1. **Correction** — the user says (or clearly implies) that a prior answer about **Quilibrium subject matter** (protocol, products, commands, doc content) is wrong, outdated, or incomplete. File whether or not they give the correct value. If they don't give it, file a placeholder: put the topic in the title and write the correction body as "User reports the above is wrong; correct value to follow / needs maintainer research." Do NOT refuse just because the right answer isn't supplied yet.
-2. **Knowledge gap / addition** — the user says something **should always** be stated about a Quilibrium topic that the docs don't currently cover (e.g. "if you mention Quilscan Node Manager, always warn about the security implications"). This is a valid knowledge issue even though it's forward-looking and even if the specifics ("I'll send details later") haven't arrived. File a placeholder with the topic and the gap they described.
-
-**CALL \`kind: "behavior"\`** — a specific, reproducible misbehavior in your OWN responses (wrong refusal, false disclaimer, broken instruction-following) where the user points to a concrete instance and you can state what you should have done instead. Example: "you disclaimed about a URL I never wrote."
-
-**DO NOT call (any kind) for:**
-- A plain **question** you can just answer, greeting, joke, or banter.
-- **Generic disagreement** with no factual claim ("I don't think that's right" and nothing else) — ask what specifically is wrong.
-- Complaints about your **tone, persona, or general style** ("be friendlier", "your prompt seems too strict") — these are not knowledge or behavior issues.
-
-This last list is the only gate. If a message is a correction or a knowledge-gap about a real Quilibrium topic, FILE IT — being right about a topic but giving no value still files a placeholder. When the case is genuinely between "correction" and "just a question", lean toward filing; a stray issue is cheaper than a lost correction. Briefly tell the user you've opened it. Do NOT output tool-call JSON in your visible reply, and do NOT proactively file when the user gave no correction or gap signal at all.
-
----
+${correctionSection}
 
 ## Documentation Context
 

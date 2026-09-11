@@ -3,6 +3,7 @@
 // Two-pass: (1) vision pre-pass for any image attachments, (2) main LLM triage.
 
 import type { Message, TextChannel } from 'discord.js';
+import { reasoningSettings } from '../../../src/lib/openrouter-reasoning';
 
 const DEFAULT_TRIAGE_MODEL = '~deepseek/deepseek-v4-flash-latest';
 const DEFAULT_VISION_MODEL = 'google/gemini-2.5-flash-lite';
@@ -297,6 +298,13 @@ async function runTriage(enriched: EnrichedMessage[], date: string): Promise<Bug
       max_tokens: 4000,
       temperature: 0.2,
       response_format: { type: 'json_object' },
+      // Same OPENROUTER_REASONING switch as the chat path. max_tokens is shared
+      // with the thinking phase, and this call must return COMPLETE JSON — a
+      // budget half-spent on reasoning truncates the object mid-key, which is
+      // the "[bug-digest] ... SyntaxError: Unexpected end of JSON input" in the
+      // production log. Same root cause as the daily recap; see the block
+      // comment on summarizeForRecap in recapGenerator.ts.
+      ...reasoningSettings(),
     }),
   });
 
@@ -305,9 +313,39 @@ async function runTriage(enriched: EnrichedMessage[], date: string): Promise<Bug
     throw new Error(`Triage API error ${response.status}: ${body}`);
   }
 
-  const data = (await response.json()) as { choices: { message: { content: string } }[] };
-  const raw = data.choices[0]?.message?.content?.trim();
-  if (!raw) return null;
+  const data = (await response.json()) as {
+    model?: string;
+    choices?: { message?: { content?: string }; finish_reason?: string }[];
+    usage?: {
+      completion_tokens?: number;
+      completion_tokens_details?: { reasoning_tokens?: number };
+    };
+  };
+  const choice = data.choices?.[0];
+  const raw = choice?.message?.content?.trim();
+  const finishReason = String(choice?.finish_reason ?? 'unknown');
+  const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
+  console.log(
+    `[bug-triage] model=${data.model ?? model} finish=${finishReason} chars=${raw?.length ?? 0} ` +
+    `compTok=${data.usage?.completion_tokens ?? 0} reasonTok=${reasoningTokens}`,
+  );
+
+  if (!raw) {
+    // Distinct from "no bugs to report": the caller returning null here used to
+    // print "No substantive bug reports", hiding an empty model reply as a
+    // clean result.
+    throw new Error(
+      `Triage model returned no text (finish=${finishReason}, reasoningTokens=${reasoningTokens}). ` +
+      `If reasoningTokens is near 4000, thinking consumed the output budget.`,
+    );
+  }
+
+  if (finishReason === 'length') {
+    console.warn(
+      `[bug-triage] output hit the 4000-token cap (reasonTok=${reasoningTokens}) — ` +
+      `JSON is probably truncated and the parse below will fail`,
+    );
+  }
 
   let parsed: unknown;
   try {
@@ -318,8 +356,13 @@ async function runTriage(enriched: EnrichedMessage[], date: string): Promise<Bug
   }
 
   if (!isValidTriageResult(parsed)) {
+    // Throw, don't return null. Returning null here reached the caller as
+    // "No substantive bug reports — skipping post", i.e. the same conflation of
+    // a model failure with a quiet day that this file's empty-content branch was
+    // just fixed to avoid. A genuinely quiet day never gets this far: it exits
+    // earlier, on an empty message list.
     console.error('[bug-triage] Invalid triage shape:', raw.slice(0, 500));
-    return null;
+    throw new Error('Triage returned JSON without the expected clusters/needs_more_info shape');
   }
 
   return {
