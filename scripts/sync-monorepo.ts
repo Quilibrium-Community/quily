@@ -220,18 +220,25 @@ async function summarizeWithLLM(version: string, commitLines: string[]): Promise
     choices?: { message?: { content?: string } }[];
   };
 
-  // Throw rather than `|| ''`. An empty string produces an empty bullet list, and
-  // the caller drops the whole version from the release notes on `length > 0` —
-  // silently. Throwing reaches the existing catch, which falls back to
-  // fallbackSummarize()'s heuristic. Disabling reasoning makes an empty reply
-  // unlikely, not impossible.
-  const text = data.choices?.[0]?.message?.content?.trim();
-  if (!text) throw new Error(`Monorepo summarizer returned no text for version ${version}`);
-  return text
+  // Test AFTER parsing, not before. The caller drops a version from the release
+  // notes entirely when `bullets.length === 0`, silently — and a reply can be
+  // non-empty yet still yield no bullets (prose, a numbered list, a fenced
+  // block). Checking only for empty content left that path exactly as silent as
+  // the `|| ''` it replaced. Throwing reaches the existing catch, which falls
+  // back to fallbackSummarize()'s heuristic.
+  const text = data.choices?.[0]?.message?.content?.trim() ?? '';
+  const bullets = text
     .split('\n')
     .map(line => line.trim())
     .filter(line => line.startsWith('- '))
     .map(line => line.substring(2).trim());
+  if (bullets.length === 0) {
+    throw new Error(
+      `Monorepo summarizer produced no bullet points for version ${version} ` +
+      `(${text.length} chars returned)`,
+    );
+  }
+  return bullets;
 }
 
 function fallbackSummarize(commitLines: string[]): string[] {

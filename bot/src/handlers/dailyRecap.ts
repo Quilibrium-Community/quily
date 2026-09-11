@@ -1,7 +1,7 @@
 // bot/src/handlers/dailyRecap.ts
 // Multi-channel daily digest — posts to #daily-digest channel.
 
-import type { Client, ForumChannel, TextChannel } from 'discord.js';
+import type { Client, ForumChannel, MediaChannel, TextChannel } from 'discord.js';
 import { ChannelType } from 'discord.js';
 import { generateChannelRecap, type ChannelRecapResult } from '../services/recapGenerator';
 import { chunkMessage } from '../utils/messageChunker';
@@ -80,7 +80,7 @@ export function startDailyRecap(client: Client): void {
                 `Channel ${id} (#${name}) is a ${ChannelType[channel.type] ?? channel.type}, which the digest cannot read`,
               );
             }
-            return await generateChannelRecap(channel as TextChannel | ForumChannel);
+            return await generateChannelRecap(channel as TextChannel | ForumChannel | MediaChannel);
           } catch (e) {
             // Name the fix. "Missing Access" on its own reads like a bug in here;
             // it is a Discord permission the bot has to be granted. `cause` keeps
@@ -147,7 +147,15 @@ export function startDailyRecap(client: Client): void {
       );
 
       const digestBody = `**Daily Digest - ${titleDate}**\n\n${sections.join('\n\n')}`;
-      const footer = `\n\n-# *Digests are posted daily at ${hour}:00 UTC*`;
+      // Surface partial failures in the POST, not only in the logs. A source
+      // channel can break permanently — #treasury-ideas failed every day for
+      // months, and #dev-general still does — and nobody reads a pm2 log on a
+      // VPS daily. Without this line a digest that silently lost a channel looks
+      // exactly like a complete one.
+      const failureNote = failedCount > 0
+        ? `\n-# ⚠️ ${failedCount} of ${channelIds.length} source channels could not be read — see bot logs`
+        : '';
+      const footer = `${failureNote}\n\n-# *Digests are posted daily at ${hour}:00 UTC*`;
 
       const fullMessage = suppressDiscordEmbeds(digestBody + footer);
       const chunks = chunkMessage(fullMessage);

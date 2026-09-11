@@ -2,7 +2,7 @@
 // Generates daily community recaps from Discord channel messages.
 // Ported from scripts/sync-discord/recap-filter.ts + recap-summarizer.ts
 
-import type { AnyThreadChannel, ForumChannel, Message, TextChannel } from 'discord.js';
+import type { AnyThreadChannel, ForumChannel, MediaChannel, Message, TextChannel } from 'discord.js';
 import { ChannelType, SnowflakeUtil } from 'discord.js';
 import { reasoningSettings } from '../../../src/lib/openrouter-reasoning';
 
@@ -86,9 +86,10 @@ const MAX_INPUT_CHARS = 60_000;
 
 // Output budget, SHARED with the thinking phase whenever reasoning is on. With
 // reasoning off a full recap costs ~400-500 completion tokens (measured against
-// real #general traffic, 2026-09-11), so 1500 is roomy. With reasoning on the
-// 0731 revision of V4 Flash spends 400-1650 of it thinking and regularly hands
-// back nothing at all — see the block comment on summarizeForRecap.
+// real #general traffic, 2026-09-11), so 1500 is roomy. With reasoning on, the
+// 0731 revision of V4 Flash was measured spending up to 1650 reasoning tokens
+// against this 1500 cap and regularly handing back nothing at all — see the
+// block comment on summarizeForRecap.
 const MAX_RECAP_OUTPUT_TOKENS = 1500;
 
 const SKIP_EMPTY_RULE = `
@@ -232,15 +233,17 @@ async function callRecapModel(
 
 /**
  * True only for the model's deliberate "nothing worth recapping" verdict.
- * Tolerates the model wrapping the sentinel in markdown or a trailing period.
  *
- * Do NOT strip `_` here: the sentinel itself contains one, so a character class
- * including `_` reduces "SKIP_EMPTY" to "SKIPEMPTY" and the comparison can never
- * be true. That bug shipped in review and would have posted a digest section
- * whose entire body was the literal text `**SKIP_EMPTY**`.
+ * Quotes are stripped because SKIP_EMPTY_RULE above asks the model to `respond
+ * with exactly "SKIP_EMPTY"` — with the quotes inside the prompt text — so the
+ * quoted form is the one it is being taught to produce.
+ *
+ * Do NOT strip `_`: the sentinel itself contains one, so a character class
+ * including `_` reduces "SKIP_EMPTY" to "SKIPEMPTY" and the test can never pass,
+ * which posts a digest section whose entire body is the literal sentinel.
  */
 function isSkipSentinel(content: string): boolean {
-  return /^skip[_\s]?empty$/i.test(content.replace(/[*`.]/g, '').trim());
+  return /^skip[_\s]?empty$/i.test(content.replace(/["'*`.]/g, '').trim());
 }
 
 /**
@@ -255,8 +258,8 @@ function isSkipSentinel(content: string): boolean {
  * indistinguishable from "the model judged this to be banter". When the
  * `~deepseek/deepseek-v4-flash-latest` alias started resolving to the 0731
  * revision (2026-09-08), reasoning began eating the shared token budget:
- * measured against real #general traffic on 2026-09-11, reasoning consumed
- * 392-1650 of the 1500-token cap, producing either zero visible characters or
+ * measured against real #general traffic on 2026-09-11, reasoning consumed up to
+ * 1650 tokens against the 1500-token cap, producing either zero visible characters or
  * a recap cut off mid-sentence. Production logged that as
  * "No channels had substantive content" on 09-08 and 09-10, and wrote a
  * 407-byte truncated recap on 09-09. Reasoning off: 3/3 clean full recaps at
@@ -367,7 +370,6 @@ export async function fetchForumRecapMessages(
   cutoff: number,
 ): Promise<FilteredMessage[]> {
   const threads: AnyThreadChannel[] = [];
-  let activeFailed = false;
   let archivedFailed = false;
   let archivedTruncated = false;
 
@@ -375,7 +377,10 @@ export async function fetchForumRecapMessages(
     const active = await channel.threads.fetchActive();
     threads.push(...active.threads.values());
   } catch (e) {
-    activeFailed = true;
+    // Warn only. fetchActive() hits the GUILD-wide active-threads route and
+    // filters by parent client-side, so it does not raise Missing Access for a
+    // single forum — it just comes back empty. It therefore carries no
+    // permission signal and must not be part of one.
     console.warn(`[recap] #${channel.name}: could not list active threads:`, (e as Error).message);
   }
   try {
@@ -387,15 +392,6 @@ export async function fetchForumRecapMessages(
     console.warn(`[recap] #${channel.name}: could not list archived threads:`, (e as Error).message);
   }
 
-  // Neither listing worked: there is no data, which is NOT the same as a quiet
-  // forum. Returning [] here would surface as "no substantive content" — exactly
-  // the silent degradation this file was rewritten to remove.
-  if (activeFailed && archivedFailed) {
-    throw new Error(
-      `#${channel.name}: could not list any threads (active and archived both failed) — ` +
-      `check View Channel + Read Message History for the bot on this forum`,
-    );
-  }
   if (archivedTruncated) {
     console.warn(`[recap] #${channel.name}: archived thread list truncated at 50 — a very busy day may be under-reported`);
   }
@@ -415,6 +411,7 @@ export async function fetchForumRecapMessages(
 
   const collected: FilteredMessage[] = [];
   let unreadable = 0;
+  let deniedCount = 0;
   for (const thread of candidates) {
     try {
       const msgs = await fetchSince(thread, cutoff);
@@ -423,26 +420,53 @@ export async function fetchForumRecapMessages(
       const filtered = filterRecapMessages(msgs);
       if (filtered.length === 0) continue;
 
-      // The forum post TITLE is the proposal; it lives in no message body. Put it
-      // on this thread's first surviving message, and keep each thread's messages
-      // contiguous rather than sorting all threads together — otherwise the
-      // summarizer receives interleaved replies from unrelated proposals with
-      // nothing to attribute them to.
+      // The forum post TITLE is the proposal and lives in no message body, so it
+      // has to travel with the messages. It is phrased as CONTEXT, not as part of
+      // what the author wrote: fetchSince stops at the cutoff, so for any thread
+      // older than the window `filtered[0]` is the oldest in-window REPLY, not
+      // the opening post. Wording it as "[in forum post: X]" keeps the summarizer
+      // from reading that replier as the proposer.
+      //
+      // Each thread's messages also stay contiguous rather than being sorted
+      // across threads, or the summarizer gets interleaved replies from unrelated
+      // proposals with nothing to attribute them to.
       collected.push(
-        { ...filtered[0], content: `[forum post: ${thread.name}] ${filtered[0].content}` },
+        { ...filtered[0], content: `[in forum post: ${thread.name}] ${filtered[0].content}` },
         ...filtered.slice(1),
       );
     } catch (e) {
       unreadable++;
+      if ((e as { code?: number }).code === 50001) deniedCount++;
       console.warn(`[recap] #${channel.name}: thread "${thread.name}" unreadable:`, (e as Error).message);
     }
   }
 
-  // Every candidate failed to read: again a permissions problem, not a quiet day.
-  if (unreadable > 0 && collected.length === 0) {
+  // Permission problems must be loud; transient ones must not masquerade as them.
+  //
+  // The listing above carries the signal: fetchArchived IS channel-scoped and
+  // does raise Missing Access, unlike fetchActive. If it failed and nothing was
+  // read, the forum is unreadable rather than quiet — and because forum posts
+  // auto-archive quickly, that combination is the normal shape of a
+  // misconfigured forum, not an edge case.
+  if (archivedFailed && collected.length === 0) {
     throw new Error(
-      `#${channel.name}: all ${unreadable} of ${candidates.length} candidate threads were unreadable — ` +
+      `#${channel.name}: archived thread listing failed and nothing was read — ` +
       `check View Channel + Read Message History for the bot on this forum`,
+    );
+  }
+  // Only claim a permissions problem when every failure actually said so. A
+  // single deleted thread, or one 500, used to be enough to fail the whole
+  // channel with advice to fix permissions that were already correct.
+  if (deniedCount > 0 && deniedCount === unreadable && collected.length === 0) {
+    throw new Error(
+      `#${channel.name}: all ${unreadable} of ${candidates.length} candidate threads returned Missing Access — ` +
+      `check View Channel + Read Message History for the bot on this forum`,
+    );
+  }
+  if (unreadable > 0 && collected.length === 0) {
+    console.warn(
+      `[recap] #${channel.name}: ${unreadable} of ${candidates.length} candidate threads failed to read ` +
+      `(not permission errors) and nothing was collected`,
     );
   }
 
@@ -458,14 +482,18 @@ export async function fetchForumRecapMessages(
  * Returns null if no substantive messages or LLM returns SKIP_EMPTY.
  */
 export async function generateChannelRecap(
-  channel: TextChannel | ForumChannel,
+  channel: TextChannel | ForumChannel | MediaChannel,
 ): Promise<ChannelRecapResult | null> {
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
 
   // Forums are filtered per-thread so each thread's messages stay contiguous and
   // keep their post title; a text channel is one flat chronological stream.
   let filtered: FilteredMessage[];
-  if (channel.type === ChannelType.GuildForum) {
+  // GuildMedia must be here too, not just in the caller's admission check.
+  // MediaChannel extends the same thread-only base as ForumChannel and has no
+  // `messages` manager at all, so letting one reach fetchSince below is a
+  // TypeError on `channel.messages.fetch`, not a graceful failure.
+  if (channel.type === ChannelType.GuildForum || channel.type === ChannelType.GuildMedia) {
     filtered = await fetchForumRecapMessages(channel as ForumChannel, cutoff);
   } else {
     const allMessages = await fetchSince(channel as TextChannel, cutoff);

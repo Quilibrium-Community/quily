@@ -9,9 +9,19 @@
  * the days already written.
  *
  * It reuses the real pipeline — fetchMessages, filterMessages, summarizeMessages
- * and the same markdown assembly as recap.ts — so the output is byte-comparable
- * with a normal run. The ONLY deliberate difference is that this overwrites an
- * existing file, which recap.ts refuses to do.
+ * and the same markdown assembly as recap.ts — so the FORMAT is identical to a
+ * normal run (frontmatter keys and order, the em dash in the heading, the en
+ * dash in the time range, no trailing newline). The CONTENT can legitimately
+ * differ: recap.ts only sees messages after its manifest watermark, whereas this
+ * sees the whole UTC day, so a backfill is usually more complete.
+ *
+ * The ONLY deliberate behavioural difference is that this overwrites an existing
+ * file, which recap.ts refuses to do — that refusal is precisely why a day
+ * written as a placeholder can never self-heal.
+ *
+ * NOTE: recap.ts deletes recaps older than 14 days on every run, and the next
+ * `yarn ingest run --clean` then sweeps their chunks. Backfilling a date beyond
+ * that window does work the next scheduled run silently undoes.
  *
  *   yarn tsx scripts/backfill-recap.ts 2026-09-09 2026-09-10
  *   DRY_RUN=1 yarn tsx scripts/backfill-recap.ts 2026-09-09
@@ -32,6 +42,8 @@ import { summarizeMessages } from './sync-discord/recap-summarizer.js';
 const DEST_PATH = './docs/discord/general-recap';
 const DISCORD_EPOCH = 1420070400000;
 const DRY_RUN = /^(1|true|yes)$/i.test(process.env.DRY_RUN ?? '');
+/** Override the shrink guard below. */
+const FORCE = /^(1|true|yes)$/i.test(process.env.FORCE ?? '');
 
 /** Lowest snowflake that can exist at or after `ms`. Used as a paging cursor. */
 function snowflakeFor(ms: number): string {
@@ -62,7 +74,10 @@ async function main() {
   console.log(`channel #${channelInfo.name}, backfilling ${dates.join(', ')}`);
 
   // Page forward from a synthesised cursor one millisecond before the window.
-  // fetchMessages runs to the end of the channel, so trim to the window after.
+  // fetchMessages pages to the END of the channel with no cap, so for a date far
+  // in the past this pulls everything since and discards almost all of it. That
+  // is bounded only by the window trim below — acceptable for a repair a day or
+  // two back, slow and wasteful for a month.
   const cursor = snowflakeFor(startMs - 1);
   const raw = await fetchMessages(token, channelId, cursor);
   const inWindow = raw.filter((m) => {
@@ -82,7 +97,9 @@ async function main() {
 
   await mkdir(DEST_PATH, { recursive: true });
 
+  const failures: string[] = [];
   for (const date of dates) {
+   try {
     const dayFiltered = byDate.get(date);
     if (!dayFiltered || dayFiltered.length === 0) {
       console.log(`${date}: no substantive messages — leaving the existing file alone`);
@@ -132,10 +149,31 @@ async function main() {
       console.log('---');
       continue;
     }
+
+    // Refuse to replace a substantial recap with a much smaller one unless
+    // forced. The whole point is repairing placeholders; halving a real recap is
+    // the opposite, and the overwrite is unrecoverable once committed.
+    if (!FORCE && previous.length > 400 && markdown.length < previous.length / 2) {
+      failures.push(`${date}: refused, would shrink ${previous.length} -> ${markdown.length} chars (pass FORCE=1 to override)`);
+      console.error(`  REFUSED: ${date} would shrink ${previous.length} -> ${markdown.length} chars`);
+      continue;
+    }
+
     await writeFile(filePath, markdown, 'utf-8');
     console.log(`  written ${filePath}`);
+   } catch (e) {
+    // Keep going: one bad date must not abandon the rest, and a partial repair
+    // is still a repair.
+    failures.push(`${date}: ${(e as Error).message}`);
+    console.error(`  FAILED ${date}: ${(e as Error).message}`);
+   }
   }
 
+  if (failures.length > 0) {
+    console.error(`\n${failures.length} date(s) did not complete:`);
+    for (const f of failures) console.error(`  - ${f}`);
+    process.exitCode = 1;
+  }
   if (!DRY_RUN) {
     console.log('\nNow commit these files and run `yarn ingest run --clean` to replace the chunks.');
   }

@@ -157,9 +157,7 @@ export async function summarizeMessages(
     result = await callModel(2);
   }
 
-  const choice = { message: { content: result.content } };
-  const finishReason = result.finishReason;
-  const reasoningTokens = result.reasoningTokens;
+  const { finishReason, reasoningTokens } = result;
 
   // Throw rather than substituting a placeholder. What this actually does: the
   // caller (scripts/sync-discord/recap.ts) catches it and writes
@@ -173,7 +171,7 @@ export async function summarizeMessages(
   // not overwrite an existing dated file and advances the lastMessageId
   // watermark regardless, so tomorrow's run cannot redo the day. Hence the retry
   // above: it is the only chance to get a real summary.
-  if (!choice?.message?.content?.trim()) {
+  if (!result.content) {
     throw new Error(
       `Recap model returned no text (finish=${finishReason}, reasoningTokens=${reasoningTokens}). ` +
       `If reasoningTokens is near 1500, thinking consumed the output budget.`,
@@ -183,10 +181,9 @@ export async function summarizeMessages(
     console.warn(`[recap] output hit the 1500-token cap (reasonTok=${reasoningTokens}) — recap may be truncated`);
   }
 
-  let recap = choice.message.content.trim();
-  // Strip any remaining @username mentions to avoid Discord notifications
-  recap = recap.replace(/@(\w+)/g, '$1');
-  return recap;
+  // Already trimmed by callModel. Strip any remaining @username mentions so the
+  // committed recap cannot trigger Discord notifications when quoted.
+  return result.content.replace(/@(\w+)/g, '$1');
 }
 
 /**

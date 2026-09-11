@@ -25,6 +25,7 @@
     "sync-discord:dry": "tsx scripts/sync-discord/index.ts sync --dry-run",
     "sync-discord:status": "tsx scripts/sync-discord/index.ts status",
     "recap-general": "tsx scripts/sync-discord/recap.ts",
+    "backfill-recap": "tsx scripts/backfill-recap.ts",
     "typecheck": "tsc --noEmit",
     "measure:latency": "tsx scripts/measure-latency.ts",
     "embed:parity": "tsx scripts/embed-parity.ts",
