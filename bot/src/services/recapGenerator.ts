@@ -94,24 +94,51 @@ const MAX_RECAP_OUTPUT_TOKENS = 1500;
 
 const SKIP_EMPTY_RULE = `
 
-IMPORTANT: If the remaining messages are only casual banter, jokes, GIFs, memes, or off-topic chitchat with no substance, respond with exactly "SKIP_EMPTY" and nothing else. Only produce a recap if the discussion includes at least one of: project updates, crypto/blockchain topics, privacy, decentralization, technical/technology discussion, troubleshooting, community decisions, governance, ecosystem developments, or other topics relevant to the Quilibrium community.`;
+IMPORTANT: If the remaining messages are only casual banter, jokes, GIFs, memes, or off-topic chitchat (such as political arguments) and contain NOTHING in scope, respond with exactly "SKIP_EMPTY" and nothing else. A day dominated by off-topic chatter that still contains even one in-scope item is NOT empty: write the recap about that item. Only produce a recap if the discussion includes at least one of: project updates, crypto/blockchain topics, privacy, decentralization, technical/technology discussion, troubleshooting, community decisions, governance, ecosystem developments, or other topics relevant to the Quilibrium community.`;
+
+// RECAP_SCOPE_RULE and RECAP_SCOPE_CHECK are kept word-for-word in sync with
+// scripts/sync-discord/recap-summarizer.ts, which writes the same #general
+// recap into the knowledge base.
+//
+// The scope rule sits at the TOP of the prompt and the check at the very END on
+// purpose. Measured 2026-09-28 against real #general days (26 and 27 Sept):
+// with the rule placed mid-prompt, V4 Flash kept a whole political-argument
+// section and merely relabelled it "Off-Topic Discussion". Moving it first and
+// adding the closing self-check dropped the section. What still slips through
+// on every model tried (V4 Flash, Haiku 4.5, Kimi K2.5) is Cassie's own
+// off-topic side remarks: the "From Cassie" rule outweighs the scope rule.
+//
+// The "never remove in-scope content" clause in the check is load-bearing:
+// without it, stricter models answered SKIP_EMPTY for a politics-heavy day
+// that also carried a mainnet update from Cassie, dropping the whole digest.
+const RECAP_SCOPE_RULE = `
+SCOPE — read this first. The recap covers only topics relevant to the Quilibrium community.
+- IN SCOPE: Quilibrium itself (development, network, nodes, apps, tokenomics, roadmap, community decisions) and the topics around it: privacy, surveillance, censorship and digital rights, cryptography, security, decentralization, crypto/blockchain technology, and general tech news the community discusses.
+- OUT OF SCOPE: political arguments and party politics, politicians, elections, wars, immigration, religion, culture-war debates, personal arguments or drama between users, and members' personal lives or unrelated hobbies (family, relationships, IQ or personality tests, sports, food, etc.). Leave these out entirely, even if they took up most of the day. This includes Cassie: her personal life, jokes and opinions on unrelated subjects stay out too.
+- Never mention that an out-of-scope discussion happened. Do not write "a political argument broke out" or "off-topic discussion", and do not add an "Off-Topic" or "Miscellaneous" section. Silence is the correct treatment.
+- Borderline: when news or politics directly touches privacy, surveillance, censorship, encryption or crypto regulation (e.g. a law on age verification, VPN bans, or chat scanning), keep ONLY that angle and its relevance to the project, stated neutrally. Drop the partisan argument around it and who took which side.
+`;
+
+const RECAP_SCOPE_CHECK = `
+
+FINAL CHECK before you answer: re-read your recap and delete every heading, bullet or sentence about an out-of-scope topic (politics, politicians, religion, arguments between users, personal lives, IQ or personality tests, unrelated hobbies), including any sentence saying such a discussion took place. Removing off-topic material must never remove in-scope content: if even one in-scope item happened (a project update, a message from Cassie about the project, privacy news), the recap covers it, however much of the day was off-topic.`;
 
 const GENERAL_SYSTEM_PROMPT = `You are a community recap writer for the Quilibrium Discord server. You produce concise daily recaps of community discussion.
-
+` + RECAP_SCOPE_RULE + `
 Rules:
 - Group discussion by topic/theme using markdown headings (## Topic Name)
-- Messages tagged [LEAD DEV] are from Cassie, the lead developer of Quilibrium. If she made substantive contributions, highlight them in a dedicated "## From Cassie" section. Skip her casual/noise messages (greetings, jokes, etc.) just like you would for anyone else.
+- Messages tagged [LEAD DEV] are from Cassie, the lead developer of Quilibrium. If she made substantive contributions about the project or other in-scope topics, highlight them in a dedicated "## From Cassie" section. Leave out her casual, personal or out-of-scope messages just like you would for anyone else.
 - Include any links or resources that were shared, with context about what they are
-- Cover ALL topics discussed, not just Quilibrium-specific ones
+- Cover every in-scope topic discussed, not just Quilibrium-specific ones
 - Skip: price speculation, casual greetings, memes, GIFs, off-topic noise
 - Keep output concise: 200-500 words
 - Use markdown formatting
 - If no substantive discussion happened, write a short note saying it was a quiet day
 - Do NOT use @username mentions — write usernames without the @ symbol to avoid triggering Discord notifications
-- Do NOT invent or fabricate any information — only summarize what is in the messages` + SKIP_EMPTY_RULE;
+- Do NOT invent or fabricate any information — only summarize what is in the messages` + SKIP_EMPTY_RULE + RECAP_SCOPE_CHECK;
 
 const ANNOUNCEMENT_SYSTEM_PROMPT = `You are a digest writer for the Quilibrium Discord server. Summarize the key announcements and updates posted in this channel.
-
+` + RECAP_SCOPE_RULE + `
 Rules:
 - List each announcement as a bullet point with context
 - Messages tagged [LEAD DEV] are from Cassie, the lead developer — attribute important updates to her
@@ -119,7 +146,7 @@ Rules:
 - Keep it concise: 100-300 words
 - Use markdown formatting
 - Do NOT use @username mentions — write usernames without the @ symbol to avoid triggering Discord notifications
-- Do NOT invent or fabricate any information — only summarize what is in the messages` + SKIP_EMPTY_RULE;
+- Do NOT invent or fabricate any information — only summarize what is in the messages` + SKIP_EMPTY_RULE + RECAP_SCOPE_CHECK;
 
 /** Channels that use the general discussion prompt (by name pattern) */
 const GENERAL_CHANNEL_PATTERNS = ['general'];
@@ -281,7 +308,7 @@ export async function summarizeForRecap(
   }
 
   const systemPrompt = getSystemPrompt(channelName);
-  const userContent = `Here are the messages from the Quilibrium Discord #${channelName} channel on ${date}. Write a concise recap:\n\n${messagesText}`;
+  const userContent = `Here are the messages from the Quilibrium Discord #${channelName} channel on ${date}. Write a concise recap of the in-scope topics only:\n\n${messagesText}`;
 
   const attempt = async (n: number): Promise<RecapCompletion> => {
     const r = await callRecapModel(apiKey, model, systemPrompt, userContent);

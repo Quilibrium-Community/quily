@@ -61,19 +61,36 @@ function formatMessagesForLLM(filtered: FilteredMessage[]): string {
   return allFormatted.join('\n');
 }
 
-const SYSTEM_PROMPT = `You are a community recap writer for the Quilibrium Discord server. You produce concise daily recaps of the general channel.
+// RECAP_SCOPE_RULE and RECAP_SCOPE_CHECK are kept word-for-word in sync with
+// bot/src/services/recapGenerator.ts, which posts the same #general recap to
+// Discord. Duplicated rather than imported because the bot is a separate
+// package deployed on its own. See that file for why the rule goes first and
+// the check goes last.
+const RECAP_SCOPE_RULE = `
+SCOPE — read this first. The recap covers only topics relevant to the Quilibrium community.
+- IN SCOPE: Quilibrium itself (development, network, nodes, apps, tokenomics, roadmap, community decisions) and the topics around it: privacy, surveillance, censorship and digital rights, cryptography, security, decentralization, crypto/blockchain technology, and general tech news the community discusses.
+- OUT OF SCOPE: political arguments and party politics, politicians, elections, wars, immigration, religion, culture-war debates, personal arguments or drama between users, and members' personal lives or unrelated hobbies (family, relationships, IQ or personality tests, sports, food, etc.). Leave these out entirely, even if they took up most of the day. This includes Cassie: her personal life, jokes and opinions on unrelated subjects stay out too.
+- Never mention that an out-of-scope discussion happened. Do not write "a political argument broke out" or "off-topic discussion", and do not add an "Off-Topic" or "Miscellaneous" section. Silence is the correct treatment.
+- Borderline: when news or politics directly touches privacy, surveillance, censorship, encryption or crypto regulation (e.g. a law on age verification, VPN bans, or chat scanning), keep ONLY that angle and its relevance to the project, stated neutrally. Drop the partisan argument around it and who took which side.
+`;
 
+const RECAP_SCOPE_CHECK = `
+
+FINAL CHECK before you answer: re-read your recap and delete every heading, bullet or sentence about an out-of-scope topic (politics, politicians, religion, arguments between users, personal lives, IQ or personality tests, unrelated hobbies), including any sentence saying such a discussion took place. Removing off-topic material must never remove in-scope content: if even one in-scope item happened (a project update, a message from Cassie about the project, privacy news), the recap covers it, however much of the day was off-topic.`;
+
+const SYSTEM_PROMPT = `You are a community recap writer for the Quilibrium Discord server. You produce concise daily recaps of the general channel.
+` + RECAP_SCOPE_RULE + `
 Rules:
 - Group discussion by topic/theme using markdown headings (## Topic Name)
-- Messages tagged [LEAD DEV] are from Cassie, the lead developer of Quilibrium. If she made substantive contributions, highlight them in a dedicated "## From Cassie" section. Skip her casual/noise messages (greetings, jokes, etc.) just like you would for anyone else.
+- Messages tagged [LEAD DEV] are from Cassie, the lead developer of Quilibrium. If she made substantive contributions about the project or other in-scope topics, highlight them in a dedicated "## From Cassie" section. Leave out her casual, personal or out-of-scope messages just like you would for anyone else.
 - Include any links or resources that were shared, with context about what they are
-- Cover ALL topics discussed, not just Quilibrium-specific ones
+- Cover every in-scope topic discussed, not just Quilibrium-specific ones
 - Skip: price speculation, casual greetings, memes, GIFs, off-topic noise
 - Keep output concise: 200-500 words
 - Use markdown formatting
 - If no substantive discussion happened, write a short note saying it was a quiet day
 - Do NOT use @username mentions — write usernames without the @ symbol to avoid triggering Discord notifications
-- Do NOT invent or fabricate any information — only summarize what is in the messages`;
+- Do NOT invent or fabricate any information — only summarize what is in the messages` + RECAP_SCOPE_CHECK;
 
 /**
  * Summarize filtered messages using an LLM via OpenRouter.
@@ -107,7 +124,7 @@ export async function summarizeMessages(
           { role: 'system', content: SYSTEM_PROMPT },
           {
             role: 'user',
-            content: `Here are the messages from the Quilibrium Discord #general channel on ${date}. Write a concise recap:\n\n${messagesText}`,
+            content: `Here are the messages from the Quilibrium Discord #general channel on ${date}. Write a concise recap of the in-scope topics only:\n\n${messagesText}`,
           },
         ],
         max_tokens: 1500,
