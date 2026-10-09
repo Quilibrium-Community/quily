@@ -1,7 +1,7 @@
 ---
-title: "Quilibrium Network Health Snapshot — October 8, 2026"
+title: "Quilibrium Network Health Snapshot — October 9, 2026"
 source: Quilibrium Explorer API (automated daily)
-date: 2026-10-08
+date: 2026-10-09
 type: network_status
 topics:
   - network health
@@ -17,23 +17,23 @@ topics:
 
 # Quilibrium Network Health Snapshot
 
-**Date:** October 8, 2026
-**Data source:** Quilibrium Explorer API (live data as of 2026-10-08)
+**Date:** October 9, 2026
+**Data source:** Quilibrium Explorer API (live data as of 2026-10-09)
 
 ## Overview
 
 | Metric | Value |
 |---|---|
 | World Size | 80.92 GB |
-| Total Shards | 50 |
-| Peers | 97 |
-| Total Workers | 1,623 |
+| Total Shards | 77 |
+| Peers | 104 |
+| Total Workers | 1,863 |
 
 ## Shard Health
 
 | Status | Count | Percentage |
 |---|---|---|
-| Healthy (6+ active provers) | 49 | 98.0% |
+| Healthy (6+ active provers) | 76 | 98.7% |
 | Warning (3–5 active provers) | 0 | 0.0% |
 | Halt Risk (<3 active provers) | 0 | 0.0% |
 
@@ -44,22 +44,22 @@ A shard is considered "healthy" when it has 6 or more active provers. Shards wit
 | Ring | Provers per Shard | Shards |
 |---|---|---|
 | Ring 0 | 1–7 | 1 |
-| Ring 1 | 8–15 | 0 |
-| Ring 2 | 16–23 | 7 |
-| Ring 3+ | 24+ | 41 |
+| Ring 1 | 8–15 | 18 |
+| Ring 2 | 16–23 | 26 |
+| Ring 3+ | 24+ | 31 |
 | Unassigned | 0 | 1 |
 
 ## Worker Activity
 
 | Status | Count |
 |---|---|
-| Active | 1,495 |
-| Joining | 128 |
-| Leaving | 25 |
+| Active | 1,605 |
+| Joining | 258 |
+| Leaving | 51 |
 | Rejected | 0 |
 
 ## Summary
 
-As of October 8, 2026, the Quilibrium network has 50 total shards. Of these, 49 (98.0%) are healthy, 0 (0.0%) need more coverage, and 0 (0.0%) are at halt risk. The network has 97 peers and 1,623 total workers.
+As of October 9, 2026, the Quilibrium network has 77 total shards. Of these, 76 (98.7%) are healthy, 0 (0.0%) need more coverage, and 0 (0.0%) are at halt risk. The network has 104 peers and 1,863 total workers.
 
 This snapshot is updated daily from the Quilibrium Explorer API.
