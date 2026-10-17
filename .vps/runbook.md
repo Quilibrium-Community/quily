@@ -203,14 +203,20 @@ Then @mention the bot in Discord to test a response.
 
 ## Deploying Updates
 
-Use the deploy script from your local machine:
+**Git Bash only** (the script needs Bash; it will not run from Windows CMD):
 
 ```bash
-cd d:/GitHub/Quilibrium/quily-chatbot
-.vps/deploy.sh
+cd /e/GitHub/Quilibrium/quily-chatbot
+bash .vps/deploy.sh
 ```
 
-Or manually:
+From Windows CMD / PowerShell, run the steps manually (one line):
+
+```
+ssh quily-vps "cd /home/quily/quily-chatbot && git pull --ff-only origin main && cd bot && npm install && npm run build && pm2 restart quily-bot"
+```
+
+Or manually, from any Bash:
 ```bash
 ssh quily-vps '
 cd /home/quily/quily-chatbot
