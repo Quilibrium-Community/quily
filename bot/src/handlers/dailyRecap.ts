@@ -29,7 +29,8 @@ export function startDailyRecap(client: Client): void {
   const bugReportsChannelId = process.env.DISCORD_BUG_REPORTS_CHANNEL_ID;
   // When the dedicated bug-reports digest is enabled, exclude that channel
   // from the main digest to avoid double-posting the same channel's content.
-  const channelIds = parseDigestChannelIds().filter((id) => id !== bugReportsChannelId);
+  const channelIds = [...new Set([...parseDigestChannelIds(), '1561076539733450802'])]
+    .filter((id) => id !== bugReportsChannelId);
 
   console.log(`[digest] Daily digest scheduled for ${hour}:00 UTC → channel ${destChannelId} (${channelIds.length} source channels)`);
 
