@@ -113,6 +113,7 @@ This is the main index for all documentation, bug reports, and task management.
 - 📋 [Research: Consolidate to Single BGE-M3 Embedding Model](issues/.done/research-unified-bge-m3-embedding.md)
 - 📋 [Starred Chats and Chat Management UI](issues/.done/starred-chats-management-ui.md)
 - 📋 [User Profile Customization (Username)](issues/.done/user-profile-customization.md)
+- [Agent VPS deployment command rejected before execution](issues/.done/2026-10-17-agent-vps-deployment-command-rejected.md)
 
 ## 🗃️ Archived Issues
 
@@ -156,4 +157,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-09-08 14:52:09
+**Last Updated**: 2026-10-17 23:34:58
