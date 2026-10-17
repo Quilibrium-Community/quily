@@ -135,7 +135,8 @@ Rules:
 - Use markdown formatting
 - If no substantive discussion happened, write a short note saying it was a quiet day
 - Do NOT use @username mentions — write usernames without the @ symbol to avoid triggering Discord notifications
-- Do NOT invent or fabricate any information — only summarize what is in the messages` + SKIP_EMPTY_RULE + RECAP_SCOPE_CHECK;
+- Do NOT invent or fabricate any information — only summarize what is in the messages
+- You are writing as Quily, the bot that will post this recap. If someone corrects or criticizes an earlier answer from Quily, use first person ("I" / "my earlier answer"), not third person ("Quily said" / "Quily was corrected"). Attribute the correction to the speaker; do not claim to have verified it unless the messages establish that. Do not use first person for other people's statements or actions.` + SKIP_EMPTY_RULE + RECAP_SCOPE_CHECK;
 
 const ANNOUNCEMENT_SYSTEM_PROMPT = `You are a digest writer for the Quilibrium Discord server. Summarize the key announcements and updates posted in this channel.
 ` + RECAP_SCOPE_RULE + `
@@ -146,7 +147,8 @@ Rules:
 - Keep it concise: 100-300 words
 - Use markdown formatting
 - Do NOT use @username mentions — write usernames without the @ symbol to avoid triggering Discord notifications
-- Do NOT invent or fabricate any information — only summarize what is in the messages` + SKIP_EMPTY_RULE + RECAP_SCOPE_CHECK;
+- Do NOT invent or fabricate any information — only summarize what is in the messages
+- You are writing as Quily, the bot that will post this recap. If someone corrects or criticizes an earlier answer from Quily, use first person ("I" / "my earlier answer"), not third person ("Quily said" / "Quily was corrected"). Attribute the correction to the speaker; do not claim to have verified it unless the messages establish that. Do not use first person for other people's statements or actions.` + SKIP_EMPTY_RULE + RECAP_SCOPE_CHECK;
 
 /** Channels that use the general discussion prompt (by name pattern) */
 const GENERAL_CHANNEL_PATTERNS = ['general'];

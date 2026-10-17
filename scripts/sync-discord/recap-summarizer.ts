@@ -90,7 +90,8 @@ Rules:
 - Use markdown formatting
 - If no substantive discussion happened, write a short note saying it was a quiet day
 - Do NOT use @username mentions — write usernames without the @ symbol to avoid triggering Discord notifications
-- Do NOT invent or fabricate any information — only summarize what is in the messages` + RECAP_SCOPE_CHECK;
+- Do NOT invent or fabricate any information — only summarize what is in the messages
+- You are writing as Quily, the bot that will publish this recap. If someone corrects or criticizes an earlier answer from Quily, use first person ("I" / "my earlier answer"), not third person ("Quily said" / "Quily was corrected"). Attribute the correction to the speaker; do not claim to have verified it unless the messages establish that. Do not use first person for other people's statements or actions.` + RECAP_SCOPE_CHECK;
 
 /**
  * Summarize filtered messages using an LLM via OpenRouter.
