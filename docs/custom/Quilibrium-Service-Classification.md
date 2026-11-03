@@ -35,7 +35,7 @@ topics:
 >
 > **Shipped and usable today:** Quorum (mobile and desktop), the Q Console services (QStorage, QKMS, Identity and Authorization, QQ, QPing), QNS, MegaRPC, Klearu and MetaVM. Quilibrium Inc. has shipped a great deal that does not depend on the token layer.
 >
-> **Not live yet**, all gated on the QUIL token shard-out: **the Bridge**, token transactions, mining reward payouts, and permissionless app deployment by external developers.
+> **Mainnet is live** (as of 2026-11-02): the token shard-out is complete, mining rewards are being issued and QUIL transfers work. **Still to come:** re-opening **the Bridge**, token applications, and permissionless app deployment by external developers.
 >
 > Being listed in this document is not evidence that a thing is running, and is not evidence that it is broken either. For status, see **[Quilibrium Network Status](Mainnet-Status-What-Is-Live.md)**.
 
@@ -92,7 +92,7 @@ These are **not** Q Console services. They are part of the network, and the offi
 |---|---|---|
 | **MetaVM** | Zero-knowledge proof system for VM execution, covering RISC-V, EVM and Solana BPF. The foundation that f(x) and raw compute workloads will be built on. | In development. Prover and verifier work today, mainnet integration arrives with Equinox |
 | **Klearu** | End-to-end encrypted ML inference via two-party computation. Open source, runs today as a library and a browser demo. | In development for mainnet. Native network integration planned for a future protocol upgrade |
-| **Bridge** | QUIL to wQUIL cross-chain bridging with Ethereum, using an in-network Ethereum execution node plus an MPC signer. | **NOT live.** Gated on the token shard-out completing. It was up previously and was taken down; expected back shortly after the v0.25 release. The bridge page at `quilibrium.com/bridge` has not been published yet. See [Mainnet Status](Mainnet-Status-What-Is-Live.md) |
+| **Bridge** | QUIL to wQUIL cross-chain bridging with Ethereum, using an in-network Ethereum execution node plus an MPC signer. | **Not open yet.** It was up previously and was taken down; it is expected back after the network has stabilised, one-way (Ethereum into Quilibrium) at first. The bridge page at `quilibrium.com/bridge` had not been published as of 2026-11-02. See [Mainnet Status](Mainnet-Status-What-Is-Live.md) |
 | **Dispatch Queue** | Ordered message dispatch between participants. The primitive QPing and QQ are built on. | Shipped |
 | **EVM Shard** | EVM-compatible app shard supporting rollup follower mode or raw EVM execution. | In development |
 | **Streaming data primitives** | Video and audio streaming primitives for calls. | Planned, arriving with a future protocol upgrade |

@@ -20,11 +20,11 @@ topics:
 
 # Quilibrium Bridge: QUIL/wQUIL Cross-Chain Bridging
 
-> **⚠️ THE BRIDGE IS NOT LIVE (as of 2026-08-12).** Bridging is gated on the QUIL token shard-out completing, and the bridge page at `quilibrium.com/bridge` has not been published yet. It was up previously, was taken down, and is expected back shortly after the v0.25 release.
+> **⚠️ THE BRIDGE IS NOT OPEN YET (as of 2026-11-02).** Mainnet has launched, the token shard-out is complete and QUIL transfers work on the Quilibrium network, but the bridge is a separate step that follows network stabilisation. The bridge page at `quilibrium.com/bridge` has not been published. It was up previously and was taken down. Per Cassie, when it returns it will be **one-way at first (Ethereum into Quilibrium)**, with the full two-way flow later.
 >
 > **Everything in this document describes how the bridge works *when running*. Do not present any of it as something a user can do today.** See [Quilibrium Network Status](../Mainnet-Status-What-Is-Live.md).
 >
-> Note that plenty of Quilibrium *is* live and unaffected by this: Quorum, the Q Console services (QStorage, QKMS, Identity and Authorization, QQ, QPing), QNS, MegaRPC, Klearu and MetaVM. The bridge being down says nothing about them.
+> Note that plenty of Quilibrium *is* live and unaffected by this: Quorum, the Q Console services (QStorage, QKMS, Identity and Authorization, QQ, QPing), QNS, MegaRPC, Klearu and MetaVM. The bridge not being open says nothing about them.
 
 **Classification:** the Bridge is a **protocol-layer capability, not a Q Console managed service.** It does not appear in Q Console. When running it is used at `quilibrium.com/bridge` or directly via the `qclient` CLI. See [Quilibrium Service Classification](../Quilibrium-Service-Classification.md).
 
@@ -76,7 +76,7 @@ This means you can give privacy to every single ERC-20 on Ethereum by routing th
 
 ## Bridging Commands via qclient
 
-> **These steps cannot be completed today.** The bridge is not live and the web flow has not been published. This is the procedure for when it returns.
+> **These steps cannot be completed today.** The bridge is not open and the web flow has not been published. This is the procedure for when it returns.
 
 The `cross-mint` command initiates a cross-chain bridging operation:
 

@@ -164,7 +164,7 @@ Shared across all processes via Rust bindings (as of v2.1.0.25):
 - **Proof Trees**: A three-tier authenticated Merkle forest built on Jellyfish Merkle Trees, using SHA-256 hash commitments
 - **Signatures**: Falcon (FN-DSA-512), for consensus signing and peer identity
 - **Key exchange**: sntrup761 (Streamlined NTRU Prime), for transport and config read keys
-- **Storage proofs**: KZG openings over BLS48-581, with the frame VDF output deriving the challenge
+- **Storage proofs**: Hash-based post-quantum proofs (Poseidon2 Merkle commitments plus a STARK per member per epoch) since epoch 1314, with the frame VDF output deriving the challenge. Earlier versions used KZG openings over BLS48-581
 - **Channel Crypto**: Secure E2EE communication
 - **Integration**: CGO bindings to Rust libraries and interfaces
 
@@ -185,8 +185,8 @@ Command-line interface for user interactions:
 High-performance cryptographic libraries used by all processes:
 
 **Core Cryptography**:
-- **bls48581**: BLS signatures
-- **bulletproofs**: Transaction privacy via zero-knowledge proofs
+- **bls48581**: BLS signatures and KZG (legacy since v2.1.0.25: consensus uses Falcon and storage proofs are hash-based; still used by MetaVM tooling)
+- **bulletproofs**: Former transaction privacy (retired in v2.1.0.25; confidential tokens now use the lattice-based `quil-lattice-ct` suite)
 - **vdf**: Verifiable Delay Functions for time consensus
 - **verenc**: Verifiable encryption schemes
 
@@ -264,7 +264,7 @@ Inter-process communication design:
 #### 1. Privacy Layers
 
 **Transaction Privacy**:
-- Bulletproofs for amount hiding
+- Lattice-based commitments and range proofs (QCT3, since v2.1.0.25) for amount hiding; earlier versions used Bulletproofs
 - Zero-knowledge range proofs
 
 **Computation Privacy**:

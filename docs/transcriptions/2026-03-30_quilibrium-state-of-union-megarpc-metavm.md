@@ -221,6 +221,8 @@ When QNS resolves to Q Storage content and the content is in a public bucket, Qu
 
 > **Historical context (March 2026):** This describes the mainnet and shard-out status as of March 30, 2026. The token shard coverage halt was still active at this time. For current mainnet status, check recent Discord announcements.
 
+> **Status update (November 2026):** The coverage halt and token-shard lock described in this section were resolved in autumn 2026. Mainnet is now live with the QUIL token shards running, mining rewards being issued and QUIL transfers working. Still to come are the bridge re-opening, token applications and apps from other developers. See the Mainnet Status document.
+
 > **Shard coverage thresholds:** The network has three shard coverage levels. **Halt risk** = fewer than 3 active provers (network halts, token shards locked). **Needs coverage** = 3–5 active provers (network continues, transactions can proceed). **Healthy** = 6+ active provers (ideal, maximum resilience). The network activates when all shards are out of halt risk (≥3 provers); it does NOT require all shards to be healthy.
 
 A question was asked about whether the mainnet could still go down after the shard-out phase is complete.

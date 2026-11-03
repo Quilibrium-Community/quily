@@ -1,13 +1,15 @@
 ---
-title: "Quilibrium Network Status: What Is Shipped and What Is Gated"
-source: Discord announcements and recaps, livestream transcripts, maintainer confirmation
-date: 2026-08-12
+title: "Quilibrium Network Status: Mainnet Is Live, What Is Open and What Is Still Coming"
+source: Discord announcements and recaps (October to November 2026), livestream transcripts, maintainer confirmation
+date: 2026-11-02
 type: technical_reference
 topics:
   - network status
   - what is the status of the network
   - mainnet status
   - is mainnet live
+  - has mainnet launched
+  - mainnet launch
   - state of the network
   - what has Quilibrium shipped
   - what is live
@@ -24,14 +26,20 @@ topics:
   - mining rewards
   - are rewards live
   - am I earning
+  - are node rewards being paid
   - shard-out
   - shard out
   - token shards
   - coverage halt
+  - shield-all
+  - legacy coins
   - can I build an app on Quilibrium
   - deploy an app
   - permissionless
+  - token app
   - alt-fee basis
+  - official release
+  - is 2.1.0.25 released
   - Quorum
   - Klearu
   - MetaVM
@@ -39,103 +47,104 @@ topics:
   - QNS
 ---
 
-# Quilibrium Network Status: What Is Shipped and What Is Gated
+# Quilibrium Network Status: Mainnet Is Live, What Is Open and What Is Still Coming
 
-**Read this before answering any "does X work / is X live / what's the status" question.**
+**Read this before answering any "does X work / is X live / what's the status" question.** Status as of **2026-11-02**.
 
 ## The short answer
 
-Mainnet is running and **a large amount of product has shipped and is usable today**. What is *not* live is specifically the **QUIL token layer**: the token shard-out has not completed, so anything requiring QUIL to move is switched off. These are two separate questions and conflating them produces a wrong answer in either direction.
+**Mainnet is live.** The token shard-out is finished, the QUIL token shards are running, mining rewards are being issued to provers, and QUIL moves on the network. Alongside that, a large amount of product (Quorum, the Q Console services, QNS, MegaRPC, Klearu, MetaVM) has been usable for months.
 
-| ✅ Shipped and usable today | ❌ Not live yet (all gated on the token shard-out) |
+The network is in a **stabilisation phase**, not a pre-launch phase. Nodes run the `2.1.0.25.x` sub-patch series, which the team has been hardening in public. The things that are **still to come** are the next steps built on a stable network: **re-opening the bridge**, **opening the token to applications**, and **applications from other developers**.
+
+| ✅ Live today | ⏳ Still to come |
 |---|---|
-| **Quorum** messenger: mobile app, and desktop/web at app.quorummessenger.com | **QUIL token transactions / transfers** |
-| **Q Console services**: QStorage, QKMS, Identity and Authorization, QQ, QPing | **Mining reward payouts** |
-| **QNS** names at names.quilibrium.com | **The Bridge** (QUIL ↔ wQUIL) |
-| **MegaRPC**, live in production | **Permissionless app deployment** by external developers |
-| **Klearu**, open-source private inference | **Full QUIL token utility** (paying for services in QUIL) |
-| **MetaVM**, prover and verifier working | |
-| **Mainnet itself** and node proving | |
+| **Mainnet** with the QUIL token shards running | **The Bridge** re-opening (QUIL and wQUIL) |
+| **Mining rewards** issued to provers | **Token applications** (the "token app" is being re-tried) |
+| **QUIL transfers** on the Quilibrium network, including confidential ("shielded") coins | **Apps from external developers** on the network |
+| **Legacy coin migration** with `qclient token shield-all` | **Official signed `2.1.0.25` binary release** (latest signed release is `2.1.0.24`) |
+| **Quorum**, **Q Console** (QStorage, QKMS, Identity and Authorization, QQ, QPing), **QNS**, **MegaRPC**, **Klearu**, **MetaVM** | |
 
-**Do not answer "the network isn't ready" as though nothing works.** Quilibrium Inc. has shipped a great deal that does not depend on the token unlock. Equally, do not tell anyone they can bridge, transfer QUIL, or that they are being paid for proving.
+**Do not answer "the network isn't ready" as though nothing works, and do not describe mainnet as unlaunched.** Equally, do not tell anyone the bridge is open or that third-party apps can deploy today. Both halves are true at once.
+
+---
+
+## What happened, in order
+
+This matters because older material in the knowledge base (written before late October 2026) describes the earlier state.
+
+- **Until mid-2026:** mainnet ran, but the QUIL token shards were locked pending the shard-out, so token transfers and reward payouts were switched off while Q Console services ran on an alt-fee basis.
+- **2026-10-19:** `v2.1.0.25` released to the archives and operators, together with a long run of fixes by the core team and community contributors (app shards producing frames, archive alignment, committee handoffs).
+- **2026-10-21 to 10-25:** app shards climbed from roughly 50 of 103 producing to 96 and then 101 of 105. Rewards looked low because the only shards hosting the QUIL token had over a million logical shards each; more shards are expected to raise earnings per logical shard.
+- **2026-10-26:** `.25.103` with seniority and data-availability proof changes. Cassie described the team as "extremely close".
+- **2026-10-27 (GLOBAL frame 943,920, epoch 1311):** several consensus rules switched on (stricter peer checks, replay guards, anchored issuance) and legacy coin shielding opened. Storage proofs moved from KZG to post-quantum hash proofs a few epochs later, at epoch 1314.
+- **2026-10-28:** the first post-quantum confidential coin transaction was processed (a legacy coin shielded into the new format). It exposed a tree-rebuild stall that was then fixed.
+- **2026-10-29:** `.25.111`. Frame times returned to the 10-second baseline and **rewards were being actively issued** again.
+- **2026-11-02:** consistent 10-second frames celebrated by the community; a wave of roughly 500 batched shield transactions temporarily stalled about a quarter of the shards and fixes were in progress.
 
 ---
 
 ## Shipped by Quilibrium Inc. and usable now
 
-These work today. Most of them do not need the token layer at all.
-
 | Product | Status |
 |---|---|
-| **Quorum** | Live. The E2EE group messenger, free, no phone number. Mobile app released; desktop/web running in production at app.quorummessenger.com (v2.1.0-1 as of 2026-08-05). This is Quilibrium's flagship consumer product and should be given real prominence in any "what has been shipped" answer |
-| **Q Console services** | Live: QStorage (S3-compatible), QKMS (key management), Identity and Authorization, QQ (SQS-compatible), QPing (notifications). Quark, and managed hosting for a Hypersnap node, are listed in the console as coming soon |
-| **QNS** | Live at names.quilibrium.com. Register `@name` handles and the `.q` namespace, with a marketplace and auctions. Paid through Ethereum-side wallets |
-| **MegaRPC** | Live in production. ORAM-based private RPC for Ethereum and Solana, already powering Quorum Mobile's wallet and the QNS backend |
-| **Klearu** | Shipped and open source. Private LLM inference over two-party computation, usable as a library with a live browser demo. Native network integration comes with a later protocol upgrade |
-| **MetaVM** | Shipped as tooling. Prover and verifier work today across RISC-V, EVM and Solana BPF, with CLI tools for proving programs, Linux boots, Ethereum blocks and Solana slots. Mainnet integration arrives with the Equinox phase |
-| **Mainnet and proving** | Running. 2.1 released to mainnet on 2025-04-14. Nodes prove and accrue shard coverage |
+| **Quorum** | Live. The E2EE group messenger, free, no phone number. Mobile app released; desktop/web at app.quorummessenger.com. Flagship consumer product and should get real prominence in any "what has shipped" answer |
+| **Q Console services** | Live: QStorage (S3-compatible), QKMS (key management), Identity and Authorization, QQ (SQS-compatible), QPing (notifications). Quark, and managed hosting for a Hypersnap node, are listed as coming soon |
+| **QNS** | Live at names.quilibrium.com. Register `@name` handles and the `.q` namespace. No mainstream browser resolves `.q` domains natively yet, so pointing a `.q` name at a server is not possible today |
+| **MegaRPC** | Live in production. ORAM-based private RPC for Ethereum and Solana, powering Quorum Mobile's wallet and the QNS backend |
+| **Klearu** | Shipped and open source. Private LLM inference and training runtime over two-party computation |
+| **MetaVM** | Shipped as tooling. Prover and verifier across RISC-V, EVM and Solana BPF. Mainnet integration arrives with the Equinox phase |
+| **Mainnet and proving** | Running, with rewards flowing. See the cryptography note in [Post-Quantum Cryptography Migration](Post-Quantum-Cryptography-Migration.md) |
 
-### Why these work while the token does not
+## Token, rewards and wallets
 
-Quilibrium ships **alt-fee-basis app shards**: a shard type that is not consensus-bearing but still commits at the global level. Alt-fee-based transactions are completely valid right now, and that is exactly why Q services could launch while the shard-out for the QUIL token is unresolved. The token shards block everything else, because everything else relies on fee-based transactions.
-
-**Services on alt-fee basis work. Anything requiring QUIL to move does not.**
+- **Rewards:** provers are being issued rewards. Amounts per node can look small because issuance follows logical-shard coverage and the QUIL shards are currently the only shards deployed; it is expected to grow once storage and processing capacity are unlocked and more app shards come online.
+- **Transfers and privacy:** QUIL transfers on the Quilibrium network work, and transfers are confidential by design (sender, receiver and amount are encrypted, so there is no Etherscan-style public explorer for token movements).
+- **Moving old (2.0 era) coins:** `qclient token legacy` reads what an old identity holds; `qclient token shield-all` moves legacy coins into the new shielded format. Pre-`.25` coins are not lost as long as the old `.config/` folder and `keys.yml` are kept. Never upload `config.yml` or `keys.yml` anywhere. Shielding runs in batches (about 5 minutes of proof building per batch on a normal node, so large wallets take days), and operators were asked to pace large runs rather than fire everything at once.
+- **Quorum account addresses** (the `0x` address used for QNS names) cannot receive QUIL today.
 
 ---
 
-## Not live yet
+## Still to come
 
-**Context before the list:** plenty *has* shipped and is usable today, including Quorum, the Q Console services (QStorage, QKMS, Identity and Authorization, QQ, QPing), QNS, MegaRPC, Klearu and MetaVM. Never present the list below as the whole picture.
-
-Every item here is blocked by the same root cause: the token shard-out has not completed, so fee-based transactions on the token shards are not enabled.
-
-**This list is complete.** Confirmed with the maintainer on 2026-08-12: transactions, mining rewards, the bridge and external app deployment are the only things gated on the shard-out. Nothing else is waiting on it, so do not imply there may be more.
+The core team's own order of work is: all app shards operational, keep them operational as nodes come and go, then optimise frame intervals. Only then do the following open.
 
 | Capability | Status |
 |---|---|
-| **QUIL token transactions / transfers** | **Not live.** Token shards locked pending shard-out |
-| **Mining rewards** | **Not live.** Provers run and accrue coverage, but payouts are not being distributed |
-| **The Bridge (QUIL ↔ wQUIL)** | **Not live.** See below |
-| **Apps from external developers** | **Not live.** Permissionless third-party deployment directly on the network needs the shard-out. Quilibrium Inc. own services run on an alt-fee basis instead |
-| **Full QUIL token utility** | **Not live.** Paying for services in QUIL and the rest of the token's role follow the same unlock |
+| **The Bridge (QUIL and wQUIL)** | **Not open yet.** Expected to return after the network has settled. Cassie said it will be **one-way at first** (into the Quilibrium network from Ethereum), with the full two-way flow later. The page at `quilibrium.com/bridge` was not published as of 2026-11-02. See [Bridge](gap-analysis/Bridge-QUIL-wQUIL-Cross-Chain.md) |
+| **Token applications** | The team described "approaching re-trying the token app" in late October. Not released as of 2026-11-02 |
+| **Apps from external developers** | Permissionless third-party deployment on the network follows the stabilisation work. Quilibrium Inc. services run on an alt-fee basis in the meantime |
+| **Official `2.1.0.25` release** | Sub-patches `.103` to `.113` are distributed to operators and archives, and Quilscan keeps nodes updated, but there is no official signed `2.1.0.25` binary yet; the latest signed release is `2.1.0.24`. To use `.25` features such as shielding, build from the release branch or use the Quilscan node console |
 
-Do not give step-by-step instructions for any of these as though they were available. Where docs contain such instructions, they describe the intended flow.
+Do not give step-by-step bridging instructions as though the bridge were open. Documentation for it describes how it works when running.
 
-### The Bridge specifically
+### Why alt-fee-basis services exist
 
-The bridge is **not live**. As of 2026-08-12:
-
-- The bridge page at `quilibrium.com/bridge` **has not been published yet**, so links to it do not resolve. This is not a site outage: that part of the site simply is not live.
-- The bridge **was** up earlier and was taken down. In the 2026-08-09 call Cassie noted that when it was previously up people immediately tried to exploit it, so it is being approached fresh-eyed.
-- Expected back **shortly after the v0.25 release**, roughly a day after. `.25` was pushed on 2026-08-11; the bridge had not followed as of 2026-08-12.
-- The 2026-06-18 announcement described "preparation work for the bridge".
-- The date has slipped repeatedly: an opening was referenced as "this weekend" about six weeks before 2026-08-04.
-
-Detailed bridge documentation elsewhere (MPC signer, MetaVM proof stack, `qclient cross-mint`, the web walkthrough, wQUIL's audited contract) accurately describes **how it works when running**. None of it means it is running now.
+Quilibrium ships **alt-fee-basis app shards**: a shard type that is not consensus-bearing but still commits at the global level. That is why the Q Console services could launch long before the token shards were running.
 
 ---
 
-## The shard-out, briefly
+## Shard coverage, briefly
 
 | Coverage level | Provers | Meaning |
 |---|---|---|
-| **Halt risk** | fewer than 3 | Network halts, token shards locked |
-| **Needs coverage** | 3 to 5 | Network continues, transactions can proceed |
+| **Halt risk** | fewer than 3 | Shard cannot progress |
+| **Needs coverage** | 3 to 5 | Shard continues |
 | **Healthy** | 6 or more | Ideal, maximum resilience |
 
-The network activates when all shards are out of halt risk (3 or more provers); it does **not** require every shard to be healthy. Completing the shard-out unlocks the token primitives and lets applications be released directly on the network rather than on an alt-fee basis.
+The Network Health Snapshot in the knowledge base carries the latest figures; on 2026-11-02 all 107 shards were in the healthy band.
 
 ---
 
 ## How to answer status questions
 
-1. **Give both halves.** A status answer that lists only what is broken is as wrong as one that claims everything works. Lead with what shipped, then name what is gated.
-2. **Never infer "it is live" from detailed documentation.** Depth of a technical reference says nothing about deployment state. That mistake produced a wrong answer about the bridge.
-3. **Present tense in a doc describes design, not status.**
-4. **Anything involving the QUIL token moving is not live**: transactions, rewards, bridging, paying for services in QUIL.
-5. **Name the gate** (the token shard-out) rather than hedging with "rolling out in stages".
-6. **Point users to Discord announcements** for the live picture, since dates here go stale.
+1. **Lead with the truth: mainnet is live, rewards are flowing, QUIL moves.** Then name what is still to come: the bridge, the token app, external-developer apps, the official `.25` release.
+2. **Give both halves.** An answer listing only what is missing is as wrong as one claiming everything is finished.
+3. **Do not say "mainnet has not launched" or "the shard-out is unfinished".** That was true until October 2026 and is no longer.
+4. **Do not say the bridge works.** It is not open.
+5. **Never infer "it is live" from detailed documentation.** Present tense in a doc describes design unless the doc gives a date.
+6. **Point users to the Discord announcements** for the live picture, since this changes week to week.
 
 ---
 
-*Last updated: 2026-08-12*
+*Last updated: 2026-11-02*

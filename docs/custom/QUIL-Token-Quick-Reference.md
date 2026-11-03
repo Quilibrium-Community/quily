@@ -26,16 +26,16 @@ $QUIL is a utility token. It is not intended for speculation, investment, or fin
 
 ## Key Facts
 
-> **⚠️ Status (2026-08-12).** Two halves, both true:
+> **Status (2026-11-02).** Mainnet is live and the token is running:
 >
-> **Live:** **wQUIL** on Ethereum is live and tradeable right now. The contract, DEX and CEX listings and market trackers below are all accurate and usable today.
+> **Live:** native **QUIL** is earned by provers (mining rewards are being issued), and QUIL transfers work on the Quilibrium network, including confidential "shielded" coins. Legacy 2.0-era coins are moved into the new format with `qclient token shield-all`. **wQUIL** on Ethereum is also live and tradeable; the contract, DEX and CEX listings and market trackers below are accurate.
 >
-> **Not live:** **native QUIL** is still locked. The token shard-out has not completed, so mining reward payouts, token transactions and bridging are switched off. Nodes prove and accrue coverage, but operators are not being paid out, and native QUIL cannot currently be moved or bridged.
+> **Still to come:** the **bridge** between native QUIL and wQUIL is not open yet (Cassie said it will be one-way at first, Ethereum into Quilibrium), and token applications and apps from other developers follow after network stabilisation. Native QUIL cannot yet be bridged out to Ethereum.
 >
-> In short: wQUIL trades, but the route to convert native QUIL into it is not open yet. See [Mainnet Status](Mainnet-Status-What-Is-Live.md).
+> See [Mainnet Status](Mainnet-Status-What-Is-Live.md).
 
-- **Native token**: $QUIL — earned by running nodes on the Quilibrium network (reward payouts not yet enabled, see above). $QUIL lives on the Quilibrium chain and is not directly tradeable on Ethereum exchanges.
-- **Wrapped token**: $wQUIL — ERC-20 on Ethereum, created by bridging native $QUIL via the Quilibrium Bridge (**bridge not currently live**; the bridge page has not been published yet). Bridging is a lock-and-mint operation run through `qclient`, with the commands documented under [bridging](https://docs.quilibrium.com/docs/run-node/qclient/commands/bridging). $wQUIL is the tradeable form on Ethereum DEXs and CEXs.
+- **Native token**: $QUIL — earned by running nodes on the Quilibrium network (rewards are being issued). $QUIL lives on the Quilibrium chain and is not directly tradeable on Ethereum exchanges.
+- **Wrapped token**: $wQUIL — ERC-20 on Ethereum, created by bridging native $QUIL via the Quilibrium Bridge (**bridge not open yet**; it is expected to return once the network has settled). Bridging is a lock-and-mint operation run through `qclient`, with the commands documented under [bridging](https://docs.quilibrium.com/docs/run-node/qclient/commands/bridging). $wQUIL is the tradeable form on Ethereum DEXs and CEXs.
 - **Fair launch**: No VC allocation, no premine, no airdrops — $QUIL can only be mined. The emissions schedule is generational: each generational milestone temporarily increases emissions before they taper off again, as described on the [Quilibrium Tokenomics](https://docs.quilibrium.com/docs/discover/quilibrium-tokenomics) page.
 
 ## wQUIL on Ethereum

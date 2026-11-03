@@ -108,6 +108,8 @@ A powerful feature: you can run a shard that isn't consensus-bearing. It imparts
 
 ## Bidirectional Ethereum Bridge
 
+> **Status note (November 2026):** This section describes the bridge design. The bridge is not open yet: it was taken down earlier, and when it returns it is expected to be one-way (Ethereum into Quilibrium) at first. Mainnet itself is live and QUIL transfers work on the Quilibrium network.
+
 The bridge uses alt-fee basis app shards. We run an Ethereum execution node, generate output execution state into KZG polynomial commitment format, and pull it in as an alt-fee basis app shard—costing only 74 bytes rolled into consensus as part of 19 kilobytes of global proof state.
 
 With this, you can prove anything about Ethereum's network state, enabling bidirectional bridging.

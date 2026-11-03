@@ -157,7 +157,7 @@ Both networks use the word "epoch" and they mean different things. A **Quilibriu
 
 - **$SNAP is live.** It trades on Ethereum decentralized exchanges. Its token generation event took place around **early May 2026**, timed ahead of Farcon.
 - **Hypersnap is forking fully from Neynar's Snapchain.** Reported on 2026-08-07 as the "big news", with Cassie's stated reason being that Neynar are "driving Farcaster into the ground". In the same discussion she noted that **Quorum has more users than the entire Farcaster network**, and that Farcaster went from over 100k daily active users to roughly 700 non-spam users.
-- **$QUIL status is different and should not be conflated.** Native QUIL payouts and bridging are **not** live pending the token shard-out; wQUIL on Ethereum is tradeable. See [QUIL Token Quick Reference](QUIL-Token-Quick-Reference.md) and [Mainnet Status](Mainnet-Status-What-Is-Live.md).
+- **$QUIL status is different and should not be conflated.** As of 2026-11-02 mainnet is live, native QUIL rewards are being issued and QUIL transfers work on the Quilibrium network; the bridge to Ethereum is **not** open yet, and wQUIL on Ethereum is tradeable. See [QUIL Token Quick Reference](QUIL-Token-Quick-Reference.md) and [Mainnet Status](Mainnet-Status-What-Is-Live.md).
 
 This document does not track $SNAP's price, market cap or liquidity. Those change constantly. Check a market tracker for current figures.
 

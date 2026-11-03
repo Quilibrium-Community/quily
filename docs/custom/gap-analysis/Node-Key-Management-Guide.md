@@ -76,14 +76,14 @@ Quilibrium defines several cryptographic key types, each serving a distinct role
 | `decaf448` | Decaf | Token operations | View and spend tokens |
 | `ed448` | Edwards Curve (Ed448) | Identity and signing | The pre-v2.1.0.25 identity key. Still a defined key type and still used by existing keysets |
 | `x448` | Edwards Curve (X448) | Encryption and messaging | The pre-v2.1.0.25 encryption key. Still a defined key type |
-| `bls48581` | BLS-48-581 | Prover and storage proofs | The pre-v2.1.0.25 prover key. Still used by the storage-attestation path |
+| `bls48581` | BLS-48-581 | Prover and storage proofs | The pre-v2.1.0.25 prover key. No longer used for storage proofs since epoch 1314; kept in older keysets |
 
 How these map to functional roles **on a v2.1.0.25 node**:
 
 - **Identity and peer keys (falcon512)** -- Represent your identity on the network. Used to authenticate and sign. Replaced Ed448.
 - **Encryption and config read keys (sntrup761)** -- Encrypt data others write for you, and carry the transport key exchange. Replaced X448.
-- **Spend keys (decaf448)** -- Required for token view and spend operations. Unchanged; the post-quantum replacement exists in the repo but is pre-audit and not yet on the node's code path.
-- **Prover keys (falcon512)** -- Prover enrollment and deployment administration. Replaced BLS48-581 for signing, though BLS48-581 remains in use for storage-possession proofs.
+- **Spend keys (decaf448)** -- Still the key type that appears in `keys.yml` for token view and spend operations. The confidential token format itself is now a post-quantum lattice suite and the old decaf448 token types are retired, so existing keys are used to own and migrate coins (`qclient token legacy`, `token shield`, `token shield-all`) rather than for the old Bulletproof format.
+- **Prover keys (falcon512)** -- Prover enrollment and deployment administration. Replaced BLS48-581 for signing. Storage-possession proofs are also no longer KZG/BLS48-581 since epoch 1314.
 
 Older key types were not deleted from the codebase, so existing keysets and older command syntax are not automatically invalid. Run `qclient key --help` on your installed version to see the exact type names it accepts. See [Post-Quantum Cryptography Migration](../Post-Quantum-Cryptography-Migration.md).
 

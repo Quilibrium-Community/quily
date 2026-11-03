@@ -105,6 +105,8 @@ The VDF output at each frame serves as an **unforgeable randomness beacon** for 
 
 ## Data Storage Proofs with VDFs
 
+> **Cryptography note (since node v2.1.0.25, mainnet epoch 1314):** the proof cycle below describes the original design, in which the storage proof was a 74-byte KZG opening. On the current network the storage proof is hash-based and post-quantum: Poseidon2 Merkle commitments plus one STARK per member per epoch. The VDF challenge cycle and its purpose are unchanged. See [Post-Quantum Cryptography Migration](../Post-Quantum-Cryptography-Migration.md).
+
 VDFs play a critical role in proving that nodes actually store the data they claim to hold:
 
 ### The Proof Cycle
@@ -246,7 +248,7 @@ The complete flow integrating VDFs and Bloom Clocks:
 
 1. The **Time Reel VDF** produces frames at regular intervals, providing global ordering and randomness.
 2. Each **shard** maintains its own Bloom Clock for tracking causal relationships between events within the shard.
-3. **Storage proofs** use VDF-derived challenges to continuously verify data holding. These still use KZG openings over BLS48-581.
+3. **Storage proofs** use VDF-derived challenges to continuously verify data holding. Before epoch 1314 these were KZG openings over BLS48-581; since then they are hash-based STARK proofs.
 4. **Frame consensus** combines VDF proofs (temporal) with state roots (state) to finalize each frame. Since **v2.1.0.25** those state roots are SHA-256 hash commitments from a Jellyfish Merkle Tree forest, not KZG commitments. See [Post-Quantum Cryptography Migration](../Post-Quantum-Cryptography-Migration.md).
 
 ### State Transitions

@@ -18,6 +18,8 @@ topics:
 
 > **OUTDATED (2026-03-23):** The shard numbers below are from January 21, 2026 and are likely outdated. The shard-out process is ongoing and these figures change as nodes join/leave. For current network health, check the Quilibrium dashboard or recent Discord dev-updates.
 
+> **Status update (November 2026):** The shard-out described in this section is finished and the network has launched. The QUIL token shards are unlocked, mining rewards are being issued and QUIL transfers work. The bridge, token applications and apps from other developers are the steps still to come. See the Mainnet Status document.
+
 About 67 shards are at halt risk. 663 need coverage, but we now have over 2,000 healthy shards out of approximately 3,000 total.
 
 > **Coverage threshold note:** "Halt risk" means fewer than 3 active provers (network halts). "Needs coverage" means 3–5 provers (network can proceed). "Healthy" means 6+ provers. Activation requires all shards to be at least "needs coverage" (≥3 provers), not "healthy."
