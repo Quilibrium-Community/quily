@@ -92,7 +92,7 @@ These are **not** Q Console services. They are part of the network, and the offi
 |---|---|---|
 | **MetaVM** | Zero-knowledge proof system for VM execution, covering RISC-V, EVM and Solana BPF. The foundation that f(x) and raw compute workloads will be built on. | In development. Prover and verifier work today, mainnet integration arrives with Equinox |
 | **Klearu** | End-to-end encrypted ML inference via two-party computation. Open source, runs today as a library and a browser demo. | In development for mainnet. Native network integration planned for a future protocol upgrade |
-| **Bridge** | QUIL to wQUIL cross-chain bridging with Ethereum, using an in-network Ethereum execution node plus an MPC signer. | **Not open yet.** It was up previously and was taken down; it is expected back after the network has stabilised, one-way (Ethereum into Quilibrium) at first. The bridge page at `quilibrium.com/bridge` had not been published as of 2026-11-02. See [Mainnet Status](Mainnet-Status-What-Is-Live.md) |
+| **Bridge** | QUIL to wQUIL cross-chain bridging with Ethereum, using an in-network Ethereum execution node plus an MPC signer. | **Not open yet.** It was up previously and was taken down; it is expected back after the network has stabilised, with transfers in both directions from the start. The bridge page at `quilibrium.com/bridge` had not been published as of 2026-11-02. See [Mainnet Status](Mainnet-Status-What-Is-Live.md) |
 | **Dispatch Queue** | Ordered message dispatch between participants. The primitive QPing and QQ are built on. | Shipped |
 | **EVM Shard** | EVM-compatible app shard supporting rollup follower mode or raw EVM execution. | In development |
 | **Streaming data primitives** | Video and audio streaming primitives for calls. | Planned, arriving with a future protocol upgrade |
@@ -155,4 +155,4 @@ And the reverse also holds: **appearing in Q Console does not make something a Q
 
 ---
 
-*Last updated: 2026-08-23*
+*Last updated: 2026-11-05*

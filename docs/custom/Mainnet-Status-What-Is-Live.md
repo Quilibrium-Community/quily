@@ -111,7 +111,7 @@ The core team's own order of work is: all app shards operational, keep them oper
 
 | Capability | Status |
 |---|---|
-| **The Bridge (QUIL and wQUIL)** | **Not open yet.** Expected to return after the network has settled. Cassie said it will be **one-way at first** (into the Quilibrium network from Ethereum), with the full two-way flow later. The page at `quilibrium.com/bridge` was not published as of 2026-11-02. See [Bridge](gap-analysis/Bridge-QUIL-wQUIL-Cross-Chain.md) |
+| **The Bridge (QUIL and wQUIL)** | **Not open yet.** Expected to return after the network has settled. It will support **two-way transfers from the start**, between Ethereum and Quilibrium. The page at `quilibrium.com/bridge` was not published as of 2026-11-02. See [Bridge](gap-analysis/Bridge-QUIL-wQUIL-Cross-Chain.md) |
 | **Token applications** | The team described "approaching re-trying the token app" in late October. Not released as of 2026-11-02 |
 | **Apps from external developers** | Permissionless third-party deployment on the network follows the stabilisation work. Quilibrium Inc. services run on an alt-fee basis in the meantime |
 | **Official `2.1.0.25` release** | Sub-patches `.103` to `.113` are distributed to operators and archives, and Quilscan keeps nodes updated, but there is no official signed `2.1.0.25` binary yet; the latest signed release is `2.1.0.24`. To use `.25` features such as shielding, build from the release branch or use the Quilscan node console |
@@ -147,4 +147,4 @@ The Network Health Snapshot in the knowledge base carries the latest figures; on
 
 ---
 
-*Last updated: 2026-11-02*
+*Last updated: 2026-11-05*

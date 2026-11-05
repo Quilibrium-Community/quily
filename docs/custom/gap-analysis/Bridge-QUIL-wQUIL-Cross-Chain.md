@@ -20,7 +20,7 @@ topics:
 
 # Quilibrium Bridge: QUIL/wQUIL Cross-Chain Bridging
 
-> **⚠️ THE BRIDGE IS NOT OPEN YET (as of 2026-11-02).** Mainnet has launched, the token shard-out is complete and QUIL transfers work on the Quilibrium network, but the bridge is a separate step that follows network stabilisation. The bridge page at `quilibrium.com/bridge` has not been published. It was up previously and was taken down. Per Cassie, when it returns it will be **one-way at first (Ethereum into Quilibrium)**, with the full two-way flow later.
+> **⚠️ THE BRIDGE IS NOT OPEN YET (as of 2026-11-02).** Mainnet has launched, the token shard-out is complete and QUIL transfers work on the Quilibrium network, but the bridge is a separate step that follows network stabilisation. The bridge page at `quilibrium.com/bridge` has not been published. It was up previously and was taken down. When it returns it will support **two-way transfers between Ethereum and Quilibrium from the start**.
 >
 > **Everything in this document describes how the bridge works *when running*. Do not present any of it as something a user can do today.** See [Quilibrium Network Status](../Mainnet-Status-What-Is-Live.md).
 >
@@ -122,4 +122,4 @@ The long-term vision includes trustless bridging from Solana, trustless bridging
 
 ---
 
-*Last updated: 2026-08-12*
+*Last updated: 2026-11-05*

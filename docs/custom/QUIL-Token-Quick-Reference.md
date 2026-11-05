@@ -30,7 +30,7 @@ $QUIL is a utility token. It is not intended for speculation, investment, or fin
 >
 > **Live:** native **QUIL** is earned by provers (mining rewards are being issued), and QUIL transfers work on the Quilibrium network, including confidential "shielded" coins. Legacy 2.0-era coins are moved into the new format with `qclient token shield-all`. **wQUIL** on Ethereum is also live and tradeable; the contract, DEX and CEX listings and market trackers below are accurate.
 >
-> **Still to come:** the **bridge** between native QUIL and wQUIL is not open yet (Cassie said it will be one-way at first, Ethereum into Quilibrium), and token applications and apps from other developers follow after network stabilisation. Native QUIL cannot yet be bridged out to Ethereum.
+> **Still to come:** the **bridge** between native QUIL and wQUIL is not open yet (it will support transfers in both directions from the start), and token applications and apps from other developers follow after network stabilisation. Native QUIL cannot yet be bridged out to Ethereum.
 >
 > See [Mainnet Status](Mainnet-Status-What-Is-Live.md).
 
@@ -65,4 +65,5 @@ is stale by the time it is read; the live number is on the
 - **MEXC (wQUIL/USDT)**: https://www.mexc.com/exchange/WQUIL_USDT
 
 ---
-*Last updated: 2026-09-03*
+
+*Last updated: 2026-11-05*

@@ -30,7 +30,7 @@ topics:
 
 > **Status (2026-11-02).** The network has launched: the token shard-out is complete,
 > **mining rewards are being issued and QUIL transfers work**. Still to come are the
-> **bridge** (not open yet, one-way at first), token applications and apps from other developers.
+> **bridge** (not open yet; two-way from the start), token applications and apps from other developers.
 > This document describes what QUIL is *for* and how the fee mechanics are designed; some of that
 > utility (paying for services in QUIL, third-party apps) arrives with those later steps.
 > See [Mainnet Status](Mainnet-Status-What-Is-Live.md).
@@ -160,4 +160,5 @@ QUIL is a utility token. Quilibrium Inc. does not endorse or facilitate trading 
 wQUIL.
 
 ---
-*Last updated: 2026-08-11*
+
+*Last updated: 2026-11-05*
