@@ -1,7 +1,7 @@
 ---
-title: "Quilibrium Network Health Snapshot — November 4, 2026"
+title: "Quilibrium Network Health Snapshot — November 5, 2026"
 source: Quilibrium Explorer API (automated daily)
-date: 2026-11-04
+date: 2026-11-05
 type: network_status
 topics:
   - network health
@@ -17,17 +17,17 @@ topics:
 
 # Quilibrium Network Health Snapshot
 
-**Date:** November 4, 2026
-**Data source:** Quilibrium Explorer API (live data as of 2026-11-04)
+**Date:** November 5, 2026
+**Data source:** Quilibrium Explorer API (live data as of 2026-11-05)
 
 ## Overview
 
 | Metric | Value |
 |---|---|
-| World Size | 80.98 GB |
+| World Size | 80.99 GB |
 | Total Shards | 109 |
-| Peers | 95 |
-| Total Workers | 2,777 |
+| Peers | 98 |
+| Total Workers | 2,712 |
 
 ## Shard Health
 
@@ -44,9 +44,9 @@ A shard is considered "healthy" when it has 6 or more active provers. Shards wit
 | Ring | Provers per Shard | Shards |
 |---|---|---|
 | Ring 0 | 1–7 | 0 |
-| Ring 1 | 8–15 | 3 |
-| Ring 2 | 16–23 | 37 |
-| Ring 3+ | 24+ | 69 |
+| Ring 1 | 8–15 | 2 |
+| Ring 2 | 16–23 | 42 |
+| Ring 3+ | 24+ | 65 |
 | Unassigned | 0 | 0 |
 
 ## Worker Activity
@@ -54,12 +54,12 @@ A shard is considered "healthy" when it has 6 or more active provers. Shards wit
 | Status | Count |
 |---|---|
 | Active | 2,556 |
-| Joining | 221 |
-| Leaving | 88 |
+| Joining | 156 |
+| Leaving | 178 |
 | Rejected | 0 |
 
 ## Summary
 
-As of November 4, 2026, the Quilibrium network has 109 total shards. Of these, 109 (100.0%) are healthy, 0 (0.0%) need more coverage, and 0 (0.0%) are at halt risk. The network has 95 peers and 2,777 total workers.
+As of November 5, 2026, the Quilibrium network has 109 total shards. Of these, 109 (100.0%) are healthy, 0 (0.0%) need more coverage, and 0 (0.0%) are at halt risk. The network has 98 peers and 2,712 total workers.
 
 This snapshot is updated daily from the Quilibrium Explorer API.
