@@ -16,7 +16,7 @@ topics:
 
 # Quilibrium Bridge
 
-> **⚠️ NOT OPEN YET (as of 2026-11-02).** The bridge is not operational. Mainnet has launched and QUIL transfers work on the Quilibrium network, but the bridge is a later step: the bridge page at `quilibrium.com/bridge` has not been published, and when it returns it will be one-way (Ethereum into Quilibrium) at first. It was up previously and was taken down. The description below is of the design, not of a service anyone can use today. See [Mainnet Status](../../Mainnet-Status-What-Is-Live.md).
+> **⚠️ NOT OPEN YET (as of 2026-11-02).** The bridge is not operational. Mainnet has launched and QUIL transfers work on the Quilibrium network, but the bridge is a later step: the bridge page at `quilibrium.com/bridge` has not been published, and when it returns it will support transfers in both directions from the start. It was up previously and was taken down. The description below is of the design, not of a service anyone can use today. See [Mainnet Status](../../Mainnet-Status-What-Is-Live.md).
 >
 > *(Manual annotation. This file is auto-generated from the ecosystem feed, which does not carry deployment status — the upstream entry needs a status field, otherwise this warning is lost on the next sync.)*
 
@@ -41,3 +41,5 @@ Built by **Quilibrium Inc.**
 ---
 
 *This document is auto-generated from the official Quilibrium ecosystem page at quilibrium.com/ecosystem.*
+
+*Last updated: 2026-11-05*
