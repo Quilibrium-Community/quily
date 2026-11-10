@@ -525,7 +525,7 @@ export function ChatContainer({
   };
 
   return (
-    <div className="flex flex-col h-full relative">
+    <div className="flex flex-col h-full min-h-0 min-w-0 relative">
       {conversationId && <ChatHeader conversationId={conversationId} />}
       <MessageList
         messages={messages}

@@ -54,8 +54,8 @@ export function ChatInput({
       // Set height to scrollHeight (content height)
       const newHeight = textarea.scrollHeight;
       textarea.style.height = `${newHeight}px`;
-      // Only enable scrolling when content exceeds max-height (192px = 12rem = max-h-48)
-      textarea.style.overflowY = newHeight > 192 ? 'auto' : 'hidden';
+      // max-h-48 grows with the device's text size, so compare computed pixels.
+      textarea.style.overflowY = newHeight > parseFloat(getComputedStyle(textarea).maxHeight) ? 'auto' : 'hidden';
     }
   }, [input]);
 
@@ -125,7 +125,7 @@ export function ChatInput({
         maxLength={MAX_LENGTH}
         disabled={disabled || isStreaming}
         rows={1}
-        className={`flex-1 resize-none bg-transparent pl-3 sm:pl-4 pr-2 text-base text-text-base
+        className={`min-w-0 flex-1 resize-none bg-transparent pl-3 sm:pl-4 pr-2 text-base text-text-base
                    placeholder-text-subtle
                    focus:outline-none
                    disabled:cursor-not-allowed
@@ -203,7 +203,7 @@ export function ChatInput({
   }
 
   return (
-    <div className="bg-bg-base px-2 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-4 sm:pt-4 sm:pb-10">
+    <div className="shrink-0 bg-bg-base px-2 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-4 sm:pt-4 sm:pb-10">
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
         {inputField}
         {charCounter}

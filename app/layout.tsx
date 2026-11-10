@@ -37,6 +37,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  other: { 'text-scale': 'scale' },
   title: 'Quily Chat',
   description: 'Get instant, accurate answers about Quilibrium from official sources',
   metadataBase: new URL('https://quily.quilibrium.one'),

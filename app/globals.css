@@ -1,6 +1,24 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Android uses the browser's initial size via text-scale. iOS needs Dynamic
+   Type explicitly; the coarse-pointer guard avoids macOS's 13px system body. */
+@layer base {
+  @supports (font: -apple-system-body) {
+    @media (pointer: coarse) {
+      html {
+        font: -apple-system-body;
+        font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+        font-weight: 400;
+        line-height: 1.5;
+      }
+      input, textarea, select { font-size: max(16px, 1em) !important; }
+    }
+  }
+  body { overflow-wrap: break-word; }
+  .grid > * { min-width: 0; }
+}
+
 /* ============================================================================
    SEMANTIC COLOR SYSTEM
    ============================================================================

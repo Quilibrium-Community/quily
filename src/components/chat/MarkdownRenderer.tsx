@@ -191,7 +191,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-accent hover:underline break-all"
+            className="text-accent hover:underline"
           >
             {children}
           </a>
@@ -245,7 +245,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
   );
 
   return (
-    <div className="prose prose-sm max-w-none dark:prose-invert wrap-break-word overflow-wrap-anywhere">
+    <div className="prose prose-sm min-w-0 max-w-none dark:prose-invert wrap-break-word" style={{ fontSize: 'calc(1.0625rem * var(--chat-font-scale, 1))' }}>
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {debouncedContent}
       </ReactMarkdown>

@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTheme } from 'next-themes';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Icon } from '@/src/components/ui/Icon';
+import { ChatFontSizeSettings } from '@/src/components/ui/ChatFontSizeSettings';
 import { getAvatarUrl } from '@/src/lib/avatar';
 import { useLocalStorage } from '@/src/hooks/useLocalStorage';
 import { getRecommendedModels, DEFAULT_MODEL_ID, FREE_MODE_DEFAULT_MODEL_ID, ModelMetadata } from '@/src/lib/openrouter';
@@ -278,7 +279,7 @@ export default function SettingsPage() {
                     height={64}
                     className="w-16 h-16 rounded-full bg-surface/10 border border-gray-200 dark:border-gray-700 object-cover"
                   />
-                  <span className="text-[10px] text-gray-400 dark:text-gray-500">Auto-generated</span>
+                  <span className="text-[0.625rem] text-gray-400 dark:text-gray-500">Auto-generated</span>
                 </div>
 
                 <div className="flex-1 min-w-0 space-y-3">
@@ -369,12 +370,12 @@ export default function SettingsPage() {
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{p.name}</span>
                         {p.isRecommended && !isDisabled && (
-                          <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-accent/10 text-accent">
+                          <span className="px-1.5 py-0.5 text-[0.625rem] font-medium rounded-full bg-accent/10 text-accent">
                             Recommended
                           </span>
                         )}
                         {isChutesUnavailable && (
-                          <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                          <span className="px-1.5 py-0.5 text-[0.625rem] font-medium rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
                             Unavailable
                           </span>
                         )}
@@ -972,12 +973,12 @@ export default function SettingsPage() {
                         {recommendedModels.find((m: ModelMetadata) => m.id === openrouterModel)?.name || 'Select a model'}
                       </span>
                       {recommendedModels.find((m: ModelMetadata) => m.id === openrouterModel)?.isOpenSource && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                        <span className="px-1.5 py-0.5 text-[0.625rem] font-medium rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
                           Open Source
                         </span>
                       )}
                       {recommendedModels.find((m: ModelMetadata) => m.id === openrouterModel)?.isRecommended && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-accent/10 dark:bg-accent/20 text-accent">
+                        <span className="px-1.5 py-0.5 text-[0.625rem] font-medium rounded bg-accent/10 dark:bg-accent/20 text-accent">
                           Recommended
                         </span>
                       )}
@@ -1017,12 +1018,12 @@ export default function SettingsPage() {
                                 {model.name}
                               </span>
                               {model.isRecommended && (
-                                <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-accent/10 dark:bg-accent/20 text-accent">
+                                <span className="px-1.5 py-0.5 text-[0.625rem] font-medium rounded bg-accent/10 dark:bg-accent/20 text-accent">
                                   Recommended
                                 </span>
                               )}
                               {model.isOpenSource && (
-                                <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                                <span className="px-1.5 py-0.5 text-[0.625rem] font-medium rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
                                   Open Source
                                 </span>
                               )}
@@ -1064,12 +1065,12 @@ export default function SettingsPage() {
                             {chutesModels.find((m) => m.id === chutesModel)?.name || 'Select a model'}
                           </span>
                           {chutesModels.find((m) => m.id === chutesModel)?.isOpenSource && (
-                            <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                            <span className="px-1.5 py-0.5 text-[0.625rem] font-medium rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
                               Open Source
                             </span>
                           )}
                           {chutesModels.find((m) => m.id === chutesModel)?.isRecommended && (
-                            <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-accent/10 dark:bg-accent/20 text-accent">
+                            <span className="px-1.5 py-0.5 text-[0.625rem] font-medium rounded bg-accent/10 dark:bg-accent/20 text-accent">
                               Recommended
                             </span>
                           )}
@@ -1109,12 +1110,12 @@ export default function SettingsPage() {
                                     {model.name}
                                   </span>
                                   {model.isRecommended && (
-                                    <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-accent/10 dark:bg-accent/20 text-accent">
+                                    <span className="px-1.5 py-0.5 text-[0.625rem] font-medium rounded bg-accent/10 dark:bg-accent/20 text-accent">
                                       Recommended
                                     </span>
                                   )}
                                   {model.isOpenSource && (
-                                    <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                                    <span className="px-1.5 py-0.5 text-[0.625rem] font-medium rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
                                       Open Source
                                     </span>
                                   )}
@@ -1208,6 +1209,10 @@ export default function SettingsPage() {
                 </div>
               )}
             </div>
+          </section>
+
+          <section className="mb-8 rounded-lg border border-border bg-bg-base p-4 sm:p-6">
+            <ChatFontSizeSettings />
           </section>
 
           {/* Danger Zone */}

@@ -22,6 +22,7 @@ This is the main index for all documentation, bug reports, and task management.
 - [Update News Skill — Obsolescence Management](docs/update-news-skill.md)
 
 ### Features
+- [Message text size follows the device](docs/features/message-text-size.md)
 - [RAG Confidence Indicator](docs/features/rag-confidence-indicator.md)
 
 ## 🐛📋 Issues
@@ -157,4 +158,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-10-17 23:34:58
+**Last Updated**: 2026-11-10 09:13:11

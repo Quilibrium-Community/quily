@@ -4,6 +4,8 @@ import { Sidebar } from '@/src/components/sidebar/Sidebar';
 import { SearchProvider } from '@/src/contexts/SearchContext';
 import { SidebarProvider, useSidebar } from '@/src/contexts/SidebarContext';
 import { useVisualViewportSync } from '@/src/hooks/useVisualViewportSync';
+import { useChatFontSize } from '@/src/hooks/useChatFontSize';
+import type { CSSProperties } from 'react';
 
 /**
  * Main application layout with persistent sidebar.
@@ -29,6 +31,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 }
 
 function AppLayoutInner({ children }: { children: React.ReactNode }) {
+  const { scale } = useChatFontSize();
   const { isOpen } = useSidebar();
 
   // Keeps --app-height in sync with the visible viewport so the mobile keyboard
@@ -46,6 +49,7 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
           - lg:pl-0 when sidebar is expanded (sidebar is in normal flow)
       */}
       <main
+        style={{ '--chat-font-scale': scale } as CSSProperties}
         className={`
           flex-1 flex flex-col min-w-0 pt-[calc(3.5rem+env(safe-area-inset-top))] lg:pt-0
           transition-[padding] duration-200
