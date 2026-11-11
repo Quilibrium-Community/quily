@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-06-09T09:02:22.603Z",
+  "lastSync": "2026-11-11T13:12:45.372Z",
   "source": {
     "owner": "QuilibriumNetwork",
     "repo": "docs",
@@ -1276,10 +1276,10 @@
     },
     "build/02-tokens/creating-tokens.md": {
       "path": "build/02-tokens/creating-tokens.md",
-      "sha": "63520aeb60afc0f2f248ec20942d676bbb099576",
-      "contentHash": "fb99b4136d033dcc70516e3704bc0f7c",
-      "syncedAt": "2026-03-20T09:32:54.896Z",
-      "size": 8073
+      "sha": "06c663d9f81fb1314e8de92291c5ddf8938997b3",
+      "contentHash": "3d4a75c6438b1787eab7725aeac1a343",
+      "syncedAt": "2026-11-11T13:12:45.169Z",
+      "size": 8163
     },
     "build/q-service-apis.md": {
       "path": "build/q-service-apis.md",
@@ -1654,10 +1654,10 @@
     },
     "run-node/qclient/commands/deploy.md": {
       "path": "run-node/qclient/commands/deploy.md",
-      "sha": "931b3fb402465e42af9894a4d182651a41a7e05b",
-      "contentHash": "03729e791341168413daf7389bf684c5",
-      "syncedAt": "2026-03-20T09:33:08.792Z",
-      "size": 12447
+      "sha": "442b3b988dba437ec44a4bb8d227d23b0ed371dc",
+      "contentHash": "0d7f41d63eae54bc0826f02108789e87",
+      "syncedAt": "2026-11-11T13:12:45.322Z",
+      "size": 12549
     },
     "run-node/qclient/commands/global-flags.md": {
       "path": "run-node/qclient/commands/global-flags.md",
