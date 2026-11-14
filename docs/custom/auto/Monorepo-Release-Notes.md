@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Node Release Notes"
 source: github.com/QuilibriumNetwork/monorepo (automated daily)
-date: 2026-11-13
+date: 2026-11-14
 type: release_notes
 topics:
   - release notes
@@ -16,7 +16,7 @@ topics:
 
 # Quilibrium Node Release Notes
 
-**Last updated:** November 13, 2026
+**Last updated:** November 14, 2026
 **Source:** [Quilibrium Monorepo](https://github.com/QuilibriumNetwork/monorepo)
 
 This document tracks changes in each Quilibrium node release.
@@ -24,65 +24,52 @@ This document tracks changes in each Quilibrium node release.
 ## v2.1.0.24 (version .24) *(auto-generated)*
 - fix race where initial sync failout leaves workers idle until reboot
 - fix patch number sync with config
-- make hypergraph store writes transaction-safe, including vertex data and tree blob writes
+- fix transaction safety for hypergraph store writes
 - make LazyVectorCommitmentTree::commit retry-safe by deferring dirty-state clearing until transaction commit
-- make compute_shard_root read-only, preventing writes outside frame transactions
+- make compute_shard_root read-only to prevent writes outside frame transactions
 - require RocksTxn for hypergraph store writes, removing silent direct-write fallback
-- handle store wipe on leave scenario
-- reduce score differential basis for flagging leave-to-join opportunities, extend scoring-based leave window to a full cycle
+- handle leaving scenario with store wipe
+- reduce score differential basis for flagging leave-to-join opportunities
+- extend scoring-based leave window to a full cycle
 - adjust margins on decisions and thresholds for decides and joins
 - adjust snapshotting to use actual rocksdb snapshots
 - resolve unsynced leave issuance condition
 - reapply docker build optimizations to Dockerfile.source
-- rejoin lagging archive by syncing proposals from peers, including serving full proposals and persisting proposer votes
+- rejoin lagging archive by syncing proposals from peers
+- serve full proposals via GetGlobalProposal
+- persist proposer vote at proposal ingest
+- add catch-up task to pull missing proposals from peers and submit into consensus loop
 
 ## v2.1.0.23 (version .23) *(auto-generated)*
 - fix docker build and static linking issues for flint/mpfr/gmp
-- resolve standalone worker connection string derivation and logging bugs
-- fix too many joins, invalid signature in qclient, and worker file logging issues
-- demote p2p and archive client logs to debug
-- add confirm/reject actions and demote shard operation logs to debug
-- resolve domain separation bug for invalid signature
-- fix tokio thread issue with logging
-- fast path push to archives for info retrieval
-- fix leaving prover bug in worker allocator
-- resolve worker storage location bug and reduce log noise
-- adjust prover shard choices and ring number calculation
-- fix TUI quirks for manual mode
-- forcibly prioritize halt risk shards in selection
-- address blackswan-reported issues 1-3 and 1-6
-- resolve worker persistence and missing lock update
-- harden prover path and fix shard store discrepancy
-- use different source for current frame number
-- cache requests to prevent available shard flashing
-- resolve stale 0 frame data response and adjust blossomsub params
-- refactor tree behaviors to skip stale data effects
-- add halt risk test and switch archive node
-- never assume, always ensure prover tree
-- add extra logging for worker panics
-- handle orphaned allocations and zero byte shard allocations
+- fix standalone worker connection string derivation and worker storage location bugs
+- resolve too many joins, invalid signature, and various worker mode issues
+- improve prover shard allocation and halt risk prioritization
+- fix domain separation bug for invalid signatures
+- resolve tokio thread and logging issues
+- force prover tree consistency and handle orphaned allocations
 - fix autonat bug crashing worker threads
-- fix too many streams issue and force static link on libchannel
+- fix too many streams and kad-dht stream connection issues
+- resolve archive node and frame data cache staleness
+- adjust blossomsub params and skip stale data effects
 - fix quil-engine unit tests and router validator tests
-- support white spaces in genesis seed for testnets
+- support whitespace in genesis seed for testnets
 - add Rust CI with GitHub Actions
-- fix propose skip on coverage halts
 - fix vdf link order and enable tests in CI
 - improve rust and docker build times
 - support archive endpoints config in rs node
 - use sha3 for prover join vdf verifier
-- fix rust node initialization issues
-- refactor quil-node main into sibling modules
-- address issues #558, #560, #561
+- fix router validator peer info test
+- refactor quil-node main into sibling modules (storage, keys, engines, frame_pipeline, networking, runtime_state, peer_info_publisher, worker_manager, allocator_and_lifecycle, message_loop, archive_sync, grpc)
 - fix canonicalization bug for peer info
 - propagate errors from subsystems
 - reduce logging noise on connection events
-- increase duration between peer info and key registry publishes
-- fix OOM from unbounded stores with memory profiling and allocator swap
-- add diagnostics for message drops and prover management
-- aggressive query for frame to avoid expired joins
-- fix leave proposal adjustment for halt risk
-- resolve proposal bug using joining
+- add memory profiling and logging to trace OOM
+- fix message drops and bitmask worker handling
+- resolve expired leaves not treated as confirmed in proposal logic and worker allocator
+- fix halt risk swap loop and overlapping join race
+- adjust leave proposal for halt risk and handle 67% barrier
+- fix TUI manage submission of messages
 
 ## v2.1.0.22 (version .22) *(auto-generated)*
 - improved prover commands and show worker id
@@ -90,6 +77,7 @@ This document tracks changes in each Quilibrium node release.
 - added component-level logger tuning
 - prover management TUI adds manual management tracking and specifies joins by worker id
 - optimized TUI round 2
+- fixed dbscan compiler error
 - log shard allocation join confirm or reject + plan leave details
 - added default archive peer list
 - fixed prover eviction bug
@@ -103,26 +91,27 @@ This document tracks changes in each Quilibrium node release.
 - added timeout for global frame fetch
 - added lru cache to getglobalframe handler
 - adjusted estimation behavior to properly calculate ring position and membership set
-- worker TUI reward calc/logical shard count, bandwidth reduction on app worker
+- fixed worker TUI reward calc/logical shard count, bandwidth reduction on app worker
 - added auto-sized filters
 - optimized logging for plan / decide and confirm / reject for shard joins and leaves
 - fixed dynamic filter width
 - blossomsub improvements, estimate/hard calc changes
 - fixed migration + improved logging
 - new migration to resolve eviction issue
-- refactored global consensus engine into discrete components, updated tests
+- refactored global consensus engine into discrete components, update tests
 - adjusted rpc/worker ring display
 
 ## v2.1.0.21 (version .21) *(auto-generated)*
 - reconcile old and new config paths
-- fix formatting and precision on prover reward data, and address possible peering issue
+- fix formatting and precision on prover reward data
+- address possible peering issue
 - fix app shard lookups on mainnet
 
 ## v2.1.0.20 (version .20) *(auto-generated)*
-- read debug configuration from environment variable
-- fix pebble db constructor config parameter
+- allow debug mode to be enabled via environment variable
+- fix pebble database constructor configuration parameter
 - reduce high CPU overhead in initial worker behaviors and ongoing sync
-- improve docker build caching for faster builds
+- speed up docker builds with improved caching
 - add extra data to node info and query metrics from command line
 - leave proposals for overcrowded shards
 - implement hub-and-spoke global message broadcasts
@@ -135,8 +124,7 @@ This document tracks changes in each Quilibrium node release.
 - fixed app shard TC signature size, collector/hotstuff race condition, and expired joins blocking new joins
 - removed compatibility with old 2.0.0 blossomsub
 - resolved abandoned prover joins and reload prover registry
-- fixed stale worker proposal edge
-- added full sanity check on join before submitting
+- fixed stale worker proposal edge and added full sanity check on join
 - resolved non-fallthrough condition that should be fallthrough
 - fixed rare SIGFPE and orphan expired joins blocking worker reallocation
 - added reconnect fallback with variable reconnect time when no peers found
@@ -147,16 +135,13 @@ This document tracks changes in each Quilibrium node release.
 - fixed shutdown scenario quirks and reload hanging
 - fixed early bailout on shutdown of coverage check
 - forced registry refresh on worker waiting for registration
-- added more logging to wait for prover
 - fixed worker manager filter refresh on allocation and snapshots blocking close on shutdown
-- forced shutdown after five seconds for app worker
-- fixed loop on shutdown and added named workers to trace hanging shutdowns
-- used deterministic key for worker peer ids to stop flagging workers as sybil attacks
+- forced shutdown after five seconds for app worker and fixed looping on shutdown
+- added named workers to trace hanging shutdowns
+- used deterministic key for peer id of workers to stop flagging workers as sybil attacks
 - removed pubsub stop from app consensus engine and integrated shutdown context to PerformSync
-- fixed blossomsub pubsub interface subscription status tracking
-- fixed subscribe order to avoid nil panic
+- fixed blossomsub pubsub interface subscription status tracking and subscribe order to avoid nil panic
 - switched from dnsaddr to dns4 and added missing quic-v1
-- added logging to isolate respawn quirks
 - applied sledgehammer to restart logic
 - restored proper respawn logic, fixed frozen hypergraph post respawn, and unsubscribed from previously missing bitmask
 
