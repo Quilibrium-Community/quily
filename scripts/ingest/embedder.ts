@@ -41,11 +41,23 @@ async function withRetry<T>(
 /**
  * Format chunk content with heading context for better embeddings
  */
-function formatForEmbedding(chunk: ChunkWithContext): string {
-  if (chunk.metadata.heading_path) {
-    return `${chunk.metadata.heading_path}\n\n${chunk.content}`;
-  }
-  return chunk.content;
+export function formatForEmbedding(chunk: ChunkWithContext): string {
+  const text = chunk.metadata.heading_path
+    ? `${chunk.metadata.heading_path}\n\n${chunk.content}`
+    : chunk.content;
+  return maskHashLikeStrings(text);
+}
+
+// 64 hex chars (optionally 0x-prefixed) are transaction hashes, coin addresses and
+// grant IDs in our docs, but they have the exact shape of an Ethereum private key.
+// The OpenRouter provider rejects the whole batch with "blocked by content filter"
+// when it sees one, which failed the daily ingestion. A hash carries no semantic
+// signal for an embedding, so we mask it. Only the embedded text is changed; the
+// stored chunk content keeps the original value.
+const HEX_64 = /\b(?:0x)?[0-9a-fA-F]{64}\b/g;
+
+export function maskHashLikeStrings(text: string): string {
+  return text.replace(HEX_64, '[hash]');
 }
 
 /**
