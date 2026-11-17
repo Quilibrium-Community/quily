@@ -1,17 +1,20 @@
 # Quily Chat
 
-A self-hosted RAG chatbot that answers questions about the Quilibrium protocol using official documentation and livestream transcriptions.
+A self-hosted RAG chatbot that answers questions about the Quilibrium protocol using official documentation, livestream transcriptions, community docs and Discord announcements. It ships as a web app plus a Discord bot.
 
 ### [>> Try the live demo <<](https://quily.quilibrium.one/)
 
 ## Features
 
 - **RAG-powered answers** with source citations from official Quilibrium docs
-- **Streaming responses** via Chutes (recommended) or OpenRouter
-- **Chutes OAuth** for easy sign-in without API keys
-- **OpenRouter support** as an alternative provider (requires API key)
+- **Streaming responses** with a choice of LLM providers
+- **Free mode**: the server's key can serve all users, so nobody has to bring their own (`NEXT_PUBLIC_FREE_MODE`)
+- **Chutes OAuth** as an optional sign-in that needs no API key
+- **Bring your own key** when free mode is off
 - **Two-stage retrieval** with Cohere or Cloudflare reranking (free tier available)
-- **Auto-sync** documentation from GitHub with incremental updates
+- **Auto-sync** of docs from GitHub, Discord announcements, the tech tree and the ecosystem list
+- **Discord bot** (`bot/`) that answers mentions and posts a daily digest
+- **Bot protection** with Cloudflare Turnstile
 - **Conversation history** persisted in browser localStorage
 - **Dark mode** support
 - **Mobile responsive** design
@@ -23,22 +26,25 @@ A self-hosted RAG chatbot that answers questions about the Quilibrium protocol u
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 22+
+- Yarn 4 (run `corepack enable`; the version is pinned in `package.json`)
 - Supabase account (free tier works)
-- Chutes account (recommended) **OR** OpenRouter API key (for chat)
+- An LLM provider API key (see `.env.example`)
+- Chutes account (optional, for Sign in with Chutes)
 - GitHub token (for docs sync, no scopes needed)
 
 ### 1. Clone and Install
 
 ```bash
 git clone https://github.com/Quilibrium-Community/quily.git
-cd Quily-Chatbot
+cd quily
+corepack enable
 yarn
 ```
 
 ### 2. Configure Environment
 
-Copy `.env.example` to `.env` and fill in your values:
+Copy `.env.example` to `.env.local` and fill in your values. `.env.example` is the full, commented list; the essentials are:
 
 ```env
 # Supabase (required)
@@ -47,20 +53,20 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 SUPABASE_URL=your_supabase_url
 SUPABASE_SERVICE_KEY=your_service_role_key
 
-# Chutes OAuth (recommended - enables Sign in with Chutes)
-CHUTES_OAUTH_CLIENT_ID=cid_xxx
-CHUTES_OAUTH_CLIENT_SECRET=csc_xxx
-CHUTES_OAUTH_SCOPES="openid profile chutes:invoke"
+# LLM provider key (required: used for embeddings and chat)
+OPENROUTER_API_KEY=your_api_key
+
+# Free mode (optional): serve all users with the server's key
+# NEXT_PUBLIC_FREE_MODE=true
+
+# Chutes OAuth (optional - enables Sign in with Chutes)
+# CHUTES_OAUTH_CLIENT_ID=cid_xxx
+# CHUTES_OAUTH_CLIENT_SECRET=csc_xxx
+# CHUTES_OAUTH_SCOPES="openid profile chutes:invoke"
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-# Optional overrides
-# CHUTES_OAUTH_REDIRECT_URI=https://your-domain.com/api/auth/chutes/callback
-# CHUTES_IDP_BASE_URL=https://api.chutes.ai
 
-# OpenRouter (alternative provider - requires API key)
-OPENROUTER_API_KEY=your_openrouter_key
-
-# Cohere reranking (optional, improves retrieval quality)
-COHERE_API_KEY=your_cohere_key
+# Reranking (optional, improves retrieval quality)
+# COHERE_API_KEY=your_cohere_key
 
 # GitHub (required for docs sync)
 GITHUB_TOKEN=ghp_your_token_here
@@ -68,8 +74,8 @@ GITHUB_TOKEN=ghp_your_token_here
 
 **Get your keys:**
 - [Supabase](https://supabase.com) → Dashboard → Settings → API
-- [Chutes](https://chutes.ai) → Create account (recommended, for OAuth sign-in)
-- [OpenRouter](https://openrouter.ai/keys) (alternative, requires API key)
+- LLM provider key (required, see `.env.example`)
+- [Chutes](https://chutes.ai) → Create account (optional, for OAuth sign-in)
 - [Cohere](https://dashboard.cohere.com/api-keys) (optional)
 - [GitHub](https://github.com/settings/tokens) → Generate token (no scopes needed for public repos)
 
@@ -77,7 +83,7 @@ GITHUB_TOKEN=ghp_your_token_here
 
 Create a new Supabase project and run the schema from `scripts/db/schema.sql` in the SQL Editor.
 
-The schema uses BGE-M3 embeddings (1024 dimensions) which work with both Chutes and OpenRouter providers.
+The schema uses BGE-M3 embeddings (1024 dimensions). Ingestion generates them through the configured provider.
 
 ### 4. Sync and Ingest Documentation
 
@@ -95,17 +101,17 @@ yarn ingest:run
 yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and configure your preferred provider (Chutes sign-in or OpenRouter API key) in Settings to start chatting.
+Open [http://localhost:3000](http://localhost:3000) and start chatting. With free mode off, configure a provider (API key or Chutes sign-in) in Settings first.
 
 ---
 
 ## Documentation Management
 
-The chatbot's knowledge comes from the `./docs` folder. Documentation is organized into two categories:
+The chatbot's knowledge comes from the `./docs` folder. Documentation is organized into three categories:
 
-### 1. Official docs (synced from GitHub, NOT committed)
+### 1. Official docs (synced from GitHub, automated)
 
-Official Quilibrium docs are synced from [QuilibriumNetwork/docs](https://github.com/QuilibriumNetwork/docs) into `docs/quilibrium-official/`. This folder is gitignored.
+Official Quilibrium docs are synced from [QuilibriumNetwork/docs](https://github.com/QuilibriumNetwork/docs) into `docs/quilibrium-official/`. The folder is tracked in git (the daily workflow commits to it), but never edit it by hand: the next sync overwrites your changes.
 
 ```bash
 # Check what would change
@@ -118,22 +124,28 @@ yarn sync-docs:run
 yarn sync-docs:force
 ```
 
-### 2. Custom docs (your uploads, COMMITTED)
+### 2. Discord mirrors (synced automatically)
 
-Add your own content to `docs/transcriptions/` or `docs/custom/`. These are version-controlled.
+`docs/discord/` holds announcements, dev updates, node updates and the general recap, pulled from Discord by `yarn sync-discord:run`. Also an automated mirror: do not edit by hand.
+
+### 3. Custom docs (your uploads, COMMITTED)
+
+Add your own content to `docs/transcriptions/` or `docs/custom/`. These are version-controlled. `docs/custom/auto/` is generated by the tech tree and ecosystem syncs, so leave it alone.
 
 ```
 docs/
-├── quilibrium-official/          ← Synced from GitHub (gitignored)
-│   ├── api/
-│   ├── discover/
-│   ├── learn/
+├── quilibrium-official/          ← Synced from GitHub (automated)
+│   ├── api/ build/ discover/
+│   ├── learn/ protocol/ run-node/
 │   └── .sync-manifest.json
-├── transcriptions/               ← Your uploads (committed)
-│   ├── livestream-notes.txt
-│   └── ama-transcript.txt
-└── custom/                       ← Your uploads (committed)
-    └── Quilibrium Architecture.md
+├── discord/                      ← Synced from Discord (automated)
+│   ├── announcements/ dev-updates/
+│   └── node-updates/ general-recap/
+├── transcriptions/               ← Livestream and interview transcripts (committed)
+│   └── 2024-06-19_quilibrium-web3-galaxy-brain-interview.md
+└── custom/                       ← Community docs (committed)
+    ├── Epochs-And-Frames.md
+    └── auto/                     ← Generated (tech tree, ecosystem)
 ```
 
 ### Supported File Types
@@ -149,15 +161,26 @@ docs/
 
 ### Automated (recommended)
 
-A GitHub Actions workflow checks for new documentation daily at 06:00 UTC. If changes are detected, it automatically syncs docs and re-ingests embeddings into Supabase.
+A GitHub Actions workflow runs daily at 06:00 UTC. It syncs official docs and Discord content, commits any changes, and re-ingests embeddings into Supabase. Other workflows in `.github/workflows/`:
 
-To enable, add these **GitHub Secrets** (Settings → Secrets and variables → Actions):
+| Workflow | What it does |
+|----------|--------------|
+| `sync-docs.yml` | Daily docs and Discord sync + RAG ingestion |
+| `sync-techtree.yml` | Weekly tech tree sync |
+| `sync-ecosystem.yml` | Weekly ecosystem project list sync |
+| `monthly-model-scout.yml` | Monthly report on cheaper or better models |
+| `supabase-keepalive.yml` | Keeps the free-tier Supabase project from pausing |
+| `ci.yml` | Install and typecheck (guards the toolchain) |
+
+To enable the daily sync, add these **GitHub Secrets** (Settings → Secrets and variables → Actions):
 
 | Secret | Value from `.env` |
 |--------|-------------------|
 | `SUPABASE_URL` | `NEXT_PUBLIC_SUPABASE_URL` |
 | `SUPABASE_SERVICE_KEY` | `SUPABASE_SERVICE_ROLE_KEY` |
-| `CHUTES_API_KEY` | `CHUTES_API_KEY` |
+| `OPENROUTER_API_KEY` | `OPENROUTER_API_KEY` |
+| `PAT_TOKEN` | A token that can push to the repo |
+| `DISCORD_BOT_TOKEN`, `DISCORD_CHANNEL_IDS`, `DISCORD_GENERAL_CHANNEL_ID` | Only if you sync Discord content |
 
 You can also trigger it manually from the Actions tab → "Daily Docs Sync & RAG Ingestion" → "Run workflow".
 
@@ -169,7 +192,8 @@ yarn sync-docs:ingest
 
 # Or step by step:
 yarn sync-docs:run    # Sync latest from GitHub
-yarn ingest:run       # Update the RAG database (via OpenRouter, BGE-M3)
+yarn ingest:run       # Update the RAG database (BGE-M3 embeddings)
+yarn sync-discord:run # Optional: pull Discord content (needs DISCORD_BOT_TOKEN)
 ```
 
 ### After deleting files
@@ -201,6 +225,13 @@ yarn ingest:status
 | `yarn build` | Production build |
 | `yarn start` | Start production server |
 | `yarn typecheck` | TypeScript type checking |
+| `yarn doc:lint` | Lint knowledge base docs |
+| `yarn retrieval:check` | Retrieval regression check |
+| `yarn prod-logs` / `yarn prod-curl` | Production debugging helpers |
+
+### Discord Bot
+
+The bot lives in `bot/` with its own `package.json`. From that folder: `npm run dev`, `npm run build`, `npm run start`. Set `DISCORD_BOT_TOKEN`, `DISCORD_CLIENT_ID` and `DISCORD_CHANNEL_IDS` (see `.env.example`).
 
 ### Documentation Sync
 
@@ -212,12 +243,15 @@ yarn ingest:status
 | `yarn sync-docs:ingest` | Sync + auto-ingest |
 | `yarn sync-docs:dry` | Preview without downloading |
 | `yarn sync-docs verify` | Verify local files match manifest |
+| `yarn sync-discord:run` | Sync Discord announcements and updates |
+| `yarn sync-techtree` | Sync the Quilibrium tech tree |
+| `yarn sync-ecosystem` | Sync the ecosystem project list |
 
 ### Ingestion
 
 | Command | Description |
 |---------|-------------|
-| `yarn ingest:run` | Run ingestion pipeline (OpenRouter, default) |
+| `yarn ingest:run` | Run ingestion pipeline (default) |
 | `yarn ingest:run-chutes` | Run ingestion via Chutes (legacy, opt-in) |
 | `yarn ingest:clean` | Ingest + remove orphaned chunks |
 | `yarn ingest:dry` | Preview without uploading |
@@ -231,11 +265,12 @@ yarn ingest:status
 |---------|-------------|
 | `yarn eval:list` | List all test cases |
 | `yarn eval:run` | Run full evaluation suite (requires `OPENROUTER_API_KEY`) |
-| `yarn eval:smoke` | Run smoke tests only (4 quick tests) |
+| `yarn eval:smoke` | Run smoke tests only (a few quick tests) |
+| `yarn eval:broad` | Run the broad suite (53 cases) instead of the focused default (43) |
 | `yarn eval:run --no-judge` | Deterministic checks only (free) |
 | `yarn eval:report <path>` | Re-display a saved JSON report |
 
-The eval harness sends queries to the chat API, parses streaming responses, and evaluates quality using deterministic checks and an LLM judge (Claude Sonnet via OpenRouter). Requires a running dev server (`yarn dev`). See [.agents/docs/qa-evaluation-harness.md](.agents/docs/qa-evaluation-harness.md) for full documentation.
+The eval harness sends queries to the chat API, parses streaming responses, and evaluates quality using deterministic checks and an LLM judge (Claude Sonnet). Requires a running dev server (`yarn dev`). See [.agents/docs/qa-evaluation-harness.md](.agents/docs/qa-evaluation-harness.md) for full documentation.
 
 ---
 
@@ -243,19 +278,27 @@ The eval harness sends queries to the chat API, parses streaming responses, and 
 
 ```
 ├── app/
-│   ├── api/chat/route.ts       # Streaming chat endpoint with RAG
+│   ├── api/
+│   │   ├── chat/route.ts       # Streaming chat endpoint with RAG
+│   │   ├── auth/               # Provider and Turnstile auth
+│   │   ├── chutes/models/      # Chutes model discovery
+│   │   └── debug/retrieve/     # Retrieval debugging endpoint
+│   ├── about/ links/ search/ settings/   # Other pages
 │   ├── layout.tsx              # Root layout with theme provider
 │   └── page.tsx                # Main chat page
+├── bot/                        # Discord bot (own package.json)
+│   └── src/                    # handlers/ (mention, digest, stats) and services/
 ├── docs/                       # Documentation source
-│   ├── quilibrium-official/    # ← Synced from GitHub (gitignored)
-│   ├── transcriptions/         # ← Your uploads (committed)
-│   └── custom/                 # ← Your uploads (committed)
+│   ├── quilibrium-official/    # ← Synced from GitHub (automated)
+│   ├── discord/                # ← Synced from Discord (automated)
+│   ├── transcriptions/         # ← Transcripts (committed)
+│   └── custom/                 # ← Community docs (committed; auto/ is generated)
 ├── scripts/
 │   ├── ingest/                 # Ingestion pipeline
 │   │   ├── index.ts            # CLI orchestrator
 │   │   ├── loader.ts           # Document loader (.md, .txt)
 │   │   ├── chunker.ts          # Semantic chunking
-│   │   ├── embedder.ts         # BGE-M3 embeddings (OpenRouter)
+│   │   ├── embedder.ts         # BGE-M3 embeddings (default)
 │   │   ├── embedder-chutes.ts  # BGE-M3 embeddings (Chutes)
 │   │   └── uploader.ts         # Supabase upload + cleanup
 │   ├── sync-docs/              # GitHub sync system
@@ -266,11 +309,15 @@ The eval harness sends queries to the chat API, parses streaming responses, and 
 │   │   └── sync.ts             # File sync execution
 │   ├── eval/                   # QA evaluation harness
 │   │   ├── index.ts            # CLI entry point
-│   │   ├── test-suite.yaml     # 34 curated test cases
+│   │   ├── test-suite-focused.yaml  # Default suite (43 cases)
+│   │   ├── test-suite.yaml     # Broad suite (53 cases)
 │   │   ├── runner.ts           # Test execution engine
-│   │   ├── judge.ts            # LLM-as-judge (OpenRouter)
+│   │   ├── judge.ts            # LLM-as-judge
 │   │   ├── stream-parser.ts    # AI SDK stream parser
 │   │   └── reporter.ts         # Terminal + JSON reports
+│   ├── sync-discord/           # Discord content sync and recaps
+│   ├── sync-techtree.ts        # Tech tree sync
+│   ├── sync-ecosystem.ts       # Ecosystem list sync
 │   └── db/
 │       └── schema.sql          # Supabase schema
 ├── src/
@@ -280,7 +327,8 @@ The eval harness sends queries to the chat API, parses streaming responses, and 
 │   │   └── ui/                 # Shared UI components
 │   ├── hooks/                  # Custom React hooks
 │   ├── lib/
-│   │   ├── rag/                # RAG retrieval system
+│   │   ├── rag/                # RAG retrieval, reranking, prompts
+│   │   ├── chutes/             # Chutes helpers
 │   │   ├── openrouter.ts       # Model definitions
 │   │   └── supabase.ts         # Database client
 │   └── stores/                 # Zustand state management
@@ -299,8 +347,11 @@ The eval harness sends queries to the chat API, parses streaming responses, and 
 | `SUPABASE_URL` | Yes | Supabase URL (for scripts) |
 | `SUPABASE_SERVICE_KEY` | Yes | Service key (for scripts) |
 | `GITHUB_TOKEN` | Yes | For docs sync (no scopes needed) |
-| `CHUTES_OAUTH_CLIENT_ID` | Recommended | Chutes OAuth client ID (for Sign in with Chutes) |
-| `CHUTES_OAUTH_CLIENT_SECRET` | Recommended | Chutes OAuth client secret |
+| `OPENROUTER_API_KEY` | Yes | LLM provider key (embeddings and chat) |
+| `NEXT_PUBLIC_FREE_MODE` | No | Serve all users with the server's key |
+| `CHUTES_OAUTH_CLIENT_ID` | No | Chutes OAuth client ID (for Sign in with Chutes) |
+| `CHUTES_OAUTH_CLIENT_SECRET` | No | Chutes OAuth client secret |
+| `CHUTES_API_KEY` | No | Chutes model discovery (OAuth tokens cannot list models) |
 | `CHUTES_OAUTH_SCOPES` | No | OAuth scopes (default: `openid profile chutes:invoke`) |
 | `NEXT_PUBLIC_APP_URL` | No | Used to build OAuth redirect URL |
 | `CHUTES_OAUTH_REDIRECT_URI` | No | Override redirect URL |
@@ -308,10 +359,14 @@ The eval harness sends queries to the chat API, parses streaming responses, and 
 | `CHUTES_DEFAULT_MODEL` | No | Default Chutes LLM chute URL |
 | `NEXT_PUBLIC_CHUTES_DEFAULT_MODEL` | No | Client default Chutes model |
 | `CHUTES_EMBEDDING_MODEL` | No | Chutes embedding chute URL |
-| `OPENROUTER_API_KEY` | No* | Alternative to Chutes (*required if not using Chutes) |
 | `COHERE_API_KEY` | No | Enables reranking (paid, highest quality) |
 | `CLOUDFLARE_ACCOUNT_ID` | No | Free reranking via Workers AI |
 | `CLOUDFLARE_API_TOKEN` | No | Free reranking via Workers AI |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | No | Cloudflare Turnstile bot protection |
+| `DISCORD_BOT_TOKEN`, `DISCORD_CLIENT_ID`, `DISCORD_CHANNEL_IDS` | Bot only | Discord bot and Discord sync |
+| `DEBUG_BYPASS_TOKEN` | No | Lets `yarn prod-curl` debug production |
+
+See `.env.example` for the full list, including latency tuning and daily digest settings.
 
 ---
 
@@ -320,23 +375,23 @@ The eval harness sends queries to the chat API, parses streaming responses, and 
 - **Framework**: Next.js 16 (App Router)
 - **Styling**: Tailwind CSS 4
 - **State**: Zustand + localStorage
-- **AI**: Vercel AI SDK + Chutes (recommended) or OpenRouter
+- **AI**: Vercel AI SDK with multiple provider options
 - **Embeddings**: BGE-M3 (1024 dimensions)
 - **Vector DB**: Supabase pgvector
 - **Reranking**: Cohere (paid) or Cloudflare Workers AI (free)
+- **Bot protection**: Cloudflare Turnstile
+- **Discord bot**: discord.js (in `bot/`)
 
 ---
 
 ## Deployment
 
-### Vercel (Recommended)
+Quily is a standard Next.js app, so it runs on any host that supports Next.js (or on your own server with `yarn build && yarn start`).
 
 1. Push to GitHub
-2. Import to Vercel
+2. Connect the repo to your host
 3. Add environment variables
 4. Deploy
-
-The free tier is sufficient for most use cases.
 
 ---
 
@@ -376,7 +431,7 @@ yarn ingest:clean
 |-------|----------|
 | Sync rate limited | Add `GITHUB_TOKEN` to `.env` |
 | Deleted files still in search | Run `yarn ingest:clean` |
-| Embeddings failing | Check `CHUTES_API_KEY` (or `OPENROUTER_API_KEY` if using OpenRouter) |
+| Embeddings failing | Check `OPENROUTER_API_KEY` (or `CHUTES_API_KEY` if you use `yarn ingest:run-chutes`) |
 | Poor search results | Add `COHERE_API_KEY` for reranking |
 
 For detailed documentation, see [.agents/docs/rag-knowledge-base-workflow.md](.agents/docs/rag-knowledge-base-workflow.md).
@@ -423,3 +478,7 @@ Quily's answers are only as good as its knowledge base. If you notice something 
 ## License
 
 AGPL-3.0 license
+
+---
+
+*Last updated: 2026-11-17*
