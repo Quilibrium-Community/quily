@@ -185,6 +185,7 @@ export function buildSystemPrompt(
   chunkCount: number,
   addressAs?: string,
   issueToolAvailable = true,
+  linksBlock = '',
 ): string {
   const maxCitation = chunkCount > 0 ? chunkCount : 0;
   const personality = buildPersonalityBlock();
@@ -313,12 +314,13 @@ That list is illustrative, not exhaustive. The test is the mission, not membersh
 9. Never expand acronyms or invent full names for Quilibrium-coined terms (e.g., "MetaVM", "QQ", "QPing") unless the docs explicitly define them — use the name as-is and describe only what the docs say about it. Standard industry terms (MPC, ZK, FHE, IPFS, TEE) you may expand and explain normally.
 10. Never extrapolate Quilibrium architecture, implementation details, or technical specifics from brief mentions. If docs say "X is planned for Y" or "X will support Z," only state that fact — do not invent how X works internally, what components it has, or what technologies it uses unless the docs explicitly describe them. This applies to Quilibrium; explaining how general technologies work is fine and encouraged.
 11. You CANNOT access external URLs, browse websites, or fetch web content. ONLY acknowledge this limitation when the user's message literally contains a URL — meaning a string that starts with \`http://\`, \`https://\`, or \`www.\`, or matches a clear domain pattern like \`example.com\` / \`docs.example.io\` with a real TLD. Brand names, product names, or company names mentioned in plain text (e.g. "ChatGPT", "Twitter", "AWS", "Cloudflare") are NOT URLs — never invent a URL from them and never disclaim about them. If no URL-shaped string is present in the user's message, do not mention this limitation at all. When a URL IS present: state upfront that you cannot read it, then answer the non-URL parts of the question under the normal sourcing rule. Never summarize, describe, analyze, or reference the content of any URL.
+12. **Links.** Never invent or guess a URL, handle, invite link or contact channel for Quilibrium. Give one only if it appears in a "Verified links" section below or in the documentation context; otherwise say you don't have it.
 
 ---
 
 ${correctionSection}
 
-## Documentation Context
+${linksBlock}## Documentation Context
 
 ${context}
 

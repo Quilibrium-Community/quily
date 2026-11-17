@@ -3,6 +3,7 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { createChutes } from '@chutes-ai/ai-sdk-provider';
 import { retrieveWithReranking } from './retriever';
 import { buildContextBlock, buildSystemPrompt, formatSourcesForClient } from './prompt';
+import { buildLinksBlock, stripUnverifiedLinks } from './officialLinks';
 import { normalizeQuery } from './queryNormalizer';
 import { parseFollowUpQuestions } from './followUpParser';
 import { ragTools } from './tools';
@@ -90,11 +91,13 @@ export async function prepareQuery(options: PrepareQueryOptions): Promise<Prepar
   // The prompt must only describe the issue tool when the caller will actually
   // pass it. Defaults to true: the Discord path always passes ragTools.
   const issueToolAvailable = options.issueToolAvailable ?? true;
-  const systemPrompt = buildSystemPrompt(context, chunks.length, options.addressAs, issueToolAvailable);
+  // Full link list only when the question is about support/community/links.
+  const linksBlock = buildLinksBlock(normalizedQuery);
+  const systemPrompt = buildSystemPrompt(context, chunks.length, options.addressAs, issueToolAvailable, linksBlock);
   // Only a second render when the tool was described; otherwise it is the same
   // string and building it twice would waste tokens for nothing.
   const systemPromptNoTool = issueToolAvailable
-    ? buildSystemPrompt(context, chunks.length, options.addressAs, false)
+    ? buildSystemPrompt(context, chunks.length, options.addressAs, false, linksBlock)
     : systemPrompt;
   const sources = formatSourcesForClient(chunks);
 
@@ -223,7 +226,12 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
           maxOutputTokens: MAX_OUTPUT_TOKENS,
           abortSignal: options.abortSignal,
         });
-        const { cleanText, questions } = parseFollowUpQuestions(result.text);
+        const parsed = parseFollowUpQuestions(result.text);
+        const { questions } = parsed;
+        // Safety net: drop made-up chat/social/lookalike links (issue #155).
+        const stripped = stripUnverifiedLinks(parsed.cleanText);
+        if (stripped.removed.length) console.warn('[processQuery] removed unverified links:', stripped.removed);
+        const cleanText = stripped.text;
         const toolCalls = (result.toolCalls || []).map((tc) => ({
           toolName: tc.toolName,
           input: tc.input as Record<string, string>,
