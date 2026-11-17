@@ -4,6 +4,7 @@ import { memo, useMemo } from 'react';
 import { parseFollowUpQuestions } from '@/src/lib/rag/followUpParser';
 import { TOOL_CALL_TEXT_REGEX as SHARED_TOOL_CALL_TEXT_REGEX } from '@/src/lib/rag/visibleText';
 import { getCitedIndices } from '@/src/lib/rag/utils';
+import { expandLinkPlaceholders, PARTIAL_PLACEHOLDER_REGEX } from '@/src/lib/rag/officialLinks';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { SourcesCitation } from './SourcesCitation';
 import { FollowUpQuestions } from './FollowUpQuestions';
@@ -72,7 +73,8 @@ function getTextContent(message: UIMessage, isStreaming: boolean = false): strin
   // Strip follow-up JSON block and raw tool call text from display
   // During streaming, also strip partial blocks that are being typed
   if (isStreaming) {
-    return fullText
+    return expandLinkPlaceholders(fullText)
+      .replace(PARTIAL_PLACEHOLDER_REGEX, '')
       .replace(PARTIAL_FOLLOW_UP_REGEX, '')
       .replace(PARTIAL_BARE_FOLLOW_UP_REGEX, '')
       .replace(PARTIAL_TOOL_CALL_REGEX, '')
@@ -82,7 +84,7 @@ function getTextContent(message: UIMessage, isStreaming: boolean = false): strin
   // For completed messages, use the parser to safely strip follow-ups.
   // parseFollowUpQuestions validates with Zod before stripping, so
   // legitimate JSON output won't be removed.
-  const { cleanText } = parseFollowUpQuestions(fullText);
+  const { cleanText } = parseFollowUpQuestions(expandLinkPlaceholders(fullText));
   return cleanText.replace(TOOL_CALL_TEXT_REGEX, '').trimEnd();
 }
 

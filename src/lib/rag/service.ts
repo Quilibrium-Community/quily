@@ -3,7 +3,7 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { createChutes } from '@chutes-ai/ai-sdk-provider';
 import { retrieveWithReranking } from './retriever';
 import { buildContextBlock, buildSystemPrompt, formatSourcesForClient } from './prompt';
-import { buildLinksBlock, stripUnverifiedLinks } from './officialLinks';
+import { buildLinksBlock, expandLinkPlaceholders, stripUnverifiedLinks } from './officialLinks';
 import { normalizeQuery } from './queryNormalizer';
 import { parseFollowUpQuestions } from './followUpParser';
 import { ragTools } from './tools';
@@ -229,7 +229,7 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
         const parsed = parseFollowUpQuestions(result.text);
         const { questions } = parsed;
         // Safety net: drop made-up chat/social/lookalike links (issue #155).
-        const stripped = stripUnverifiedLinks(parsed.cleanText);
+        const stripped = stripUnverifiedLinks(expandLinkPlaceholders(parsed.cleanText));
         if (stripped.removed.length) console.warn('[processQuery] removed unverified links:', stripped.removed);
         const cleanText = stripped.text;
         const toolCalls = (result.toolCalls || []).map((tc) => ({
