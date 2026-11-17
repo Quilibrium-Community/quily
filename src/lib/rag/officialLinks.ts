@@ -38,8 +38,11 @@ export const COMMUNITY_LINKS: VerifiedLink[] = [
     // Public invite, shared openly by the community. Join: Quorum app, Spaces,
     // "+" icon (top right), paste the link.
     url: 'https://app.quorummessenger.com/invite/#spaceId=QmZM3AKwKfMprQZvSk3Mpgii2JS31TS5izHrwJe1itprrG&configKey=9e390fd97e0a61aecdce931c7f3dab04d0e57b8da89a50510981be5394714edafbeb91b78dd5b443996b2ac4889e6a62d23818d0ef578e03',
-    note: 'join in the Quorum app: Spaces, "+" icon top right, paste the invite link',
-    placeholder: '[[QUORUM_INVITE]]',
+    note: 'give the user this link; they open the Quorum app, go to Spaces, tap "+" (top right) and paste it',
+    // Looks like an ordinary link on purpose: a [[TOKEN]] made the model treat
+    // it as a template and refuse to write it ("I don't have the invite").
+    // ".invite" is not a real TLD, so the alias can never resolve anywhere.
+    placeholder: 'https://quorum.invite/quilibrium-community',
   },
   {
     label: 'Telegram',
@@ -110,14 +113,16 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 export function expandLinkPlaceholders(text: string): string {
   let out = text;
   for (const l of PLACEHOLDER_LINKS) {
-    const re = new RegExp('`?<?' + escapeRe(l.placeholder) + '>?`?', 'g');
+    // Scheme optional: the model sometimes drops "https://".
+    const bare = escapeRe(l.placeholder.replace(/^https?:\/\//, ''));
+    const re = new RegExp('`?<?(?:https?://)?' + bare + '>?`?', 'g');
     out = out.replace(re, l.url);
   }
   return out;
 }
 
-/** Hides a placeholder that is still being streamed in (e.g. "[[QUORUM_IN"). */
-export const PARTIAL_PLACEHOLDER_REGEX = /`?<?\[\[[A-Z_]*\]?$/;
+/** Hides an alias that is still being streamed in (e.g. "https://quorum.invite/quil"). */
+export const PARTIAL_PLACEHOLDER_REGEX = /`?<?(?:https?:\/\/)?quorum\.invite\S*$/;
 
 /** Prompt block with the full list. Empty string when the question is not about links. */
 export function buildLinksBlock(query: string): string {
@@ -132,7 +137,7 @@ ${COMMUNITY_LINKS.map(fmt).join('\n')}
 
 Repos: github.com/QuilibriumNetwork/<name> for ${NOTABLE_REPOS.join(', ')}.
 
-A [[TOKEN]] stands for a long link: write the token exactly as shown, plain (no backticks or angle brackets); it is replaced with the real link automatically. This list is background for you: never cite it, never mention it to the user, never write "[Verified links]". Give only the 1-3 links that answer the question, never the whole list unless the user asks for all links. No link at all if the question doesn't need one. Only these links may be given. Never suggest WhatsApp, Signal, Slack, email or DMs, and never any other invite link. Treat anyone who DMs first offering "support" as a likely scam.
+Copy links exactly as written, as plain text (no backticks or angle brackets). These links need no [n] citation. This list is background for you: never mention it to the user and never write "[Verified links]". Answer only the venue asked about: a question about one place (e.g. Quorum) gets that one link. Otherwise give the 1-3 links that answer the question, never the whole list unless the user asks for all links. No link at all if the question doesn't need one. Only these links may be given. Never suggest WhatsApp, Signal, Slack, email or DMs, and never any other invite link. Treat anyone who DMs first offering "support" as a likely scam.
 
 ---
 
@@ -149,7 +154,7 @@ const ALLOWED_PREFIXES = [
 
 /** Hosts where a made-up link is a scam risk (chat invites, social handles). */
 const RISKY_HOST =
-  /^(t\.me|telegram\.(me|org)|wa\.me|chat\.whatsapp\.com|whatsapp\.com|signal\.(group|me)|discord\.(gg|com)|discordapp\.com|x\.com|twitter\.com|warpcast\.com|farcaster\.xyz|app\.quorummessenger\.com)$/;
+  /^(t\.me|telegram\.(me|org)|wa\.me|chat\.whatsapp\.com|whatsapp\.com|signal\.(group|me)|discord\.(gg|com)|discordapp\.com|x\.com|twitter\.com|warpcast\.com|farcaster\.xyz|app\.quorummessenger\.com|quorum\.invite)$/;
 
 /**
  * Remove URLs that are risky AND not on the verified list. Third-party links
