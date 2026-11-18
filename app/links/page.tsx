@@ -59,8 +59,8 @@ const COMMUNITY_LINKS: LinkItem[] = [
   },
   {
     title: 'Community X / Twitter',
-    description: 'QuilibriumOne community Twitter/X account',
-    url: 'https://x.com/QuilibriumOne/highlights',
+    description: 'Quilibrium community X account (@QuilCommunity)',
+    url: 'https://x.com/QuilCommunity/highlights',
     icon: 'simple-icons:x',
   },
 ];

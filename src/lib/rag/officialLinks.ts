@@ -49,7 +49,7 @@ export const COMMUNITY_LINKS: VerifiedLink[] = [
     url: 'https://t.me/quilibrium',
     note: 'not actively maintained and can get toxic; mention that if you suggest it',
   },
-  { label: 'X / Twitter (community)', url: 'https://x.com/QuilibriumOne' },
+  { label: 'X / Twitter (community)', url: 'https://x.com/QuilCommunity' },
   { label: 'Community GitHub (this bot lives here)', url: 'https://github.com/Quilibrium-Community' },
   { label: 'Community site (unofficial)', url: 'https://quilibrium.one' },
 ];
