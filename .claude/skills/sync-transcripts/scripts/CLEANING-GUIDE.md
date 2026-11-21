@@ -2,6 +2,8 @@
 
 This guide covers **Phase 2: Clean** of the transcript workflow. It outlines how to clean raw YouTube transcripts and prepare them for deduplication.
 
+> **Where the raw text comes from:** either YouTube auto-subtitles (`fetch-transcripts.py`) or the Whisper transcript made by the public [q-stream-recap](https://github.com/Quilibrium-Community/q-stream-recap) project. The Whisper transcripts go through a mechanical glossary pass first (`scripts/clean_transcript.py` there, with `config/glossary.yaml` as the full list of correct spellings and common mishearings). That pass fixes non-word mishearings, and writes a report of the doubtful words and of names that appear nowhere in these docs. Start from its output, and use the report to decide which terms to verify.
+
 > **Note:** This is Phase 2 only. After cleaning, run **Phase 3: Dedupe** using [DEDUPE-GUIDE.md](DEDUPE-GUIDE.md) to remove content that duplicates official documentation.
 
 ## Overview
@@ -209,7 +211,9 @@ So "21018" → `2` + `1` + `0` + `18` → `2.1.0.18`
 **Version timeline reference:**
 - 2024: Version 2.0.x era
 - Early 2025: Version 2.1.x releases
+- 2026: patch releases 2.1.0.18 through 2.1.0.25. 2.1.0.25 (the post-quantum release) reached stability in late October 2026. 2.1.0.26 and 2.1.1 were upcoming as of 2026-11-21
 - Check release notes if unsure about specific patch versions
+- Speakers often say "point 26" or "210-26" for "2.1.0.26", and Whisper often writes "21025" for "2.1.0.25". Decode them the same way as above
 
 #### Quilibrium-Specific Terms
 
@@ -220,11 +224,23 @@ So "21018" → `2` + `1` + `0` + `18` → `2.1.0.18`
 | "wrapped quill" | "wQUIL" or "wrapped QUIL" | The wrapped token |
 | "quorum" / "corum" / "quaram" | "Quorum" | The messenger app (capital Q) |
 | "Quora mobile" / "quorum mobile" | "Quorum Mobile" | Mobile app |
-| "q console" / "queue console" | "Q Console" | Web management interface |
-| "cue storage" / "queue storage" / "Q storage" | "Q Storage" | S3-compatible storage |
+| "q console" / "queue console" / "Q Console" | "QConsole" | Web management interface. The official docs write it without a space |
+| "cue storage" / "queue storage" / "Q storage" / "Q Storage" | "QStorage" | S3-compatible storage. The official docs write it without a space |
 | "QKMS" / "q k m s" / "QMS" | "QKMS" | Key Management Service |
 | "QNS" / "q n s" / "Q&S" / "Q&amp;s" | "QNS" | Quilibrium Name Service |
 | "hyperraph" / "hyper graph" / "hypergraph" | "hypergraph" | One word, lowercase |
+| "Klaru" / "Clairo" / "Claro" | "Klearu" | Private AI / MPC machine learning framework |
+| "Metavium" / "Meta VM" | "MetaVM" | Zero-knowledge and MPC virtual machine |
+| "Mega RPC" / "mega RPC" | "MegaRPC" | Privacy-preserving RPC service |
+| "Hyper Snap" | "Hypersnap" | Farcaster protocol fork. Lowercase "s", as in the latest docs |
+| "Copis" / "COPIS" | "Coppice" | Post-quantum E2EE chat SDK that replaces the Channels SDK |
+| "Hot Stuff" | "HotStuff" | BFT consensus algorithm used up to 2.1.0.24 |
+| "Qclient" / "Q Client" | "QClient" | Command-line client |
+| "Q web services" | "QWeb services" | The managed services umbrella |
+| "BDF" / "VDEF" | "VDF" | Verifiable delay function |
+| "Farkaster" / "Far caster" | "Farcaster" | The social protocol |
+
+> **Spaced forms in older transcripts:** transcripts cleaned before 2026-11 mostly write "Q Console" and "Q Storage". Do not rewrite them. For new transcripts use "QConsole" and "QStorage", the forms the official docs use (checked 2026-11-21: 78 vs 0 and 249 vs 11 occurrences in `docs/quilibrium-official`).
 
 #### External Services & Integrations
 
@@ -321,6 +337,8 @@ If an entire section is likely to become outdated quickly, also add a section-le
 But **never rely on section-level notes alone** — always add inline temporal markers so individual chunks are self-describing.
 
 ### Step 6: Add YAML Frontmatter
+
+`date` is the day of the stream, and it never changes afterwards, even when the file is edited later. The retriever uses it for temporal ranking.
 
 ```yaml
 ---
@@ -429,4 +447,4 @@ After completing Phase 2 (cleaning):
 
 ---
 
-*Last updated: 2026-05-01*
+*Last updated: 2026-11-21*
