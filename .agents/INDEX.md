@@ -58,6 +58,8 @@ This is the main index for all documentation, bug reports, and task management.
 - 🐛 [sync-docs: locally deleted docs are never detected or restored](issues/.open/2026-07-29-sync-docs-silent-file-loss.md)
 - 🐛 [Bot presents outdated docs as current news](issues/.open/2026-08-11-latest-news-recency-workflow.md)
 - 🐛 [ingest:status and --clean read a truncated file list once the table exceeds 1000 rows](issues/.open/2026-09-03-ingest-status-truncated-by-postgrest-row-cap.md)
+- 🐛 [Bot invents Quorum native app install links](issues/.open/2026-11-22-quorum-install-link-hallucination.md)
+- 🐛 [Bot occasionally leaks internal reasoning text into visible answers](issues/.open/2026-11-22-reasoning-text-leaks-into-answers.md)
 - 📋 [Keep the knowledge base current with the v2.1.0.25 post-quantum migration](issues/.open/2026-08-23-stale-crypto-docs-after-pqc-migration.md)
 
 ## ✅ Completed Issues
@@ -158,4 +160,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-11-10 09:13:11
+**Last Updated**: 2026-11-22 10:58:43
