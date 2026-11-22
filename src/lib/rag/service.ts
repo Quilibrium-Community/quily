@@ -6,6 +6,7 @@ import { buildContextBlock, buildSystemPrompt, formatSourcesForClient } from './
 import { buildLinksBlock, expandLinkPlaceholders, stripUnverifiedLinks } from './officialLinks';
 import { normalizeQuery } from './queryNormalizer';
 import { parseFollowUpQuestions } from './followUpParser';
+import { ANSWER_ONLY_INSTRUCTION, hasDraftingLeak, stripIssueMemoryNotes } from './visibleText';
 import { ragTools } from './tools';
 import { withZdr } from '../openrouter-routing';
 import { reasoningSettings } from '../openrouter-reasoning';
@@ -216,7 +217,7 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
         const t1 = Date.now();
         const result = await generateText({
           model: aiModel,
-          system: prepared.systemPrompt,
+          system: `${prepared.systemPrompt}\n\n${ANSWER_ONLY_INSTRUCTION}`,
           messages,
           // Honour the flag rather than hardcoding. `issueToolAvailable: false`
           // previously type-checked here and silently produced the mismatch in
@@ -227,9 +228,13 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
           abortSignal: options.abortSignal,
         });
         const parsed = parseFollowUpQuestions(result.text);
-        const { questions } = parsed;
+        const draftingLeak = hasDraftingLeak(parsed.cleanText);
+        const questions = draftingLeak ? null : parsed.questions;
+        // Unmarked drafting has no reliable end boundary. Discard the reply so
+        // the empty-answer retry and fallback can recover without showing it.
+        const answerText = draftingLeak ? '' : stripIssueMemoryNotes(parsed.cleanText);
         // Safety net: drop made-up chat/social/lookalike links (issue #155).
-        const stripped = stripUnverifiedLinks(expandLinkPlaceholders(parsed.cleanText));
+        const stripped = stripUnverifiedLinks(expandLinkPlaceholders(answerText));
         if (stripped.removed.length) console.warn('[processQuery] removed unverified links:', stripped.removed);
         const cleanText = stripped.text;
         const toolCalls = (result.toolCalls || []).map((tc) => ({
@@ -243,7 +248,7 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
           ?? result.usage.reasoningTokens ?? 0;
         console.log(
           `[processQuery] generateText (${model}) attempt=${attempt} took ${Date.now() - t1}ms ` +
-          `finish=${result.finishReason} text=${cleanText.trim().length}ch tools=${toolCalls.length} ` +
+          `finish=${result.finishReason} text=${cleanText.trim().length}ch tools=${toolCalls.length} draftingLeak=${draftingLeak} ` +
           `outTok=${result.usage.outputTokens ?? '?'} reasonTok=${reasonTok}`,
         );
         return { cleanText, questions, toolCalls, finishReason: String(result.finishReason) };

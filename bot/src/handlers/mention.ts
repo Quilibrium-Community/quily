@@ -183,10 +183,8 @@ export function registerMentionHandler(client: Client): void {
         (issueToolFired
           ? 'Thanks for the correction!'
           : 'Nothing useful came out that time.');
-      // What goes into conversation memory. Diverges from responseText only
-      // when an issue was filed: the model should know it filed one, but not
-      // see a GitHub URL it could later fabricate without a tool call.
-      let memoryText = responseText;
+      // Keep the answer in history without the issue footer or its URL.
+      const memoryText = responseText;
 
       // Handle auto-correction tool call
       if (result.toolCalls?.length) {
@@ -282,12 +280,10 @@ export function registerMentionHandler(client: Client): void {
               );
               responseText +=
                 `\n\n*I've opened a [GitHub issue](${issueUrl}) with your correction for the maintainers to review. Thanks for helping me get smarter.*`;
-              memoryText += '\n\n(I filed a GitHub issue for this.)';
             } catch (err) {
               console.error('[auto-issue] Failed to create GitHub issue:', err);
               responseText +=
                 `\n\n*I couldn't auto-create the issue — you can open one manually at https://github.com/Quilibrium-Community/quily/issues*`;
-              memoryText += '\n\n(I could not file a GitHub issue for this.)';
             }
           }
         }

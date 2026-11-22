@@ -15,6 +15,60 @@
 
 import { parseFollowUpQuestions } from './followUpParser';
 
+export const ANSWER_ONLY_INSTRUCTION = 'Write only the user-facing answer. Keep any deliberation, source-checking notes, and plans for writing the answer out of the reply.';
+
+const ISSUE_MEMORY_NOTE = /^\s*\(?I (?:filed|could not file) a GitHub issue for this\.\)?\s*$/i;
+
+/** Remove standalone issue-filing notes previously inserted into Discord history. */
+export function stripIssueMemoryNotes(text: string): string {
+  const lines = text.split(/\r?\n/);
+  const answerLines = lines.filter((line) => !ISSUE_MEMORY_NOTE.test(line));
+  return answerLines.length === lines.length ? text : answerLines.join('\n').trim();
+}
+
+const NARRATES_REQUEST = /(?:^|[.!?]\s+|\n)\s*the user (?:is asking|wants to know|might (?:also )?be interested)\b/i;
+const PLANS_ANSWER = /(?:^|[.!?]\s+|\n)\s*(?:first,\s*)?(?:I (?:need to check the (?:documentation|sources)|should make sure to mention)|the response should be concise)\b/i;
+
+/** Detect model-facing drafting in the answer field, where SDK reasoning filtering cannot see it. */
+export function hasDraftingLeak(text: string): boolean {
+  const prose = text.replace(/^\s*```[^\n]*\n[\s\S]*?^\s*```[^\n]*$/gm, '');
+  return NARRATES_REQUEST.test(prose) && PLANS_ANSWER.test(prose);
+}
+
+/** Release ordinary paragraphs while holding a possible drafting tail for validation. */
+export function createDraftingStreamGate() {
+  let pending = '';
+
+  return {
+    push(delta: string): string {
+      pending += delta;
+      let ready = '';
+      const boundaryRe = /\r?\n[ \t]*\r?\n/g;
+      boundaryRe.lastIndex = 0;
+      let boundary: RegExpExecArray | null;
+      while ((boundary = boundaryRe.exec(pending))) {
+        const end = boundary.index + boundary[0].length;
+        const block = pending.slice(0, end);
+        // Grow the block until it closes any open code fence and contains a
+        // letter, so a code sample or a `---` line is judged together with its
+        // neighbours instead of stalling the stream until finish().
+        if ((block.match(/```/g)?.length ?? 0) % 2 === 1 || !/\p{L}/u.test(block)) continue;
+        // A possible drafting tail stays held until finish() can judge it whole.
+        if (NARRATES_REQUEST.test(block) || PLANS_ANSWER.test(block)) break;
+        ready += block;
+        pending = pending.slice(end);
+        boundaryRe.lastIndex = 0;
+      }
+      return ready;
+    },
+    finish(): string {
+      const answer = hasDraftingLeak(pending) ? '' : pending;
+      pending = '';
+      return answer;
+    },
+  };
+}
+
 /**
  * Raw tool-call text some models emit instead of a structured call. Matches from
  * the start of the offending line to the end of the message, because the payload
