@@ -59,8 +59,8 @@ This is the main index for all documentation, bug reports, and task management.
 - 🐛 [Bot presents outdated docs as current news](tickets/.open/2026-08-11-latest-news-recency-workflow.md)
 - 🐛 [ingest:status and --clean read a truncated file list once the table exceeds 1000 rows](tickets/.open/2026-09-03-ingest-status-truncated-by-postgrest-row-cap.md)
 - 🐛 [Bot invents Quorum native app install links](tickets/.open/2026-11-22-quorum-install-link-hallucination.md)
-- 🐛 [Bot occasionally leaks internal reasoning text into visible answers](tickets/.open/2026-11-22-reasoning-text-leaks-into-answers.md)
 - 📋 [Keep the knowledge base current with the v2.1.0.25 post-quantum migration](tickets/.open/2026-08-23-stale-crypto-docs-after-pqc-migration.md)
+- 📋 [Investigate why Quily started emitting drafting text in answers](tickets/.open/2026-11-22-investigate-upstream-drafting-leaks.md)
 
 ## ✅ Completed Issues
 
@@ -68,6 +68,7 @@ This is the main index for all documentation, bug reports, and task management.
 - 🐛 [Broad-query retrieval collapse](tickets/.done/2026-08-11-broad-query-retrieval-collapse.md)
 - 🐛 [All scheduled workflows failing after Yarn Berry migration](tickets/.done/2026-08-11-ci-broken-after-yarn-berry-migration.md)
 - 🐛 [Discord bot answers real questions with a bare 👀](tickets/.done/2026-09-08-empty-model-replies-surface-as-eyes-emoji.md)
+- 🐛 [Bot occasionally leaks internal reasoning text into visible answers](tickets/.done/2026-11-22-reasoning-text-leaks-into-answers.md)
 - 🐛 [Sidebar Scroll Snaps Back When Collapsible Nav Items Change Height](tickets/.done/sidebar-scroll-snapback-collapsible-nav.md)
 - 🐛 [Turnstile Token Reuse Causes Verification Failure](tickets/.done/turnstile-token-reuse-verification-failure.md)
 - 📋 [Design: Discord Bot Integration for Quily](tickets/.done/2026-03-17-discord-bot-design.md)
@@ -160,4 +161,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-11-22 10:58:43
+**Last Updated**: 2026-11-22 12:04:23
