@@ -63,6 +63,14 @@ export default function SettingsPage() {
   const [showWipeDataConfirm, setShowWipeDataConfirm] = useState(false);
 
   const isFreeMode = process.env.NEXT_PUBLIC_FREE_MODE === 'true';
+  const [botConfig, setBotConfig] = useState<{ model: string | null } | null>(null);
+  useEffect(() => {
+    if (!isFreeMode) return;
+    fetch('/api/bot-config')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => data && setBotConfig(data))
+      .catch(() => {});
+  }, [isFreeMode]);
   const provider = getProvider('openrouter');
   const isOpenRouter = providerId === 'openrouter';
   const isChutes = providerId === 'chutes';
@@ -333,13 +341,15 @@ export default function SettingsPage() {
                   <div className="text-base sm:text-sm text-text-secondary space-y-2">
                     <p className="font-medium text-text-primary">Model</p>
                     {(() => {
-                      const allModels = getRecommendedModels();
-                      const defaultModel = allModels.find(m => m.id === FREE_MODE_DEFAULT_MODEL_ID) ?? allModels[0];
+                      // Prefer the live server config; fall back to the build-time value.
+                      const modelId = botConfig?.model ?? FREE_MODE_DEFAULT_MODEL_ID;
+                      const modelName =
+                        getRecommendedModels().find((m) => m.id === modelId)?.name ?? modelId;
                       return (
                         <ul className="space-y-1 text-base sm:text-sm text-gray-600 dark:text-gray-400">
                           <li className="flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
-                            <span><strong>{defaultModel.name}</strong> — default model</span>
+                            <span><strong>{modelName}</strong> — default model</span>
                           </li>
                         </ul>
                       );
