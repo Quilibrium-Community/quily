@@ -90,11 +90,11 @@ Read every issue's title and body. Classify each as:
   **Default to INVESTIGATE over SKIP when in doubt.** Even a low-effort issue is a useful starting point to audit the bot's answer. Only skip issues that are clearly unrelated to knowledge accuracy.
 
 - **ACTIONABLE (non-knowledge)** — issues that are valid but not about knowledge accuracy. These still need resolution, just not through doc changes. Examples:
-  - Code bug reports (CSS, UI, deployment issues) → convert to `.agents/tasks/` task or link to existing task
-  - Feature requests for the chatbot or website → convert to `.agents/tasks/` task or link to existing task
+  - Code bug reports (CSS, UI, deployment issues) → convert to a `type: task` ticket in `.agents/tickets/.open/` or link to an existing ticket
+  - Feature requests for the chatbot or website → convert to a `type: task` ticket in `.agents/tickets/.open/` or link to an existing ticket
   - Issues about chatbot behavior/UX (not answer correctness) → convert to task
 
-  For each of these, check if an existing task in `.agents/tasks/` already covers it. If so, comment linking to it and close. If not, create a new task or ask the user.
+  For each of these, check if an existing ticket in `.agents/tickets/` already covers it. If so, comment linking to it and close. If not, create a new task or ask the user.
 
 - **DUPLICATE** — already covered by a more detailed issue (detected in previous step). Note which issue supersedes it.
 
@@ -395,7 +395,7 @@ Duplicates closed: D
   #25 — Duplicate of #15
 
 Actionable (non-knowledge): A
-  #12 — Created .agents/tasks/css-mobile-fix.md
+  #12 — Created .agents/tickets/.open/css-mobile-fix.md
 
 Skipped: S
   #30 — Empty issue

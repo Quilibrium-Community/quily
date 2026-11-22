@@ -120,7 +120,7 @@ If a user reports a problem, ask them what they saw. If they saw a red panel wit
 2. **`yarn prod-curl "<exact query the user reported>"`** — reproduce. Read the structured summary.
 3. **If reproduced and `errors[]` is populated** — that's your diagnosis. Fix at the source (rotate key, switch model, fix RAG).
 4. **If reproduced but the route returned content** — bug is client-side. Check ChatContainer/MessageList for parsing or rendering issues.
-5. **If NOT reproduced** — transient upstream issue. Confirm OpenRouter / Chutes status pages. Note in `.agents/bugs/` only if it recurs.
+5. **If NOT reproduced** — transient upstream issue. Confirm OpenRouter / Chutes status pages. Note it as a `type: bug` ticket in `.agents/tickets/.open/` only if it recurs.
 
 ---
 
