@@ -2,7 +2,7 @@
 title: "QNS (Quilibrium Name Service) FAQ"
 source: discord
 author: Community (compiled by lamat1111)
-date: 2026-02-05
+date: 2026-11-22
 type: community_faq
 topics:
   - QNS
@@ -149,11 +149,15 @@ Traditional web security relies on certificate authorities (CAs). If a CA is com
 
 **Can I access .q websites in regular browsers?**
 
-Not yet without additional tools:
-- Browsers with built-in Quilibrium support (as they become available)
-- Extensions or proxy tools (similar to Tor for .onion sites)
+Not yet. No mainstream browser resolves `.q` domains natively, and there is no released tool for it today.
 
-Components to enable browser support are being built into Quorum's browser integration. Major browsers like Chrome are unlikely to add native support without direct incentive.
+**Browser extensions are not the planned path.** Cassie has explained why a Chrome-style extension cannot do the job properly:
+- The extension model cannot enforce a clean boundary, i.e. guarantee that *only* `.q` domains resolve while the mode is active and nothing leaks to the normal web.
+- An extension cannot run a functional proxy itself. Chrome's `chrome.proxy` API can only point at an *external* proxy, which forces users to trust a proxy endpoint, defeating the point.
+
+**The intended approach is a native, "all-or-nothing" mode**, similar to how Proton VPN works: while it is on, *all* traffic routes through it, non-`.q` requests are killed, and it performs proper onion routing and key agreement itself. Treat this as the design direction, not a shipped product.
+
+Older material (including earlier versions of this FAQ) suggested "extensions or proxy tools, like Tor for .onion sites". That is outdated; do not recommend extensions or third-party proxies for reaching `.q` sites. Major browsers like Chrome are unlikely to add native support without direct incentive.
 
 ## Buying QNS Names
 
