@@ -1,7 +1,7 @@
 ---
 title: "Post-Quantum Cryptography Migration: What Quilibrium Actually Uses Now"
 source: QuilibriumNetwork/monorepo branch v2.1.0.25 (crate manifests, source headers, merged PRs, read 2026-11-03), Cassie's .25 branch announcement (Discord, 2026-07-20), Discord node-updates and recaps (October 2026)
-date: 2026-11-03
+date: 2026-11-22
 type: technical_reference
 topics:
   - what cryptography does quilibrium use
@@ -106,7 +106,7 @@ Not everything classical is gone. See "What Is Still Classical" below, chiefly *
 - **Epoch 1321 (frame 951,120, 2026-10-29):** provers without sealed storage are paid issuance again.
 - **Epoch 1342 (frame 966,240):** a missing storage epoch proof stops costing the prover its seat.
 
-The official signed release is still `2.1.0.24` as of 2026-11-02; `.25.x` sub-patches are distributed to operators and archives, and the network is running them.
+- **2026-11-18:** Cassie announced that `v2.1.0.25` is officially released and asked operators to upgrade at their earliest convenience. Until then (from 2026-10-19) `.25.x` sub-patches had been distributed to operators and archives while the latest official release was still `2.1.0.24`.
 
 ---
 
@@ -247,7 +247,7 @@ Pre-2.1 (2.0-era) coins were verifiable-encryption blobs under a hard-coded publ
 - Shielding is accepted on mainnet from GLOBAL frame 943,920 (epoch 1311).
 - Each batch takes about 5 minutes to prove on an ordinary node and archives need tens of seconds to verify it, so since PR #1087 `shield-all` spaces batches at least 300 seconds apart. A wallet with tens of thousands of coins can take days. Large operators were asked to pace their runs after a wave of roughly 500 batch shields stalled about a quarter of the shards on 2026-11-02; a rerun cannot charge the fee twice.
 - Pre-.25 coins are not lost as long as the old `.config/` folder and `keys.yml` are kept. Never upload `config.yml` or `keys.yml` anywhere: `config.yml` holds the private key that owns the coins.
-- A running `.25` node is needed to read or shield legacy coins, since there is no official signed `.25` qclient release yet; operators use the latest branch build or the Quilscan node console.
+- A running `.25` node is needed to read or shield legacy coins. `v2.1.0.25` has been officially released since 2026-11-18; before that, operators used the latest branch build or the Quilscan node console.
 
 ---
 

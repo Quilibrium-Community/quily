@@ -1,7 +1,7 @@
 ---
 title: "Quilibrium Network Status: Mainnet Is Live, What Is Open and What Is Still Coming"
 source: Discord announcements and recaps (October to November 2026), livestream transcripts, maintainer confirmation
-date: 2026-11-02
+date: 2026-11-22
 type: technical_reference
 topics:
   - network status
@@ -49,7 +49,7 @@ topics:
 
 # Quilibrium Network Status: Mainnet Is Live, What Is Open and What Is Still Coming
 
-**Read this before answering any "does X work / is X live / what's the status" question.** Status as of **2026-11-02**.
+**Read this before answering any "does X work / is X live / what's the status" question.** Status as of **2026-11-02**, release status updated **2026-11-18**.
 
 ## The short answer
 
@@ -62,7 +62,8 @@ The network is in a **stabilisation phase**, not a pre-launch phase. Nodes run t
 | **Mainnet** with the QUIL token shards running | **The Bridge** re-opening (QUIL and wQUIL) |
 | **Mining rewards** issued to provers | **Token applications** (the "token app" is being re-tried) |
 | **QUIL transfers** on the Quilibrium network, including confidential ("shielded") coins | **Apps from external developers** on the network |
-| **Legacy coin migration** with `qclient token shield-all` | **Official signed `2.1.0.25` binary release** (latest signed release is `2.1.0.24`) |
+| **Legacy coin migration** with `qclient token shield-all` | |
+| **Official `v2.1.0.25` release** (announced 2026-11-18; operators should upgrade) | |
 | **Quorum**, **Q Console** (QStorage, QKMS, Identity and Authorization, QQ, QPing), **QNS**, **MegaRPC**, **Klearu**, **MetaVM** | |
 
 **Do not answer "the network isn't ready" as though nothing works, and do not describe mainnet as unlaunched.** Equally, do not tell anyone the bridge is open or that third-party apps can deploy today. Both halves are true at once.
@@ -81,6 +82,7 @@ This matters because older material in the knowledge base (written before late O
 - **2026-10-28:** the first post-quantum confidential coin transaction was processed (a legacy coin shielded into the new format). It exposed a tree-rebuild stall that was then fixed.
 - **2026-10-29:** `.25.111`. Frame times returned to the 10-second baseline and **rewards were being actively issued** again.
 - **2026-11-02:** consistent 10-second frames celebrated by the community; a wave of roughly 500 batched shield transactions temporarily stalled about a quarter of the shards and fixes were in progress.
+- **2026-11-18:** Cassie announced that **`v2.1.0.25` has been officially released** and asked operators to upgrade at their earliest convenience. `2.1.0.24` is no longer the current release.
 
 ---
 
