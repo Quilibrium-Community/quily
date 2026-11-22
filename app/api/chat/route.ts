@@ -2,6 +2,7 @@ import {
   createUIMessageStream,
   createUIMessageStreamResponse,
   streamText,
+  type UIMessageChunk,
 } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { createChutes } from '@chutes-ai/ai-sdk-provider';
@@ -11,7 +12,7 @@ import { ragTools } from '@/src/lib/rag/tools';
 import { createGitHubIssue } from '@/bot/src/utils/githubIssues';
 import type { RetrievedChunk, SourceReference } from '@/src/lib/rag/types';
 import { parseFollowUpQuestions } from '@/src/lib/rag/followUpParser';
-import { visibleAnswerText, leaksToolCallText, TOOL_CALL_TEXT_REGEX, MIN_USABLE_ANSWER_CHARS } from '@/src/lib/rag/visibleText';
+import { ANSWER_ONLY_INSTRUCTION, createDraftingStreamGate, hasDraftingLeak, visibleAnswerText, leaksToolCallText, TOOL_CALL_TEXT_REGEX, MIN_USABLE_ANSWER_CHARS } from '@/src/lib/rag/visibleText';
 import { normalizeQuery } from '@/src/lib/rag/queryNormalizer';
 import { getOAuthConfig, refreshTokens, checkChutesBalance } from '@/src/lib/chutesAuth';
 import { validateApiKeyWithCredits } from '@/src/lib/openrouter';
@@ -1003,8 +1004,9 @@ export async function POST(request: Request) {
           try {
             const streamResult = streamText({
               model: modelProvider(modelUrl) as Parameters<typeof streamText>[0]['model'],
-              system: systemPrompt,
+              system: `${systemPrompt}\n\n${ANSWER_ONLY_INSTRUCTION}`,
               messages: llmMessages,
+              abortSignal: request.signal,
               // Same gate as the OpenRouter branch below. This path had the
               // identical defect — an execute-less tool that can end a turn with
               // no text — and additionally treats a tool-only turn as success
@@ -1018,21 +1020,21 @@ export async function POST(request: Request) {
               },
             });
 
-            let isFirstChunk = true;
+            const gate = createDraftingStreamGate();
+            const publish = (text: string) => {
+              const delta = localReceivedContent ? text : text.trimStart();
+              if (!delta) return;
+              localReceivedContent = true;
+              receivedAnyContent = true;
+              fullResponseText += delta;
+              writer.write({ type: 'text-delta', id: textId, delta });
+            };
+            let attemptText = '';
             for await (const chunk of streamResult.textStream) {
               if (chunk) {
                 logTiming();
-                localReceivedContent = true;
-                receivedAnyContent = true;
-                fullResponseText += chunk;
-                // Strip leading whitespace from first chunk to prevent markdown
-                // interpreting indentation as code blocks (some models like DeepSeek
-                // add heavy leading indentation)
-                const processedChunk = isFirstChunk ? chunk.trimStart() : chunk;
-                isFirstChunk = false;
-                if (processedChunk) {
-                  writer.write({ type: 'text-delta', id: textId, delta: processedChunk });
-                }
+                attemptText += chunk;
+                publish(gate.push(chunk));
               }
             }
 
@@ -1044,6 +1046,11 @@ export async function POST(request: Request) {
               }
             } catch {
               // Tool calls may not be available
+            }
+
+            publish(gate.finish());
+            if (hasDraftingLeak(attemptText) && !localReceivedContent && capturedToolCalls.length === 0) {
+              return { success: false, error: 'The model returned drafting text without a usable answer.' };
             }
 
             // If we got no content but captured an error, return the error
@@ -1346,7 +1353,7 @@ export async function POST(request: Request) {
               // as visible prose, which the client then strips to the end of the
               // message. Using it would let the retry erase the answer it exists
               // to rescue.
-              system: systemPromptNoTool,
+              system: `${systemPromptNoTool}\n\n${ANSWER_ONLY_INSTRUCTION}`,
               messages: llmMessages,
               abortSignal: request.signal,
               // textStream silently DROPS error parts rather than throwing, and
@@ -1389,7 +1396,7 @@ export async function POST(request: Request) {
             // caller and suppress the empty-response error, which is the same
             // raw-truthiness mistake this file already fixed for the primary
             // reply — one layer down.
-            if (!visibleAnswerText(out)) {
+            if (hasDraftingLeak(out) || !visibleAnswerText(out)) {
               console.error('[tool-only-retry] Recovery produced no visible text — discarding');
               return '';
             }
@@ -1407,7 +1414,7 @@ export async function POST(request: Request) {
 
         const result = streamText({
           model: streamModel,
-          system: systemPrompt,
+          system: `${systemPrompt}\n\n${ANSWER_ONLY_INSTRUCTION}`,
           messages: llmMessages,
           abortSignal: request.signal,
           ...(issueToolAvailable ? { tools: ragTools } : {}),
@@ -1420,7 +1427,10 @@ export async function POST(request: Request) {
           },
         });
 
-        writer.merge(result.toUIMessageStream({
+        const gate = createDraftingStreamGate();
+        let publishedText = '';
+        const uiStream = result.toUIMessageStream({
+          sendReasoning: false,
           onError: (error: unknown) => {
             const msg = error instanceof Error ? error.message : 'An error occurred while streaming the response.';
             console.error('UI message stream error:', error);
@@ -1428,9 +1438,11 @@ export async function POST(request: Request) {
             writeError(writer, 'ui-stream', msg);
             return msg;
           },
-          onFinish: async () => {
+        });
+        const finishResponse = async () => {
             // Declared out here so the follow-up parsing below can fall back to it.
             let recovered = '';
+            let acceptedText = '';
             // Debug snapshot after streaming completes
             try {
               const text = await result.text;
@@ -1459,13 +1471,16 @@ export async function POST(request: Request) {
               // only the follow-up block, or only whitespace, has hundreds of raw
               // characters and renders as an empty bubble. Testing raw length let
               // both cases through with no answer and no error at all.
-              const visibleText = visibleAnswerText(text);
+              const draftingLeak = hasDraftingLeak(text);
+              acceptedText = publishedText;
+              const visibleText = visibleAnswerText(acceptedText);
               const attemptedRecovery =
-                visibleText.length < MIN_USABLE_ANSWER_CHARS
-                && debugErrors.length === 0
-                && (tools?.length ?? 0) > 0;
+                debugErrors.length === 0 && (
+                  (draftingLeak && !visibleText) ||
+                  (visibleText.length < MIN_USABLE_ANSWER_CHARS && (tools?.length ?? 0) > 0)
+                );
               if (attemptedRecovery) {
-                console.warn('[tool-only-retry] Turn produced only a tool call — re-asking without tools');
+                console.warn(`[tool-only-retry] ${draftingLeak ? 'Drafting text withheld' : 'Tool turn returned no usable answer'}; re-asking without tools`);
                 recovered = await retryWithoutTools();
               }
 
@@ -1505,7 +1520,8 @@ export async function POST(request: Request) {
               writeDebug({
                 phase: 'stream-finished',
                 outputLength: text.length,
-                outputPreview: text.slice(0, 300),
+                outputPreview: acceptedText.slice(0, 300),
+                draftingLeak,
                 toolCallNames: (tools || []).map((t) => t.toolName),
                 toolOnlyRecoveredChars: recovered.length,
                 issueToolOffered: issueToolAvailable,
@@ -1539,13 +1555,10 @@ export async function POST(request: Request) {
               });
             }
 
-            // Parse and send follow-up questions. Prefers the recovered text so a
-            // rescued turn still gets follow-up chips. `||` was wrong here: two of
-            // three measured recoveries had 2 chars of original text, which is
-            // truthy, so the chips were parsed from "Ok" and silently lost.
+            // Follow-up chips come from the recovered reply when available,
+            // otherwise from the primary text that actually reached the browser.
             try {
-              const baseText = await result.text;
-              const fullText = recovered.length > baseText.length ? recovered : baseText;
+              const fullText = recovered || acceptedText;
               const { questions } = parseFollowUpQuestions(fullText);
               if (questions && questions.length > 0) {
                 writer.write({
@@ -1565,7 +1578,7 @@ export async function POST(request: Request) {
               const toolCalls = await result.toolCalls;
               const issueCall = toolCalls?.find((tc) => tc.toolName === 'create_knowledge_issue');
               const issueInput = issueCall && 'input' in issueCall ? issueCall.input as { title?: string; correction?: string; kind?: 'knowledge' | 'behavior' } : null;
-              const fullText = await result.text;
+              const fullText = acceptedText;
               let issueArgs: { title: string; correction: string; kind?: 'knowledge' | 'behavior' } | null =
                 issueInput?.title && issueInput?.correction
                   ? { title: issueInput.title, correction: issueInput.correction, kind: issueInput.kind }
@@ -1605,8 +1618,50 @@ export async function POST(request: Request) {
             } catch (err) {
               console.error('[auto-issue] Failed to handle tool calls from web UI:', err);
             }
+        };
+        let answerId: string | undefined;
+        const checkedStream = uiStream.pipeThrough(new TransformStream<UIMessageChunk, UIMessageChunk>({
+          transform(chunk, controller) {
+            const publish = (delta: string) => {
+              if (!delta || !answerId) return;
+              publishedText += delta;
+              controller.enqueue({ type: 'text-delta', id: answerId, delta });
+            };
+            // Reasoning can span SDK text parts. Use one gate and one client
+            // text part for the whole generation so neither half can escape.
+            if (chunk.type === 'text-start') {
+              if (answerId) return;
+              answerId = chunk.id;
+            }
+            if (chunk.type === 'text-delta') {
+              publish(gate.push(chunk.delta));
+              return;
+            }
+            if (chunk.type === 'text-end') return;
+            // Flush on error as well: the SDK is not guaranteed to send `finish`
+            // after an error, and the held tail would otherwise be dropped.
+            if ((chunk.type === 'finish' || chunk.type === 'abort' || chunk.type === 'error') && answerId) {
+              if (chunk.type !== 'abort') publish(gate.finish());
+              controller.enqueue({ type: 'text-end', id: answerId });
+              answerId = undefined;
+            }
+            controller.enqueue(chunk);
           },
         }));
+        const reader = checkedStream.getReader();
+        let finishChunk: Extract<UIMessageChunk, { type: 'finish' }> | undefined;
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (value.type === 'finish') finishChunk = value;
+            else writer.write(value);
+          }
+        } finally {
+          reader.releaseLock();
+        }
+        if (!request.signal.aborted) await finishResponse();
+        if (finishChunk) writer.write(finishChunk);
       }
     },
     onError: (error) => {
