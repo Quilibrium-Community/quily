@@ -87,7 +87,6 @@ export function ChatContainer({
 }: ChatContainerProps) {
   const updateMessages = useConversationStore((state) => state.updateMessages);
   const addConversation = useConversationStore((state) => state.addConversation);
-  const setActive = useConversationStore((state) => state.setActive);
   const conversations = useConversationStore((state) => state.conversations);
 
   // Effective conversation id. Seeded from the prop, but when the user sends the
@@ -101,8 +100,7 @@ export function ChatContainer({
   //   "first chat not saved" race.)
   const effectiveIdRef = useRef<string | null>(conversationId);
   const [effectiveId, setEffectiveId] = useState<string | null>(conversationId);
-  // Keep both in sync when the prop changes for reasons other than our own lazy
-  // creation (e.g. a same-mount prop update from setActive should be adopted).
+  // Adopt the id assigned by the store when the first message creates the chat.
   if (conversationId && conversationId !== effectiveIdRef.current) {
     effectiveIdRef.current = conversationId;
   }
@@ -281,7 +279,7 @@ export function ChatContainer({
   // Mount-stable id for useChat. Captured once so it does NOT change when we
   // lazily create a conversation on the first message (that would switch useChat
   // instances mid-send and drop the in-flight stream). The component remounts
-  // via key={chatKey} in page.tsx whenever the user switches to a different
+  // via chatRevision in page.tsx whenever the user switches to a different
   // existing conversation, so capturing the initial value at mount is correct.
   const chatIdRef = useRef<string>(conversationId || 'new-chat');
 
@@ -292,7 +290,7 @@ export function ChatContainer({
     onData: handleData,
   });
 
-  // Load stored messages on mount (component remounts when conversationId changes via key prop)
+  // Load stored messages on mount.
   useEffect(() => {
     if (hasLoadedInitial) return;
     setHasLoadedInitial(true);
@@ -373,7 +371,6 @@ export function ChatContainer({
         const newId = addConversation();
         effectiveIdRef.current = newId;
         setEffectiveId(newId);
-        setActive(newId);
       }
 
       // Clear thinking steps, follow-up questions, correction URL, and RAG quality for new message
@@ -386,7 +383,7 @@ export function ChatContainer({
         text,
       });
     },
-    [hasAccess, sendMessage, addConversation, setActive]
+    [hasAccess, sendMessage, addConversation]
   );
 
   // Handle stop generation
