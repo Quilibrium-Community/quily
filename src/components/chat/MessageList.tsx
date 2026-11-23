@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
+import { NetworkBackground, WELCOME_EFFECTS_KEY } from './NetworkBackground';
+import { useLocalStorage } from '@/src/hooks/useLocalStorage';
 import { MessageBubble } from './MessageBubble';
 import { ThinkingProcess, ThinkingStep } from './ThinkingProcess';
 import { ChatInput } from './ChatInput';
@@ -69,6 +71,11 @@ export function MessageList({ messages, status, error, streamError, rateLimitErr
     scrollToBottomImmediate,
   } = useScrollAnchor();
 
+  // Home screen style (Settings > Appearance). Effects render only after the
+  // stored choice is read, so Minimal users never see them flash in.
+  const [welcomeEffects, , welcomeEffectsHydrated] = useLocalStorage<boolean>(WELCOME_EFFECTS_KEY, true);
+  const showEffects = welcomeEffectsHydrated && welcomeEffects;
+
   const isStreaming = status === 'streaming' || status === 'submitted';
 
   // The assistant message object is added to `messages` as soon as the first stream part
@@ -134,11 +141,17 @@ export function MessageList({ messages, status, error, streamError, rateLimitErr
     return (
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 flex flex-col bg-bg-base chat-scrollbar"
+        className="relative isolate flex-1 overflow-y-auto overflow-x-hidden p-4 flex flex-col bg-bg-base chat-scrollbar"
       >
+        {/* Decorative dot grid that links up near the pointer (Settings > Appearance > Home screen) */}
+        {showEffects && (
+          <div className="welcome-bg" aria-hidden="true">
+            <NetworkBackground />
+          </div>
+        )}
         {/* Centered content area */}
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center text-text-muted w-full max-w-xl px-4">
+        <div className="relative flex-1 flex items-center justify-center">
+          <div className={`${showEffects ? 'welcome-glow ' : ''}text-center text-text-muted w-full max-w-xl px-4`}>
             <div className="flex items-start justify-center gap-1 mb-2">
               <Logo height={56} />
             </div>
@@ -151,7 +164,7 @@ export function MessageList({ messages, status, error, streamError, rateLimitErr
                   <button
                     key={action.command}
                     onClick={() => onQuickAction(action.command)}
-                    className="px-4 py-2 text-sm rounded-full border border-border hover:bg-hover hover:border-border-strong transition-colors text-text-muted cursor-pointer"
+                    className="px-4 py-2 text-sm rounded-full border border-border-strong bg-bg-elevated shadow-sm hover:bg-hover-strong transition-colors text-text-secondary hover:text-text-primary cursor-pointer"
                     title={action.description}
                   >
                     {action.label}

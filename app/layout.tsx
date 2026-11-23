@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Poppins } from 'next/font/google';
 import localFont from 'next/font/local';
 import { ThemeProvider } from '@/src/components/providers/ThemeProvider';
+import { ThemeColorSync } from '@/src/components/providers/ThemeColorSync';
 import { AppLayout } from '@/src/components/layout/AppLayout';
 import './globals.css';
 
@@ -34,6 +35,8 @@ export const viewport: Viewport = {
   // so the chat input stays visible above it. iOS ignores this directive, where
   // useVisualViewportSync takes over instead.
   interactiveWidget: 'resizes-content',
+  // Dark is the default theme; ThemeColorSync updates this when the theme changes.
+  themeColor: '#1a1f2e',
 };
 
 export const metadata: Metadata = {
@@ -81,6 +84,7 @@ export default function RootLayout({
     <html lang="en" className={`${poppins.variable} ${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <body className="font-sans antialiased">
         <ThemeProvider>
+          <ThemeColorSync />
           <AppLayout>{children}</AppLayout>
         </ThemeProvider>
       </body>

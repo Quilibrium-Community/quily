@@ -161,7 +161,7 @@ export function SourcesCitation({ sources }: SourcesCitationProps) {
                     href={source.url!}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="link-unstyled text-accent hover:text-accent-hover flex items-center gap-2 sm:gap-1 py-2.5 sm:py-1 min-h-11 sm:min-h-0"
+                    className="link-unstyled text-text-secondary hover:text-accent flex items-center gap-2 sm:gap-1 py-2.5 sm:py-1 min-h-11 sm:min-h-0"
                   >
                     <span className="text-gray-400 dark:text-gray-500 shrink-0">
                       [{idxStr}]
