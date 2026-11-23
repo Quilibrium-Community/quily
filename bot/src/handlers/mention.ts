@@ -134,6 +134,7 @@ export function registerMentionHandler(client: Client): void {
       // in-flight request (and, since the retry landed, a second one) kept
       // running and being billed after the user had been told it timed out.
       const abort = new AbortController();
+      const deadline = performance.now() + TIMEOUT_MS;
       const queryPromise = processQuery({
         query,
         conversationHistory: history,
@@ -145,6 +146,7 @@ export function registerMentionHandler(client: Client): void {
         cohereApiKey: process.env.COHERE_API_KEY,
         addressAs: getNickname(message.author.id) ?? undefined,
         abortSignal: abort.signal,
+        deadline,
       });
 
       let timeoutHandle: NodeJS.Timeout | undefined;
@@ -152,7 +154,7 @@ export function registerMentionHandler(client: Client): void {
         timeoutHandle = setTimeout(() => {
           abort.abort();
           reject(new Error('TIMEOUT'));
-        }, TIMEOUT_MS);
+        }, Math.max(0, deadline - performance.now()));
       });
 
       let result;

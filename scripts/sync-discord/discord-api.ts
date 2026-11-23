@@ -38,7 +38,7 @@ async function discordFetch(url: string, token: string): Promise<Response> {
       const body = (await res.clone().json().catch(() => null)) as
         | { retry_after?: number }
         | null;
-      const retryAfterSec = body?.retry_after ?? Number(retryAfterHeader);
+      const retryAfterSec = body?.retry_after ?? (retryAfterHeader === null ? NaN : Number(retryAfterHeader));
       if (Number.isFinite(retryAfterSec) && retryAfterSec >= 0) {
         // Add a small buffer so we clear the window cleanly.
         waitMs = retryAfterSec * 1000 + 250;
@@ -47,6 +47,18 @@ async function discordFetch(url: string, token: string): Promise<Response> {
 
     await sleep(waitMs);
   }
+}
+
+export class DiscordReadError extends Error {
+  constructor(readonly status: number, path: string) {
+    super(`Discord API returned ${status} for ${path}`);
+  }
+}
+
+export async function readDiscord<T>(token: string, path: string): Promise<T> {
+  const response = await discordFetch(`${DISCORD_API_BASE}${path}`, token);
+  if (!response.ok) throw new DiscordReadError(response.status, path.split('?')[0]);
+  return (await response.json()) as T;
 }
 
 /**

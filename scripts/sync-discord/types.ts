@@ -11,6 +11,9 @@ export interface DiscordMessage {
     bot?: boolean;
   };
   timestamp: string; // ISO 8601
+  channel_id?: string;
+  message_reference?: { message_id?: string; channel_id?: string };
+  thread?: { id: string };
   embeds: DiscordEmbed[];
   attachments: DiscordAttachment[];
 }
@@ -33,6 +36,7 @@ export interface DiscordChannel {
   name: string;
   type: number;
   guild_id: string;
+  parent_id?: string;
 }
 
 /** Parsed channel config from DISCORD_CHANNEL_IDS env var */

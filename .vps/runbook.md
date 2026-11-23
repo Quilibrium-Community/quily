@@ -33,6 +33,7 @@
 | Restart bot | `ssh quily-vps 'pm2 restart quily-bot'` |
 | Check status | `ssh quily-vps 'pm2 status quily-bot'` |
 | View logs | `ssh quily-vps 'pm2 logs quily-bot --lines 30'` |
+| Preview private Discord review | `ssh quily-vps '~/.quily-discord-curation/bin/weekly --plan'` |
 | Switch provider | Edit `.env` → change `BOT_LLM_PROVIDER` → restart bot (see [Switching LLM Provider](#switching-llm-provider)) |
 
 ---
@@ -291,6 +292,23 @@ Note: The GitHub Actions workflow also generates a recap at 06:00 UTC (committed
 
 ---
 
+## Private weekly Discord curation
+
+The T3 Code session **Quily · Revisione settimanale Discord** runs every Monday at 10:30 Europe/Rome. It uses the operator's SSH access to collect new messages from Cassie and Black Swan and prepare editorial proposals. The launcher is independent of the daily recap and the PM2 process.
+
+```powershell
+ssh quily-vps '~/.quily-discord-curation/bin/weekly --plan'
+ssh quily-vps '~/.quily-discord-curation/bin/weekly'
+```
+
+The preview reports missing UTC date ranges. The regular command resumes from the private ledger, fills gaps through the last complete UTC day, and refreshes the review batch. The agent reviews pending messages and returns proposals for editorial approval. Publishing and production ingestion are separate steps.
+
+The private state is `~/.quily-discord-curation/ledger.json` and `review-batch.json` under the same directory. Preserve that directory during VPS recovery. Its `bin/` contains the installed launcher, the bundled collector, and the approved credential loader. To restore the launcher, install [weekly-vps.sh](../scripts/curate-discord/weekly-vps.sh) as `bin/weekly` with mode `700`, bundle [the collector](../scripts/curate-discord/index.ts) as Node 22 CommonJS to `bin/curate.cjs`, and place the approved `skill-run.py` beside it. Verify the installation with `--plan`.
+
+See the [editorial workflow](../.agents/docs/discord-knowledge-curation.md) for review decisions, citations, and validation.
+
+---
+
 ## Bug Reports Digest
 
 A dedicated, triaged digest of `#quorum-bug-reports` posts **back into the same `#quorum-bug-reports` channel** at **07:00 UTC** (independent of the main digest at 14:00 UTC). The early time slot is chosen so the lead dev sees it at the start of the day. It clusters similar reports, groups by severity (blocker / degraded / minor / question), surfaces "needs more info" reports with suggested follow-ups, and OCRs image attachments via a vision pre-pass. To post the digest into a different channel, set `DISCORD_BUG_REPORTS_POST_CHANNEL_ID`.
@@ -328,4 +346,6 @@ The script stages ONLY `archives/`, so it never touches other VPS working-tree c
 
 ---
 
-*Created: 2026-03-18 | Updated: 2026-06-07*
+*Created: 2026-03-18*
+
+*Last updated: 2026-11-23*

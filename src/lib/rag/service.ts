@@ -165,7 +165,9 @@ function getChuteUrl(slug: string): string {
   return `https://${slug}.chutes.ai`;
 }
 
-export async function processQuery(options: PrepareQueryOptions): Promise<ProcessQueryResult> {
+export async function processQuery(
+  options: PrepareQueryOptions & { deadline?: number },
+): Promise<ProcessQueryResult> {
   const t0 = Date.now();
   const prepared = await prepareQuery(options);
   console.log(`[processQuery] prepareQuery took ${Date.now() - t0}ms`);
@@ -184,11 +186,21 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
     { role: 'user' as const, content: options.query },
   ];
 
-  const modelsToTry = [primaryModel, ...getFallbackModels(llmProvider)];
+  const modelsToTry = [...new Set([primaryModel, ...getFallbackModels(llmProvider)])];
   let lastError: unknown;
   let lastEmpty: ProcessQueryResult | undefined;
 
-  for (const model of modelsToTry) {
+  for (const [index, model] of modelsToTry.entries()) {
+    options.abortSignal?.throwIfAborted();
+    const hasFallback = index < modelsToTry.length - 1;
+    // Share the remaining time with the rest of the chain, including any retry
+    // on this model. The final model can use the rest of the caller's deadline.
+    const modelTimeout = hasFallback && options.deadline !== undefined
+      ? AbortSignal.timeout(Math.max(0, Math.floor((options.deadline - performance.now()) / 2)))
+      : undefined;
+    const modelSignal = modelTimeout && options.abortSignal
+      ? AbortSignal.any([modelTimeout, options.abortSignal])
+      : modelTimeout ?? options.abortSignal;
     try {
       const modelId = llmProvider === 'chutes' ? getChuteUrl(model) : model;
       const isPrimaryOpenRouter = llmProvider !== 'chutes' && model === primaryModel;
@@ -215,6 +227,7 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
 
       const generateOnce = async (attempt: number) => {
         const t1 = Date.now();
+        modelSignal?.throwIfAborted();
         const result = await generateText({
           model: aiModel,
           system: `${prepared.systemPrompt}\n\n${ANSWER_ONLY_INSTRUCTION}`,
@@ -225,8 +238,9 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
           // tool" while the model was handed one. The two must never disagree.
           ...(options.issueToolAvailable ?? true ? { tools: ragTools } : {}),
           maxOutputTokens: MAX_OUTPUT_TOKENS,
-          abortSignal: options.abortSignal,
+          abortSignal: modelSignal,
         });
+        modelSignal?.throwIfAborted();
         const parsed = parseFollowUpQuestions(result.text);
         const draftingLeak = hasDraftingLeak(parsed.cleanText);
         const questions = draftingLeak ? null : parsed.questions;
@@ -263,7 +277,7 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
       // so one retry on the same model is cheap insurance before moving on.
       let gen = await generateOnce(1);
       let attempts = 1;
-      if (isEmpty(gen) && !options.abortSignal?.aborted) {
+      if (isEmpty(gen) && !modelSignal?.aborted) {
         console.warn(`[processQuery] empty reply from ${model} (finish=${gen.finishReason}), retrying once`);
         gen = await generateOnce(2);
         attempts = 2;
@@ -284,7 +298,7 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
       // hand over to the fallback chain like an exception would. If every model
       // comes back empty, return the last empty result rather than throwing, so
       // the handler can still say something honest.
-      if (isEmpty(gen) && !options.abortSignal?.aborted) {
+      if (isEmpty(gen)) {
         console.warn(`[processQuery] ${model} returned empty twice, trying next fallback`);
         lastEmpty = out;
         continue;
@@ -294,7 +308,8 @@ export async function processQuery(options: PrepareQueryOptions): Promise<Proces
       // A cancelled request must not cascade into three more paid attempts.
       if (options.abortSignal?.aborted) throw error;
       lastError = error;
-      console.error(`Model ${model} failed, ${modelsToTry.indexOf(model) < modelsToTry.length - 1 ? 'trying next fallback...' : 'no more fallbacks'}`);
+      const failure = modelTimeout?.aborted ? 'timed out' : 'failed';
+      console.error(`Model ${model} ${failure}, ${hasFallback ? 'trying next fallback...' : 'no more fallbacks'}`);
     }
   }
 
