@@ -406,17 +406,20 @@ input[type="button"] {
   cursor: pointer !important;
 }
 
-/* Global link styles - uses brand accent color */
-/* Excludes nav links, sidebar links, .link-unstyled, and .link-muted which have their own styling */
+/* Global content links (chat answers, pages): text color with a soft underline.
+   Orange in running text competed with the words around it; the accent only
+   appears on hover. Nav/sidebar links keep their own styling. */
 a:not(nav a):not(aside a):not(.link-unstyled):not(.link-muted) {
-  color: var(--color-accent);
-  text-decoration: none;
-  transition: color 0.15s ease, text-decoration 0.15s ease;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  text-underline-offset: 3px;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
 }
 
 a:not(nav a):not(aside a):not(.link-unstyled):not(.link-muted):hover {
   color: var(--color-link-hover);
-  text-decoration: underline;
+  text-decoration-color: currentColor;
 }
 
 /* Muted links - inherit text color, always underlined */

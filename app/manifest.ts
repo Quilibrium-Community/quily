@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Get instant, accurate answers about Quilibrium from official sources',
     start_url: '/',
     display: 'standalone',
-    background_color: '#ffffff',
-    theme_color: '#F97316',
+    background_color: '#1a1f2e',
+    theme_color: '#1a1f2e',
     icons: [
       {
         src: '/apple-touch-icon.png',
