@@ -650,3 +650,49 @@ a.link-muted:hover {
     height: 100dvh;
   }
 }
+
+/* ==========================================================================
+   WELCOME SCREEN BACKGROUND
+   Dot grid with a center hue; links up near the pointer (see NetworkBackground.tsx).
+   ========================================================================== */
+.welcome-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.welcome-network {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* Fade the grid out toward the edges */
+  mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
+}
+
+/* Soft warm/violet hue centered behind the logo + input block. Attached to
+   that block (not the screen) so it stays centered on it at any size. */
+.welcome-glow {
+  position: relative;
+}
+
+.welcome-glow::before {
+  content: '';
+  position: absolute;
+  inset: -70% -45%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(closest-side at 38% 50%, rgba(255, 110, 30, 0.16), transparent),
+    radial-gradient(closest-side at 62% 50%, rgba(150, 100, 235, 0.16), transparent);
+}
+
+/* Light backgrounds wash out low-alpha color, so the hue needs more strength */
+:root:not(.dark) .welcome-glow::before {
+  background:
+    radial-gradient(closest-side at 38% 50%, rgba(255, 110, 30, 0.2), transparent),
+    radial-gradient(closest-side at 62% 50%, rgba(150, 100, 235, 0.2), transparent);
+}

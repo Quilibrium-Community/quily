@@ -7,6 +7,7 @@ import { Icon } from '@/src/components/ui/Icon';
 import { ChatFontSizeSettings } from '@/src/components/ui/ChatFontSizeSettings';
 import { getAvatarUrl } from '@/src/lib/avatar';
 import { useLocalStorage } from '@/src/hooks/useLocalStorage';
+import { WELCOME_EFFECTS_KEY } from '@/src/components/chat/NetworkBackground';
 import { getRecommendedModels, DEFAULT_MODEL_ID, FREE_MODE_DEFAULT_MODEL_ID, ModelMetadata } from '@/src/lib/openrouter';
 import { getProvider, getActiveProviders, getDefaultProvider } from '@/src/lib/providers';
 import { useChutesSession } from '@/src/hooks/useChutesSession';
@@ -52,6 +53,7 @@ export default function SettingsPage() {
   // Profile state
   const [profileName, setProfileName, profileNameHydrated] = useLocalStorage<string>('user-profile-name', 'You');
   const [profileCustomSet, setProfileCustomSet] = useLocalStorage<boolean>('user-profile-custom-set', false);
+  const [welcomeEffects, setWelcomeEffects] = useLocalStorage<boolean>(WELCOME_EFFECTS_KEY, true);
 
   // UI state
   const [inputValue, setInputValue] = useState('');
@@ -1215,6 +1217,38 @@ export default function SettingsPage() {
                       key={i}
                       className="px-3 py-2 h-10 rounded-lg border border-gray-200 dark:border-gray-700 bg-surface/5"
                     />
+                  ))}
+                </div>
+              )}
+
+              <h3 className="text-sm font-medium text-text-primary mt-6 mb-1">Home screen</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                Interactive adds a colored glow and a dot grid that links up as you move or tap.
+                Minimal keeps the start screen plain.
+              </p>
+              {mounted && (
+                <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Home screen style">
+                  {([
+                    { value: true, label: 'Interactive', icon: 'grid' },
+                    { value: false, label: 'Minimal', icon: 'square' },
+                  ] as const).map((option) => (
+                    <button
+                      key={option.label}
+                      type="button"
+                      role="radio"
+                      aria-checked={welcomeEffects === option.value}
+                      onClick={() => setWelcomeEffects(option.value)}
+                      className={`px-3 py-2 min-h-11 sm:min-h-0 text-sm rounded-lg border transition-colors text-center
+                        ${welcomeEffects === option.value
+                          ? 'border-accent bg-accent/10 text-text-primary'
+                          : 'border-gray-200 dark:border-gray-700 text-text-secondary hover:bg-surface/5 dark:hover:bg-surface/10'
+                        }`}
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <Icon name={option.icon} size={16} />
+                        <span className="font-medium">{option.label}</span>
+                      </div>
+                    </button>
                   ))}
                 </div>
               )}
