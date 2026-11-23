@@ -494,8 +494,11 @@ QStorage supports static website hosting with CDN-level performance through tier
 
 1. Create a public bucket
 2. Upload your static site files (drag-and-drop supported)
-3. Set your DNS CNAME to `bucketname.qstorage.quilibrium.com`
-4. Optionally integrate with QNS for `.q` domain resolution
+3. Enable website hosting and set the index document, typically `index.html`
+4. Set your DNS CNAME to `bucketname.qstorage.quilibrium.com`
+5. Optionally integrate with QNS for `.q` domain resolution
+
+Public visibility makes content accessible through the public bucket endpoint. The website configuration is what lets a request for the site root serve the index document. [QStorage website API](QStorage-API-Reference.md) · [Cassie's public bucket and website clarification](https://discord.com/channels/1212446221395042335/1212446222367985726/1574087638581911574)
 
 > **Note:** If your domain uses Cloudflare DNS, you will hit a "CNAME Cross-User Banned" error. See the Cloudflare DNS limitation note above for workarounds.
 
@@ -526,4 +529,4 @@ Yes. Because QStorage is S3-compatible, migration is straightforward: update you
 **What is the difference between free and paid tier replication?**
 Free-tier data is replicated within Quilibrium Inc.'s infrastructure (multiple data centers, multiple regions). Paid-tier data receives full decentralized network replication across 24-32 geographically distributed nodes per shard with Reed-Solomon encoding.
 
-*Last updated: 2026-02-14*
+*Last updated: 2026-11-23*

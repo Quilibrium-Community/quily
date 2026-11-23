@@ -175,6 +175,18 @@ Binaries are included for:
 - Sparse inference calibration
 - Private client-server inference
 
+### Run the macOS desktop app from source
+
+Install Xcode, Rust, and Node.js with npm. Clone `QuilibriumNetwork/klearu` and `QuilibriumNetwork/monorepo` as sibling directories, then run the desktop development script from the Klearu checkout:
+
+```bash
+cd web
+npm install
+npm run tauri:dev
+```
+
+The package script starts Tauri in release mode. Download the model files required by the model you intend to run. [Cassie's setup notes](https://discord.com/channels/1212446221395042335/1212446222367985726/1554118498878488639) · [Klearu build instructions](https://github.com/QuilibriumNetwork/klearu#building) · [Desktop package scripts](https://github.com/QuilibriumNetwork/klearu/blob/master/web/package.json)
+
 ---
 
-*Last updated: 2026-03-21*
+*Last updated: 2026-11-23*

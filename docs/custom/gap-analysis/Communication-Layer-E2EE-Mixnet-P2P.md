@@ -92,6 +92,10 @@ The interface for using Triple Ratchet in applications is straightforward:
 
 The `channel` crate in the Quilibrium codebase implements these secure E2EE communication primitives.
 
+### Coppice group encryption research
+
+Coppice has an experimental Rust implementation of a group end-to-end encryption design described in the HyperSnap specification. The repository documents a research wire format and reports that the complete composition has no security audit or proof. Cassie's announcement concerns the research repository. It establishes no deployment status for Quorum or Quilibrium mainnet. [Coppice research repository](https://github.com/QuilibriumNetwork/coppice-research) · [Cassie's announcement](https://discord.com/channels/1212446221395042335/1212446222367985726/1567119839980552232)
+
 ## Mixnet Routing: Metadata Privacy
 
 Even with perfect message encryption, an adversary who can observe network traffic can learn **who is communicating with whom** (metadata). Quilibrium addresses this with a **Random Permutation Matrix (RPM) mixnet** — a system that makes it impossible to link senders to recipients at the network level.
@@ -343,4 +347,4 @@ A: Quorum is a peer-to-peer encrypted messenger built on Quilibrium. It uses Tri
 
 ---
 
-*Last updated: 2026-02-11*
+*Last updated: 2026-11-23*

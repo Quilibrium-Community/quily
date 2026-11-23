@@ -62,10 +62,16 @@ Variance depends on:
 ## Throughput Calculation
 
 With the sharded architecture:
-- 256 shards minimum × 6,000 TPS per shard = **1,536,000 TPS baseline**
+- The historical capacity estimate used 256 shards × 6,000 TPS per shard = **1,536,000 TPS under those assumptions**
 - Network expansion increases both shard count and throughput
+
+To measure observed TPS, count the transactions in the app-shard frames sequenced over a GLOBAL interval, plus transactions executed directly in GLOBAL, then divide by the elapsed seconds. Use ten seconds as the divisor only for an interval that actually lasted ten seconds. [Cassie's explanation of observed throughput](https://discord.com/channels/1212446221395042335/1212446222367985726/1572553756783018037)
+
+Frame interval, transaction finality, and application latency measure different things. Under normal consensus conditions, Quilibrium has single-slot finality: the frame certificate finalizes the transactions it covers. Operations that do not wait for a consensus frame have their own latency. [Consensus documentation](https://docs.quilibrium.com/docs/protocol/consensus/) · [Cassie's explanation](https://discord.com/channels/1212446221395042335/1212446222367985726/1572746603360559245)
 
 Quilibrium's finalization window positions it as notably faster than established networks in optimal conditions, while the sharded architecture enables horizontal scaling beyond what single-chain networks can achieve.
 
 ---
 *Source: [Quilibrium Wiki](https://github.com/lamat1111/Quilibrium_Wiki) - Last updated: 2025-02-05*
+
+*Last updated: 2026-11-23*

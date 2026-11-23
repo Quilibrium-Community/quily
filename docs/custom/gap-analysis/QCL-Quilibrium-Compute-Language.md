@@ -171,6 +171,8 @@ Continuous applications are QCL programs that require multi-step evaluation acro
 - **Atomic swaps**: Two parties exchange tokens where the swap either completes fully or not at all, with neither party seeing the other's account details.
 - **Private set intersection**: Using bloom filter intrinsics to check overlapping data between parties without revealing the full datasets.
 
+In an MPC-based atomic swap design, both parties can supply private inputs to a shared computation that produces the authorization needed for the exchange transactions. The computation keeps each party's input private from the other participant. This is an application design pattern. [Cassie's Discord explanation, November 22, 2026](https://discord.com/channels/1212446221395042335/1212446222367985726/1574027801022177291)
+
 ## What QCL Cannot Do
 
 QCL is specifically designed for privacy-preserving on-chain computation. It is **not** a replacement for traditional web backends or serverless functions:
@@ -213,4 +215,4 @@ QCL computation runs as garbled circuit evaluation, which has different performa
 ---
 
 *Sources: Quilibrium official documentation (build/applications), qclient command reference, livestream transcripts (2024-06 through 2026-02)*
-*Last updated: 2026-02-11*
+*Last updated: 2026-11-23*

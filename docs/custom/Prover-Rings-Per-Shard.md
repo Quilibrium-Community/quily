@@ -30,6 +30,10 @@ topics:
 
 The number of rings around a given shard grows organically as more nodes declare membership for that shard, with priority determined by seniority.
 
+The practical limit on active shards depends on how many provers the network can assign to cover them. A shard needs enough participating provers to keep making progress. [Cassie's explanation of shard capacity](https://discord.com/channels/1212446221395042335/1212446222367985726/1560760341267226635)
+
+Shard splits and merges change active shard metadata. Proof submission and reward processing are separate execution paths, so a split or merge can succeed while a prover's submission fails, or vice versa. When diagnosing missing rewards, check whether the prover submitted its proof and the network accepted it. [Cassie's explanation of shard changes](https://discord.com/channels/1212446221395042335/1212446222367985726/1556537885270868091) · [Cassie's explanation of proof acceptance and rewards](https://discord.com/channels/1212446221395042335/1212446222367985726/1556531169179213845)
+
 > **As of Quilibrium 2.1 Bloom:** There is no hard cap on rings, but ring depth is bounded *in practice* by re-bundling. A shard bundle **subdivides once it reaches 32 provers**, which is exactly four full rings of eight. Subdivision resets ring assignments on the new sub-bundles, so rings do not grow without limit on a single bundle. Ring membership is also no longer undocumented: `ring = floor(rank / 8)`. See [Epochs and Frames](Epochs-And-Frames.md) for the formulas and the reward consequences.
 
 ---
@@ -70,6 +74,7 @@ What the public livestream and architecture docs explicitly cover:
 
 What IS documented as of 2.1 Bloom:
 - **How ring membership is assigned:** `ring = floor(rank / 8)`, where rank comes from sorting provers by join frame (ascending), then seniority (descending), then address (ascending). Eight provers per ring.
+- **What seniority changes:** An earlier join frame ranks ahead of a later join frame. Seniority can improve a prover's order among provers with the same join frame. Higher seniority alone cannot displace a prover that joined earlier. [Black Swan's explanation of join order](https://discord.com/channels/1212446221395042335/1212446222367985726/1572945248852902000)
 - **What triggers subdivision:** a shard bundle reaching 32 provers, driven by prover density.
 - **The reward consequence of ring position:** rewards are divided by `2^(ring+1)`, so Ring 0 receives 1/2, Ring 1 receives 1/4, and so on.
 
@@ -99,4 +104,4 @@ If you need a definitive answer on a maximum or a protocol cap, the right move i
 
 ---
 
-*Last updated: 2026-08-23*
+*Last updated: 2026-11-23*

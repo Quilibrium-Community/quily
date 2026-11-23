@@ -312,6 +312,8 @@ Example with 16 threads, 24 GB RAM, 100 GB SSD:
 
 RAM is the bottleneck, so this node should run **12 workers**.
 
+If your Quilibrium node falls behind on synchronization or proof submission, check available bandwidth and connection stability alongside CPU, memory, and SSD capacity. A worker count that fits the host hardware can still strain the network connection. [Black Swan's Discord guidance, November 19, 2026](https://discord.com/channels/1212446221395042335/1212446222367985726/1573096419915473007)
+
 ### Setting Worker Count in config.yml
 
 If the default (one worker per thread) exceeds what your hardware can support, manually limit the worker count:
@@ -336,6 +338,8 @@ Worker processes are launched with a `--core` flag, so this command counts them 
 ---
 
 ## Storage Management
+
+Monitor disk space and SSD endurance separately. Daily bytes written measure write activity, which can include repeated writes over existing data. Free space tells you how close the node is to its storage thresholds. Cumulative writes matter for SSD wear. [Cassie's explanation of disk writes and wear](https://discord.com/channels/1212446221395042335/1212446222367985726/1571861401826234589)
 
 ### Storage Threshold Triggers
 
@@ -823,4 +827,4 @@ qclient node prover status
 
 This shows worker statuses, shard assignments, and storage availability for each worker.
 
-*Last updated: 2026-02-24T12:00:00*
+*Last updated: 2026-11-23*
