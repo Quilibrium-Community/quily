@@ -1620,6 +1620,7 @@ export async function POST(request: Request) {
             }
         };
         let answerId: string | undefined;
+        let stepStarted = false;
         const checkedStream = uiStream.pipeThrough(new TransformStream<UIMessageChunk, UIMessageChunk>({
           transform(chunk, controller) {
             const publish = (delta: string) => {
@@ -1637,13 +1638,23 @@ export async function POST(request: Request) {
               publish(gate.push(chunk.delta));
               return;
             }
-            if (chunk.type === 'text-end') return;
+            // The client clears active text parts on finish-step. The gate
+            // holds text across steps, so expose the merged answer as one step.
+            if (chunk.type === 'start-step') {
+              if (stepStarted) return;
+              stepStarted = true;
+            }
+            if (chunk.type === 'text-end' || chunk.type === 'finish-step') return;
             // Flush on error as well: the SDK is not guaranteed to send `finish`
             // after an error, and the held tail would otherwise be dropped.
             if ((chunk.type === 'finish' || chunk.type === 'abort' || chunk.type === 'error') && answerId) {
               if (chunk.type !== 'abort') publish(gate.finish());
               controller.enqueue({ type: 'text-end', id: answerId });
               answerId = undefined;
+            }
+            if ((chunk.type === 'finish' || chunk.type === 'abort') && stepStarted) {
+              controller.enqueue({ type: 'finish-step' });
+              stepStarted = false;
             }
             controller.enqueue(chunk);
           },
