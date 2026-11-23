@@ -70,6 +70,10 @@ export function suppressDiscordEmbeds(text: string): string {
   return result;
 }
 
+function sourceDocumentUrl(url: string): string {
+  return url.replace(/#.*$/, '').replace(/\/$/, '');
+}
+
 export function formatForDiscord(
   text: string,
   sources: SourceReference[],
@@ -83,15 +87,20 @@ export function formatForDiscord(
   // Convert simple markdown tables to code blocks
   formatted = convertTablesToCodeBlocks(formatted);
 
-  // Show only sources whose citation index actually appears in the response text.
-  // If the response didn't cite anything (e.g. casual/banter replies), skip the
-  // sources block entirely — showing unrelated sources under a joke looks weird.
+  // Only show references the answer actually cites. Some models link directly
+  // to a retrieved document instead of using its numbered marker.
   if (sources.length > 0) {
     const citedIndices = getCitedIndices(text);
 
-    const citedSources = sources
-      .filter((s) => citedIndices.has(s.index))
-      .sort((a, b) => a.index - b.index);
+    const orderedSources = [...sources].sort((a, b) => a.index - b.index);
+    let citedSources = orderedSources.filter((s) => citedIndices.has(s.index));
+    if (citedSources.length === 0) {
+      const linkedUrls = new Set(
+        (text.match(/https?:\/\/[^\s<>()\[\]"'`]+/g) ?? [])
+          .map((url) => sourceDocumentUrl(url.replace(/[.,;:!?]+$/, ''))),
+      );
+      citedSources = orderedSources.filter((s) => s.url && linkedUrls.delete(sourceDocumentUrl(s.url)));
+    }
 
     if (citedSources.length > 0) {
       // Confidence warning for low/none quality (only when citations exist)
