@@ -57,6 +57,8 @@ const MAX_CONVERSATIONS = 50;
 interface ConversationStore {
   conversations: Conversation[];
   activeId: string | null;
+  // Navigation remounts the chat. Saving its first message keeps the current mount.
+  chatRevision: number;
   _hasHydrated: boolean;
 
   // Actions
@@ -89,6 +91,7 @@ export const useConversationStore = create<ConversationStore>()(
     (set, get) => ({
       conversations: [],
       activeId: null,
+      chatRevision: 0,
       _hasHydrated: false,
 
       addConversation: (title?: string) => {
@@ -123,7 +126,10 @@ export const useConversationStore = create<ConversationStore>()(
       },
 
       setActive: (id: string | null) => {
-        set({ activeId: id });
+        const { activeId, chatRevision } = get();
+        if (id !== activeId) {
+          set({ activeId: id, chatRevision: chatRevision + 1 });
+        }
       },
 
       updateMessages: (id: string, messages: Message[]) => {
@@ -174,8 +180,10 @@ export const useConversationStore = create<ConversationStore>()(
       deleteConversation: (id: string) => {
         set((state) => {
           const conversations = state.conversations.filter((c) => c.id !== id);
-          const activeId = state.activeId === id ? null : state.activeId;
-          return { conversations, activeId };
+          if (state.activeId === id) {
+            return { conversations, activeId: null, chatRevision: state.chatRevision + 1 };
+          }
+          return { conversations };
         });
       },
 
