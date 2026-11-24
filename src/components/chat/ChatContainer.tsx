@@ -24,6 +24,8 @@ interface ChatContainerProps {
   conversationId: string | null;
   /** Turnstile token from parent (null = not yet verified, string = verified) */
   turnstileToken: string | null;
+  /** Called after a fresh (non-empty) Turnstile token is sent, so a new one is fetched */
+  onTurnstileTokenUsed?: () => void;
 }
 
 /** Whether free mode is enabled (server pays for all users) */
@@ -84,6 +86,7 @@ export function ChatContainer({
   model,
   conversationId,
   turnstileToken,
+  onTurnstileTokenUsed,
 }: ChatContainerProps) {
   const updateMessages = useConversationStore((state) => state.updateMessages);
   const addConversation = useConversationStore((state) => state.addConversation);
@@ -190,6 +193,8 @@ export function ChatContainer({
       new DefaultChatTransport({
         api: '/api/chat',
         prepareSendMessagesRequest({ messages: reqMessages }) {
+          const token = turnstileTokenRef.current;
+          if (token) onTurnstileTokenUsed?.();
           return {
             body: {
               messages: reqMessages,
@@ -200,7 +205,7 @@ export function ChatContainer({
               chutesApiKey: chutesExternalApiKey || undefined,
               priorityDocIds: extractPriorityDocIds(reqMessages),
               // Use ref to get current token (avoids stale closure issue)
-              turnstileToken: turnstileTokenRef.current || undefined,
+              turnstileToken: token || undefined,
             },
           };
         },
@@ -234,7 +239,7 @@ export function ChatContainer({
           return response;
         },
       }),
-    [apiKey, model, providerId, chutesEmbeddingModel, chutesExternalApiKey]
+    [apiKey, model, providerId, chutesEmbeddingModel, chutesExternalApiKey, onTurnstileTokenUsed]
   );
 
   // Handle data parts from the stream (status updates and follow-up questions)

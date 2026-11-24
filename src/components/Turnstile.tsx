@@ -30,6 +30,8 @@ interface TurnstileProps {
   onVerify: (token: string) => void;
   onError?: () => void;
   onExpire?: () => void;
+  /** Increment to request a fresh token (tokens are single-use). */
+  resetSignal?: number;
 }
 
 /**
@@ -42,7 +44,7 @@ interface TurnstileProps {
  * The widget is positioned at the bottom of the chat area and only visible when
  * Cloudflare requires user interaction.
  */
-export function Turnstile({ onVerify, onError, onExpire }: TurnstileProps) {
+export function Turnstile({ onVerify, onError, onExpire, resetSignal = 0 }: TurnstileProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const [isVisible, setIsVisible] = useState(true);
@@ -58,7 +60,6 @@ export function Turnstile({ onVerify, onError, onExpire }: TurnstileProps) {
         sitekey: siteKey,
         callback: (token: string) => {
           console.log('[Turnstile] Verification successful');
-          setIsVisible(false); // Hide widget after success
           onVerify(token);
         },
         'error-callback': () => {
@@ -137,6 +138,17 @@ export function Turnstile({ onVerify, onError, onExpire }: TurnstileProps) {
       }
     };
   }, [siteKey, renderWidget, onVerify]);
+
+  // After each send the spent token is useless, so fetch a new one. This keeps
+  // chat working even when the browser drops the turnstile_verified cookie.
+  useEffect(() => {
+    if (resetSignal === 0 || !widgetIdRef.current || !window.turnstile) return;
+    try {
+      window.turnstile.reset(widgetIdRef.current);
+    } catch (err) {
+      console.error('[Turnstile] Reset failed:', err);
+    }
+  }, [resetSignal]);
 
   // Don't render anything if not visible or no site key
   if (!isVisible || !siteKey) {
