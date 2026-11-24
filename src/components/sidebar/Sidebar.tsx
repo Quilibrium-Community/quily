@@ -9,6 +9,7 @@ import { Icon } from '@/src/components/ui/Icon';
 import { LogoIcon } from '@/src/components/ui/LogoIcon';
 import { Tooltip, TooltipProvider } from '@/src/components/ui/Tooltip';
 import { useLocalStorage } from '@/src/hooks/useLocalStorage';
+import { useWelcomeEffects } from '@/src/hooks/useWelcomeEffects';
 import { useConversationStore } from '@/src/stores/conversationStore';
 import { useChutesSession } from '@/src/hooks/useChutesSession';
 import { useSearch } from '@/src/contexts/SearchContext';
@@ -35,6 +36,8 @@ export function Sidebar() {
   const [providerId] = useLocalStorage<string>('selected-provider', 'openrouter');
   const [apiKey] = useLocalStorage<string>('openrouter-api-key', '');
   const [profileName] = useLocalStorage<string>('user-profile-name', 'You');
+  const [welcomeEffects, , welcomeEffectsHydrated] = useWelcomeEffects();
+  const animateLogo = welcomeEffectsHydrated && welcomeEffects;
   const { isSignedIn: isChutesSignedIn } = useChutesSession();
   const setActive = useConversationStore((s) => s.setActive);
   const activeId = useConversationStore((s) => s.activeId);
@@ -118,7 +121,7 @@ export function Sidebar() {
           className="p-1 ml-2 shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
           aria-label="New conversation"
         >
-          <LogoIcon size={32} />
+          <LogoIcon size={32} animated={animateLogo} />
         </button>
       </div>
 
@@ -247,7 +250,7 @@ export function Sidebar() {
             className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
             aria-label="New conversation"
           >
-            <LogoIcon size={36} />
+            <LogoIcon size={36} animated={animateLogo && sidebarOpen} />
           </button>
           <button
             onClick={closeSidebar}

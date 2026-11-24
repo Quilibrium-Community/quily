@@ -7,7 +7,7 @@ import { Icon } from '@/src/components/ui/Icon';
 import { ChatFontSizeSettings } from '@/src/components/ui/ChatFontSizeSettings';
 import { getAvatarUrl } from '@/src/lib/avatar';
 import { useLocalStorage } from '@/src/hooks/useLocalStorage';
-import { WELCOME_EFFECTS_KEY } from '@/src/components/chat/NetworkBackground';
+import { useWelcomeEffects } from '@/src/hooks/useWelcomeEffects';
 import { getRecommendedModels, DEFAULT_MODEL_ID, FREE_MODE_DEFAULT_MODEL_ID, ModelMetadata } from '@/src/lib/openrouter';
 import { getProvider, getActiveProviders, getDefaultProvider } from '@/src/lib/providers';
 import { useChutesSession } from '@/src/hooks/useChutesSession';
@@ -53,7 +53,7 @@ export default function SettingsPage() {
   // Profile state
   const [profileName, setProfileName, profileNameHydrated] = useLocalStorage<string>('user-profile-name', 'You');
   const [profileCustomSet, setProfileCustomSet] = useLocalStorage<boolean>('user-profile-custom-set', false);
-  const [welcomeEffects, setWelcomeEffects] = useLocalStorage<boolean>(WELCOME_EFFECTS_KEY, true);
+  const [welcomeEffects, setWelcomeEffects] = useWelcomeEffects();
 
   // UI state
   const [inputValue, setInputValue] = useState('');
@@ -1221,13 +1221,13 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              <h3 className="text-sm font-medium text-text-primary mt-6 mb-1">Home screen</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                Interactive adds a colored glow and a dot grid that links up as you move or tap.
-                Minimal keeps the start screen plain.
+              <h3 className="text-base sm:text-sm font-medium text-text-primary mt-6 mb-1">Logo and home screen</h3>
+              <p className="text-sm sm:text-xs text-gray-500 dark:text-gray-400 mb-4">
+                Interactive animates the logos and adds a glow and a responsive dot grid to the home screen.
+                Minimal turns these effects off.
               </p>
               {mounted && (
-                <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Home screen style">
+                <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Logo and home screen style">
                   {([
                     { value: true, label: 'Interactive', icon: 'grid' },
                     { value: false, label: 'Minimal', icon: 'square' },

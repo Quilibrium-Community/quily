@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import { NetworkBackground, WELCOME_EFFECTS_KEY } from './NetworkBackground';
-import { useLocalStorage } from '@/src/hooks/useLocalStorage';
+import { NetworkBackground } from './NetworkBackground';
+import { useWelcomeEffects } from '@/src/hooks/useWelcomeEffects';
 import { MessageBubble } from './MessageBubble';
 import { ThinkingProcess, ThinkingStep } from './ThinkingProcess';
 import { ChatInput } from './ChatInput';
@@ -73,7 +73,7 @@ export function MessageList({ messages, status, error, streamError, rateLimitErr
 
   // Home screen style (Settings > Appearance). Effects render only after the
   // stored choice is read, so Minimal users never see them flash in.
-  const [welcomeEffects, , welcomeEffectsHydrated] = useLocalStorage<boolean>(WELCOME_EFFECTS_KEY, true);
+  const [welcomeEffects, , welcomeEffectsHydrated] = useWelcomeEffects();
   const showEffects = welcomeEffectsHydrated && welcomeEffects;
 
   const isStreaming = status === 'streaming' || status === 'submitted';
@@ -153,7 +153,7 @@ export function MessageList({ messages, status, error, streamError, rateLimitErr
         <div className="relative flex-1 flex items-center justify-center">
           <div className={`${showEffects ? 'welcome-glow ' : ''}text-center text-text-muted w-full max-w-xl px-4`}>
             <div className="flex items-start justify-center gap-1 mb-2">
-              <Logo height={56} />
+              <Logo height={56} animated={showEffects} />
             </div>
             <p className="mb-6">Ask a question about Quilibrium to get started</p>
 

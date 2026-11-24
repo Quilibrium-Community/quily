@@ -1,8 +1,11 @@
 'use client';
 
+import styles from './Logo.module.css';
+
 interface LogoProps {
   className?: string;
   height?: number | string;
+  animated?: boolean;
 }
 
 /**
@@ -10,23 +13,43 @@ interface LogoProps {
  *
  * Colors:
  * - dot-accent: Uses the accent color (orange) from the theme
- * - text/body: Light theme #0B1D45, Dark theme #A1B5DD
+ * - text/body: Light theme #3B5998, Dark theme #8A9DC0
  * - eyes: Same as text/body for consistency
  *
  * The SVG uses CSS classes for theming,
  * making it responsive to light/dark mode automatically.
  */
-export function Logo({ className = '', height = 32 }: LogoProps) {
+export function Logo({ className = '', height = 32, animated = false }: LogoProps) {
   return (
     <svg
       viewBox="0 0 759 338"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      className={animated ? `${className} ${styles.animatedLogo}` : className}
       style={{ height, width: 'auto' }}
+      role="img"
       aria-label="Quily"
     >
       {/* Accent dot - uses theme accent color */}
+      {animated && (
+        <g
+          transform="translate(466.5 72.5) rotate(225)"
+          className="stroke-accent"
+          strokeDasharray="90 270"
+          strokeLinecap="round"
+          aria-hidden="true"
+        >
+          {[0, 280, 560].map((delay) => (
+            <circle
+              key={delay}
+              r="40"
+              pathLength="360"
+              className={styles.signalRing}
+              style={{ animationDelay: `${delay}ms` }}
+            />
+          ))}
+        </g>
+      )}
       <circle
         cx="466.5"
         cy="72.5"
@@ -51,8 +74,12 @@ export function Logo({ className = '', height = 32 }: LogoProps) {
           d="M129.541 14C193.352 14 245.081 65.7294 245.081 129.541C245.081 156.28 235.996 180.896 220.747 200.475C225.871 210.363 229.065 215.701 234.517 221.62C240.584 228.207 242.819 231.397 253.889 240.3C265.305 249.986 273.953 253.099 274.991 254.137C265.651 257.251 247.316 255.521 247.316 255.521C247.316 255.521 241.436 255.294 230.275 253.049C213.692 249.713 198.414 241.691 185.698 230.538C169.073 239.802 149.924 245.081 129.541 245.081C65.7293 245.081 14 193.352 14 129.541C14 65.7294 65.7293 14 129.541 14ZM129.887 56.8954C89.5747 56.8954 56.8954 89.5747 56.8954 129.887C56.8954 170.199 89.5747 202.878 129.887 202.878C170.199 202.878 202.878 170.199 202.878 129.887C202.878 89.5747 170.199 56.8954 129.887 56.8954Z"
         />
         {/* Eyes */}
-        <path d="M100.485 128.853C108.128 128.853 114.324 122.657 114.324 115.014C114.324 107.371 108.128 101.174 100.485 101.174C92.8414 101.174 86.6454 107.371 86.6454 115.014C86.6454 122.657 92.8414 128.853 100.485 128.853Z" />
-        <path d="M160.156 128.853C167.799 128.853 173.995 122.657 173.995 115.014C173.995 107.371 167.799 101.174 160.156 101.174C152.513 101.174 146.317 107.371 146.317 115.014C146.317 122.657 152.513 128.853 160.156 128.853Z" />
+        <g className={animated ? styles.gaze : undefined}>
+          <g className={animated ? styles.eyes : undefined}>
+            <path d="M100.485 128.853C108.128 128.853 114.324 122.657 114.324 115.014C114.324 107.371 108.128 101.174 100.485 101.174C92.8414 101.174 86.6454 107.371 86.6454 115.014C86.6454 122.657 92.8414 128.853 100.485 128.853Z" />
+            <path d="M160.156 128.853C167.799 128.853 173.995 122.657 173.995 115.014C173.995 107.371 167.799 101.174 160.156 101.174C152.513 101.174 146.317 107.371 146.317 115.014C146.317 122.657 152.513 128.853 160.156 128.853Z" />
+          </g>
+        </g>
       </g>
     </svg>
   );

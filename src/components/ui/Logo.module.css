@@ -1,0 +1,76 @@
+.signalRing {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animatedLogo {
+    overflow: visible;
+  }
+
+  .eyes,
+  .gaze,
+  .signalRing {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .eyes {
+    animation: blink 13s ease-in-out infinite;
+  }
+
+  .gaze {
+    animation: glance 13s ease-in-out infinite;
+  }
+
+  .signalRing {
+    animation: ripple 4.4s linear infinite;
+  }
+}
+
+@keyframes blink {
+  0%, 20%, 22.2%, 65%, 67.2%, 100% {
+    transform: scaleY(1);
+  }
+
+  20.9%, 65.9% {
+    transform: scaleY(0.15);
+  }
+}
+
+@keyframes glance {
+  0%, 9%, 28%, 51%, 75%, 100% {
+    transform: translate(0, 0);
+  }
+
+  12%, 24% {
+    transform: translate(17%, -18%);
+  }
+
+  55%, 70% {
+    transform: translate(-16%, 22%);
+  }
+}
+
+@keyframes ripple {
+  0% {
+    opacity: 0;
+    stroke-width: 5;
+    transform: scale(1);
+  }
+
+  7% {
+    opacity: 0.75;
+    stroke-width: 3.5;
+  }
+
+  32% {
+    opacity: 0.35;
+    stroke-width: 2;
+  }
+
+  52%, 100% {
+    opacity: 0;
+    stroke-width: 1.3;
+    transform: scale(3.25);
+  }
+}

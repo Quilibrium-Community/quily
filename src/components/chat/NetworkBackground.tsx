@@ -3,9 +3,6 @@
 import { useEffect, useRef } from 'react';
 import { useTheme } from 'next-themes';
 
-/** localStorage key for the Interactive/Minimal home screen setting (true = interactive). */
-export const WELCOME_EFFECTS_KEY = 'welcome-effects';
-
 const SPACING = 26; // px between grid dots
 const REACH = 120; // px around the pointer where dots link up
 const LINK_CHANCE = 0.5; // share of neighbor pairs that get a link, so it reads as a network, not a mesh
