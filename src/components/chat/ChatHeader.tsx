@@ -26,7 +26,7 @@ export function ChatHeader({ conversationId }: ChatHeaderProps) {
   const conversation = useConversationStore((s) =>
     s.conversations.find((c) => c.id === conversationId)
   );
-  const toggleStarred = useConversationStore((s) => s.toggleStarred);
+  const togglePinned = useConversationStore((s) => s.togglePinned);
   const updateTitle = useConversationStore((s) => s.updateTitle);
   const deleteConversation = useConversationStore((s) => s.deleteConversation);
   const setActive = useConversationStore((s) => s.setActive);
@@ -138,7 +138,7 @@ export function ChatHeader({ conversationId }: ChatHeaderProps) {
                 align="start"
               >
                 <DropdownMenu.Item
-                  onClick={() => toggleStarred(conversationId)}
+                  onClick={() => togglePinned(conversationId)}
                   className="
                     flex items-center gap-2 px-2 py-1.5
                     text-sm text-text-primary
@@ -149,10 +149,10 @@ export function ChatHeader({ conversationId }: ChatHeaderProps) {
                   "
                 >
                   <Icon
-                    name={conversation.starred ? 'lucide:star-off' : 'star'}
+                    name={conversation.pinned ? 'lucide:pin-off' : 'lucide:pin'}
                     size={16}
                   />
-                  {conversation.starred ? 'Unstar' : 'Star'}
+                  {conversation.pinned ? 'Unpin' : 'Pin'}
                 </DropdownMenu.Item>
 
                 <DropdownMenu.Item

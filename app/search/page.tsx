@@ -59,7 +59,7 @@ function formatRelativeTime(timestamp: number): string {
 interface SearchResultItemProps {
   conversation: Conversation;
   onSelect: () => void;
-  onToggleStarred: () => void;
+  onTogglePinned: () => void;
   onRename: (newTitle: string) => void;
   onDelete: () => void;
 }
@@ -67,7 +67,7 @@ interface SearchResultItemProps {
 function SearchResultItem({
   conversation,
   onSelect,
-  onToggleStarred,
+  onTogglePinned,
   onRename,
   onDelete,
 }: SearchResultItemProps) {
@@ -194,7 +194,7 @@ function SearchResultItem({
               <DropdownMenu.Item
                 onClick={(e) => {
                   e.stopPropagation();
-                  onToggleStarred();
+                  onTogglePinned();
                 }}
                 className="
                   flex items-center gap-2 px-2 py-1.5
@@ -206,10 +206,10 @@ function SearchResultItem({
                 "
               >
                 <Icon
-                  name={conversation.starred ? 'lucide:star-off' : 'star'}
+                  name={conversation.pinned ? 'lucide:pin-off' : 'lucide:pin'}
                   size={16}
                 />
-                {conversation.starred ? 'Unstar' : 'Star'}
+                {conversation.pinned ? 'Unpin' : 'Pin'}
               </DropdownMenu.Item>
 
               <DropdownMenu.Item
@@ -290,7 +290,7 @@ export default function SearchPage() {
   const hasHydrated = useConversationStore((s) => s._hasHydrated);
   const setActive = useConversationStore((s) => s.setActive);
   const deleteConversation = useConversationStore((s) => s.deleteConversation);
-  const toggleStarred = useConversationStore((s) => s.toggleStarred);
+  const togglePinned = useConversationStore((s) => s.togglePinned);
   const updateTitle = useConversationStore((s) => s.updateTitle);
 
   // Debounce search query
@@ -402,7 +402,7 @@ export default function SearchPage() {
             key={conv.id}
             conversation={conv}
             onSelect={() => handleSelect(conv.id)}
-            onToggleStarred={() => toggleStarred(conv.id)}
+            onTogglePinned={() => togglePinned(conv.id)}
             onRename={(newTitle) => updateTitle(conv.id, newTitle)}
             onDelete={() => deleteConversation(conv.id)}
           />

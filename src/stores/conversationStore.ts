@@ -45,7 +45,7 @@ export interface Conversation {
   messages: Message[];
   createdAt: number;
   updatedAt: number;
-  starred: boolean;
+  pinned: boolean;
 }
 
 /**
@@ -66,8 +66,9 @@ interface ConversationStore {
   setActive: (id: string | null) => void;
   updateMessages: (id: string, messages: Message[]) => void;
   updateTitle: (id: string, title: string) => void;
-  toggleStarred: (id: string) => void;
+  togglePinned: (id: string) => void;
   deleteConversation: (id: string) => void;
+  deleteConversations: (ids: readonly string[]) => void;
   getActiveConversation: () => Conversation | null;
 }
 
@@ -104,7 +105,7 @@ export const useConversationStore = create<ConversationStore>()(
           messages: [],
           createdAt: now,
           updatedAt: now,
-          starred: false,
+          pinned: false,
         };
 
         set((state) => {
@@ -169,18 +170,23 @@ export const useConversationStore = create<ConversationStore>()(
         }));
       },
 
-      toggleStarred: (id: string) => {
+      togglePinned: (id: string) => {
         set((state) => ({
           conversations: state.conversations.map((conv) =>
-            conv.id === id ? { ...conv, starred: !conv.starred } : conv
+            conv.id === id ? { ...conv, pinned: !conv.pinned } : conv
           ),
         }));
       },
 
       deleteConversation: (id: string) => {
+        get().deleteConversations([id]);
+      },
+
+      deleteConversations: (ids) => {
+        const selected = new Set(ids);
         set((state) => {
-          const conversations = state.conversations.filter((c) => c.id !== id);
-          if (state.activeId === id) {
+          const conversations = state.conversations.filter((c) => !selected.has(c.id));
+          if (state.activeId !== null && selected.has(state.activeId)) {
             return { conversations, activeId: null, chatRevision: state.chatRevision + 1 };
           }
           return { conversations };
@@ -202,11 +208,13 @@ export const useConversationStore = create<ConversationStore>()(
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // Migrate existing conversations: add starred field if missing
-          state.conversations = state.conversations.map((conv) => ({
-            ...conv,
-            starred: conv.starred ?? false,
-          }));
+          // Preserve pins from histories saved with the original starred field.
+          state.conversations = state.conversations.map(
+            ({ starred, ...conv }: Conversation & { starred?: boolean }) => ({
+              ...conv,
+              pinned: conv.pinned ?? starred ?? false,
+            })
+          );
           state._hasHydrated = true;
         }
       },
