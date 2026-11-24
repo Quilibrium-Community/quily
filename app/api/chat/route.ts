@@ -490,6 +490,21 @@ function parseToolCallFromText(text: string): { title: string; correction: strin
  * Sends sources before streaming LLM response.
  */
 export async function POST(request: Request) {
+  // Turnstile tokens are single-use. Once one is verified, EVERY response must
+  // carry the session cookie (commands like /help and early error replies too),
+  // otherwise the client resends the spent token and gets "Bot verification failed".
+  const verification = { setCookie: false };
+  const response = await handleChat(request, verification);
+  if (verification.setCookie) {
+    response.headers.append('Set-Cookie', buildTurnstileSessionCookie());
+  }
+  return response;
+}
+
+async function handleChat(
+  request: Request,
+  verification: { setCookie: boolean }
+): Promise<Response> {
   try {
     const body = await request.json();
 
@@ -524,9 +539,6 @@ export async function POST(request: Request) {
     const cookies = request.headers.get('cookie') || '';
     const hasVerifiedSession = cookies.includes('turnstile_verified=true');
 
-    // Track if we need to set the session cookie in the response
-    let shouldSetVerifiedCookie = false;
-
     if (isProduction && !isDebug && !hasVerifiedSession && !turnstileToken) {
       // No session and no token - need verification
       console.warn('[Chat] Missing Turnstile token and no verified session');
@@ -558,7 +570,7 @@ export async function POST(request: Request) {
       }
 
       // Token verified successfully - mark to set session cookie
-      shouldSetVerifiedCookie = true;
+      verification.setCookie = true;
       if (isDev) console.log('[Chat] Turnstile token verified, will set session cookie');
     } else if (hasVerifiedSession) {
       if (isDev) console.log('[Chat] Using existing verified session');
@@ -663,11 +675,7 @@ export async function POST(request: Request) {
         },
       });
 
-      const response = createUIMessageStreamResponse({ stream });
-      if (shouldSetVerifiedCookie) {
-        response.headers.append('Set-Cookie', buildTurnstileSessionCookie());
-      }
-      return response;
+      return createUIMessageStreamResponse({ stream });
     }
 
     if (commandResponse) {
@@ -1682,15 +1690,6 @@ export async function POST(request: Request) {
   });
 
     const response = createUIMessageStreamResponse({ stream });
-
-    // Set Turnstile verified session cookie (browser session duration - no maxAge)
-    // This allows subsequent requests to skip token verification
-    if (shouldSetVerifiedCookie) {
-      response.headers.append(
-        'Set-Cookie',
-        buildTurnstileSessionCookie()
-      );
-    }
 
     // If we refreshed Chutes token, update cookies on response
     if (provider === 'chutes' && refreshedTokenInfo?.expiresIn && chutesAccessToken) {

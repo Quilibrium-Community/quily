@@ -79,6 +79,13 @@ export default function HomePage() {
     setTurnstileToken(token);
   }, []);
 
+  // Tokens are single-use: once one is sent, ask the widget for a fresh one.
+  const [turnstileResetSignal, setTurnstileResetSignal] = useState(0);
+  const handleTurnstileTokenUsed = useCallback(() => {
+    setTurnstileToken(null);
+    setTurnstileResetSignal((n) => n + 1);
+  }, []);
+
   const handleTurnstileExpire = useCallback(() => {
     setTurnstileToken(null);
   }, []);
@@ -146,6 +153,7 @@ export default function HomePage() {
         <Turnstile
           onVerify={handleTurnstileVerify}
           onExpire={handleTurnstileExpire}
+          resetSignal={turnstileResetSignal}
         />
       )}
 
@@ -158,6 +166,7 @@ export default function HomePage() {
         model={activeModel}
         conversationId={activeId}
         turnstileToken={turnstileToken}
+        onTurnstileTokenUsed={handleTurnstileTokenUsed}
       />
     </div>
   );
