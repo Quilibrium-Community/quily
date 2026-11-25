@@ -87,8 +87,7 @@ export function formatForDiscord(
   // Convert simple markdown tables to code blocks
   formatted = convertTablesToCodeBlocks(formatted);
 
-  // Only show references the answer actually cites. Some models link directly
-  // to a retrieved document instead of using its numbered marker.
+  // Some models link directly to a retrieved document instead of citing its number.
   if (sources.length > 0) {
     const citedIndices = getCitedIndices(text);
 
@@ -102,7 +101,9 @@ export function formatForDiscord(
       citedSources = orderedSources.filter((s) => s.url && linkedUrls.delete(sourceDocumentUrl(s.url)));
     }
 
-    if (citedSources.length > 0) {
+    const showRelatedSources = citedSources.length === 0 && quality === 'high' && Boolean(text.trim());
+    const footerSources = showRelatedSources ? orderedSources : citedSources;
+    if (footerSources.length > 0) {
       // Confidence warning for low/none quality (only when citations exist)
       if (quality === 'low') {
         formatted += '\n\n-# ⚠️ I\'m not very confident about this one — double-check the sources';
@@ -111,9 +112,9 @@ export function formatForDiscord(
       }
 
       // Group sources by URL (or file path) to deduplicate
-      const grouped = new Map<string, { indices: number[]; source: typeof citedSources[0] }>();
-      for (const s of citedSources) {
-        const key = s.url || s.file;
+      const grouped = new Map<string, { indices: number[]; source: SourceReference }>();
+      for (const s of footerSources) {
+        const key = s.url ? (showRelatedSources ? sourceDocumentUrl(s.url) : s.url) : s.file;
         const existing = grouped.get(key);
         if (existing) {
           existing.indices.push(s.index);
@@ -122,25 +123,27 @@ export function formatForDiscord(
         }
       }
 
-      const sourceLines = Array.from(grouped.values()).map(({ indices, source: s }) => {
+      const groups = Array.from(grouped.values());
+      const sourceLines = (showRelatedSources ? groups.slice(0, 3) : groups).map(({ indices, source: s }) => {
         const label = getSourceTypeLabel(s);
         const isLivestream = s.doc_type === 'livestream_transcript';
         const url = s.url;
-        const idxStr = indices.join(',');
+        const prefix = showRelatedSources ? '•' : `• [${indices.join(',')}]`;
 
         if (isLivestream) {
           const date = s.published_date || '';
           return url
-            ? `• [${idxStr}] **${label}${date ? ` (${date})` : ''}:** <${url}>`
-            : `• [${idxStr}] **${label}${date ? ` (${date})` : ''}**`;
+            ? `${prefix} **${label}${date ? ` (${date})` : ''}:** <${url}>`
+            : `${prefix} **${label}${date ? ` (${date})` : ''}**`;
         }
 
         const title = s.title || s.file;
         return url
-          ? `• [${idxStr}] **${label}:** ${title} — <${url}>`
-          : `• [${idxStr}] **${label}:** ${title}`;
+          ? `${prefix} **${label}:** ${title} — <${url}>`
+          : `${prefix} **${label}:** ${title}`;
       });
-      formatted += `\n\n-# **Sources:**\n${sourceLines.map((l) => `-# ${l}`).join('\n')}`;
+      const heading = showRelatedSources ? 'Related sources' : 'Sources';
+      formatted += `\n\n-# **${heading}:**\n${sourceLines.map((l) => `-# ${l}`).join('\n')}`;
     }
   }
 
