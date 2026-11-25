@@ -41,6 +41,7 @@
     "Sign-in-with-Chutes",
     ".tmp-chutes",
     ".tmp-chutes2",
-    "bot"
+    "bot",
+    "scripts/eval/regression"
   ]
 }

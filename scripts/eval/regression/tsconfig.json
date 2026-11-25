@@ -1,0 +1,13 @@
+{
+  "//": "Checked separately: these files import the Discord bot, whose packages (discord.js) live in bot/node_modules. Run after installing them.",
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "plugins": []
+  },
+  "include": [
+    "./*.ts",
+    "../../../next-env.d.ts"
+  ],
+  "exclude": []
+}

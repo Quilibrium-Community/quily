@@ -80,3 +80,8 @@ jobs:
       - name: Build Discord bot
         working-directory: bot
         run: npm run build
+
+      # Excluded from the root typecheck (and so from Vercel's build) because
+      # these tests import the bot, whose packages only exist after the step above.
+      - name: Typecheck regression tests
+        run: yarn typecheck:regression
