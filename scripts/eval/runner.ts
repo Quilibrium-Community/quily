@@ -12,6 +12,7 @@
 import { parseStreamResponse } from './stream-parser.js';
 import { evaluateCriterion } from './judge.js';
 import { sendChatRequestDirect } from './direct-adapter.js';
+import { getCitedIndices, getSourceCitationIndex } from '../../src/lib/rag/utils';
 import type {
   TestCase,
   TestResult,
@@ -117,19 +118,18 @@ function tryDeterministicCheck(
   response: ParsedResponse
 ): CriterionResult | null {
   if (criterion.type === 'must_cite') {
-    const citationPattern = /\[(\d+)\]/g;
-    const citations = new Set<string>();
-    let match;
-    while ((match = citationPattern.exec(response.text)) !== null) {
-      citations.add(match[1]);
-    }
-    const count = citations.size;
+    const citations = getCitedIndices(response.text);
+    const retrieved = new Set(response.sources.map((source) => getSourceCitationIndex(source.sourceId)));
+    const invalid = [...citations].filter((index) => index < 1 || !retrieved.has(index));
+    const count = citations.size - invalid.length;
     const needed = criterion.min_citations;
     return {
       criterion,
-      passed: count >= needed,
-      score: Math.min(count / needed, 1),
-      reasoning: `Found ${count} unique citation(s) (need ${needed}): ${[...citations].map((n) => `[${n}]`).join(', ') || 'none'}`,
+      passed: invalid.length === 0 && count >= needed,
+      score: invalid.length ? 0 : Math.min(count / needed, 1),
+      reasoning: invalid.length
+        ? `Unknown citation(s): ${invalid.map((n) => `[${n}]`).join(', ')}`
+        : `Found ${count} resolved citation(s) (need ${needed})`,
     };
   }
 

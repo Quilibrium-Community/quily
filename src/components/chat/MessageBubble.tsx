@@ -3,7 +3,7 @@
 import { memo, useMemo } from 'react';
 import { parseFollowUpQuestions } from '@/src/lib/rag/followUpParser';
 import { TOOL_CALL_TEXT_REGEX as SHARED_TOOL_CALL_TEXT_REGEX } from '@/src/lib/rag/visibleText';
-import { getCitedIndices } from '@/src/lib/rag/utils';
+import { getCitedIndices, getSourceCitationIndex } from '@/src/lib/rag/utils';
 import { expandLinkPlaceholders, PARTIAL_PLACEHOLDER_REGEX } from '@/src/lib/rag/officialLinks';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { SourcesCitation } from './SourcesCitation';
@@ -94,7 +94,7 @@ function getTextContent(message: UIMessage, isStreaming: boolean = false): strin
 function getSources(
   message: UIMessage,
   responseText: string
-): Array<{ sourceId: string; url: string; title?: string }> {
+): Array<{ index: number; sourceId: string; url: string; title?: string }> {
   if (!message.parts) return [];
 
   // Show only sources whose citation index actually appears in the response text.
@@ -110,14 +110,13 @@ function getSources(
     )
     .map((part) => ({
       // sourceId is written as `source-${index}-${id}` in app/api/chat/route.ts
-      index: Number(part.sourceId.match(/^source-(\d+)-/)?.[1] ?? NaN),
+      index: getSourceCitationIndex(part.sourceId),
       sourceId: part.sourceId,
       url: part.url,
       title: part.title,
     }))
     .filter((s) => citedIndices.has(s.index))
-    .sort((a, b) => a.index - b.index)
-    .map(({ index: _index, ...source }) => source);
+    .sort((a, b) => a.index - b.index);
 }
 
 /**

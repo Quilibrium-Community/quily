@@ -16,3 +16,8 @@ export function getCitedIndices(text: string): Set<number> {
 export function hasCitations(text: string): boolean {
   return /\[\d+\]/.test(text);
 }
+/** Read the citation number from a streamed or persisted source ID. */
+export function getSourceCitationIndex(sourceId: string): number {
+  return Number(sourceId.match(/^source-(\d+)-\d+$/)?.[1] ?? NaN);
+}
+

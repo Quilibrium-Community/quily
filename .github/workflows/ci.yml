@@ -25,10 +25,14 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# PRs from forks run untrusted code: read-only token, and no secrets are used.
+permissions:
+  contents: read
+
 jobs:
   install-and-typecheck:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
@@ -55,3 +59,29 @@ jobs:
 
       - name: Typecheck
         run: yarn typecheck
+
+      # Offline: a scripted answer runs through the real web route and Discord
+      # handler, so source footers can't silently break (GitHub #169). No API
+      # keys, no network. Real model quality is `yarn test:live`, run by hand.
+      - name: Presentation regression tests
+        run: yarn test
+
+      # The Discord bot is excluded from the root typecheck and Vercel never
+      # builds it, so without these a bot-only break surfaced at VPS deploy.
+      # It imports src/lib, which is why it runs after the root install.
+      - name: Install Discord bot dependencies
+        working-directory: bot
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck Discord bot
+        working-directory: bot
+        run: npm run typecheck
+
+      - name: Build Discord bot
+        working-directory: bot
+        run: npm run build
+
+      # Excluded from the root typecheck (and so from Vercel's build) because
+      # these tests import the bot, whose packages only exist after the step above.
+      - name: Typecheck regression tests
+        run: yarn typecheck:regression

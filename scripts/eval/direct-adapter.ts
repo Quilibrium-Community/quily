@@ -210,6 +210,7 @@ export async function sendChatRequestDirect(
     return {
       text: result.text,
       sources,
+      ragQuality: prepared.ragQuality,
       followUpQuestions: [], // Parsed by evaluateCriterion if needed via must_have_follow_ups
       statusMessages: [],
       latencyMs: Date.now() - t0,
