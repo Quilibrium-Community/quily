@@ -101,9 +101,10 @@ export function formatForDiscord(
       citedSources = orderedSources.filter((s) => s.url && linkedUrls.delete(sourceDocumentUrl(s.url)));
     }
 
-    const showRelatedSources = citedSources.length === 0 && quality === 'high' && Boolean(text.trim());
-    const footerSources = showRelatedSources ? orderedSources : citedSources;
-    if (footerSources.length > 0) {
+    // Only list sources the answer actually uses. A "related sources" fallback
+    // for uncited replies was tried and removed: retrieval similarity matched
+    // words, not meaning, so jokes and "I don't know" replies got unrelated docs.
+    if (citedSources.length > 0) {
       // Confidence warning for low/none quality (only when citations exist)
       if (quality === 'low') {
         formatted += '\n\n-# ⚠️ I\'m not very confident about this one — double-check the sources';
@@ -113,8 +114,8 @@ export function formatForDiscord(
 
       // Group sources by URL (or file path) to deduplicate
       const grouped = new Map<string, { indices: number[]; source: SourceReference }>();
-      for (const s of footerSources) {
-        const key = s.url ? (showRelatedSources ? sourceDocumentUrl(s.url) : s.url) : s.file;
+      for (const s of citedSources) {
+        const key = s.url || s.file;
         const existing = grouped.get(key);
         if (existing) {
           existing.indices.push(s.index);
@@ -123,12 +124,11 @@ export function formatForDiscord(
         }
       }
 
-      const groups = Array.from(grouped.values());
-      const sourceLines = (showRelatedSources ? groups.slice(0, 3) : groups).map(({ indices, source: s }) => {
+      const sourceLines = Array.from(grouped.values()).map(({ indices, source: s }) => {
         const label = getSourceTypeLabel(s);
         const isLivestream = s.doc_type === 'livestream_transcript';
         const url = s.url;
-        const prefix = showRelatedSources ? '•' : `• [${indices.join(',')}]`;
+        const prefix = `• [${indices.join(',')}]`;
 
         if (isLivestream) {
           const date = s.published_date || '';
@@ -142,8 +142,7 @@ export function formatForDiscord(
           ? `${prefix} **${label}:** ${title} — <${url}>`
           : `${prefix} **${label}:** ${title}`;
       });
-      const heading = showRelatedSources ? 'Related sources' : 'Sources';
-      formatted += `\n\n-# **${heading}:**\n${sourceLines.map((l) => `-# ${l}`).join('\n')}`;
+      formatted += `\n\n-# **Sources:**\n${sourceLines.map((l) => `-# ${l}`).join('\n')}`;
     }
   }
 

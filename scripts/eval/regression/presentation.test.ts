@@ -31,12 +31,6 @@ function discordFooter(reply: string): string[] {
   return [...reply.matchAll(/^-# • (\[[\d,]+\])/gm)].map((match) => match[1]);
 }
 
-/** URLs under Discord's unnumbered 'Related sources' fallback footer. */
-function discordRelated(reply: string): string[] {
-  if (!/\*\*Related sources:\*\*/.test(reply)) return [];
-  return [...reply.matchAll(/^-# • .*<(https?:[^>]+)>$/gm)].map((match) => match[1]);
-}
-
 // ─── Web UI rendering (jsdom) ──────────────────────────────────────────────
 
 let dom: JSDOM;
@@ -116,18 +110,16 @@ test('strong retrieval, cited answer: both surfaces list exactly the cited sourc
   assert.match(discord, DISCLAIMER);
 });
 
-test('strong retrieval, uncited answer: Discord falls back to related sources (PR #170)', async () => {
+test('strong retrieval, uncited answer: no footer on either surface', async () => {
   const { web, discord } = await run(evidence.high, 'External developers cannot deploy a DEX on Quilibrium yet.');
 
-  // Discord groups chunks of one document, caps the list, and drops numbers.
-  assert.deepEqual(discordFooter(discord), []);
-  const related = discordRelated(discord);
-  assert.ok(related.length >= 1 && related.length <= 3, `Expected 1-3 related sources, got ${related.length}`);
-  assert.ok(related.some((url) => url.includes('document-203')), 'Deployment roadmap must be among related sources');
-
-  // Current web behavior: only cited sources render, so an uncited answer has
-  // no footer. Changing that is a product decision; this pins it down.
+  // Only cited sources are listed. Discord briefly showed a "Related sources"
+  // fallback here (PR #170); it attached unrelated docs to jokes and
+  // "I don't know" replies, so it was removed.
   assert.deepEqual((await webFooter(web)).labels, []);
+  assert.deepEqual(discordFooter(discord), []);
+  assert.doesNotMatch(discord, /sources:/i);
+  assert.match(discord, DISCLAIMER);
 });
 
 test('weak retrieval, cited answer: footer plus low-confidence warning on both surfaces', async () => {
@@ -162,7 +154,6 @@ test('citation numbers with no matching retrieved source never produce a footer 
   const { web, discord } = await run(evidence.high, 'External developers cannot deploy a DEX today [9].');
 
   assert.deepEqual((await webFooter(web)).labels, []);
-  // Discord treats an all-invalid answer as uncited: related sources, no numbers.
   assert.deepEqual(discordFooter(discord), [], 'Phantom [9] must not get a numbered footer');
-  assert.ok(discordRelated(discord).length > 0, 'Strong retrieval should still show related sources');
+  assert.doesNotMatch(discord, /sources:/i, 'Phantom [9] must not produce any footer');
 });
