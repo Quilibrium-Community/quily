@@ -12,6 +12,7 @@ This is the main index for all documentation, bug reports, and task management.
 - [Cloudflare Workers AI Reranker](docs/cloudflare-workers-ai-reranker.md)
 - [Daily General Channel Recap](docs/daily-general-recap.md)
 - [Discord Bot Architecture](docs/discord-bot-architecture.md)
+- [Discord Knowledge Curation](docs/discord-knowledge-curation.md)
 - [Knowledge Update Pipeline — Processing GitHub Issues into Docs](docs/knowledge-update-pipeline.md)
 - [Model-Specific Instruction Handling](docs/model-specific-instruction-handling.md)
 - [Production Debug Pipeline](docs/production-debug-pipeline.md)
@@ -25,7 +26,7 @@ This is the main index for all documentation, bug reports, and task management.
 - [Message text size follows the device](docs/features/message-text-size.md)
 - [RAG Confidence Indicator](docs/features/rag-confidence-indicator.md)
 
-## 🐛📋 Issues
+## 🐛📋 Tickets
 
 🐛 bug &nbsp;&nbsp; 📋 task
 
@@ -41,6 +42,7 @@ This is the main index for all documentation, bug reports, and task management.
 - 📋 [Harden sync-docs against silent local doc loss](tickets/2026-07-29-harden-sync-docs-drift-detection.md)
 - 📋 [Two-axis prompt rework: stop refusing adjacent questions](tickets/2026-07-29-quily-two-axis-prompt-rework.md)
 - 📋 [Provocation handling: replace the one-line jailbreak rule](tickets/2026-08-22-provocation-handling-rework.md)
+- 📋 [Curate Discord knowledge from Cassie and Black Swan](tickets/2026-11-23-prd-discord-knowledge-curation.md)
 - 📋 [Add Self-Review / Fact Check Button to Bot Replies](tickets/self-review-fact-check-button.md)
 - 📋 [Add Web Fetching Capability to Chatbot](tickets/web-fetching-capability.md)
 - 📋 [Cross-Reference Verification Against Source Docs](tickets/cross-reference-verification.md)
@@ -61,8 +63,9 @@ This is the main index for all documentation, bug reports, and task management.
 - 🐛 [Bot invents Quorum native app install links](tickets/.open/2026-11-22-quorum-install-link-hallucination.md)
 - 📋 [Keep the knowledge base current with the v2.1.0.25 post-quantum migration](tickets/.open/2026-08-23-stale-crypto-docs-after-pqc-migration.md)
 - 📋 [Investigate why Quily started emitting drafting text in answers](tickets/.open/2026-11-22-investigate-upstream-drafting-leaks.md)
+- 📋 [Extract more context from the reviewed Discord archive](tickets/.open/2026-11-23-discord-editorial-second-pass.md)
 
-## ✅ Completed Issues
+## ✅ Completed Tickets
 
 - 🐛 [RAG retrieval surfaces outdated sharding/milestone info despite recency improvements](tickets/.done/2026-03-21-rag-outdated-sharding-sources.md)
 - 🐛 [Broad-query retrieval collapse](tickets/.done/2026-08-11-broad-query-retrieval-collapse.md)
@@ -100,6 +103,7 @@ This is the main index for all documentation, bug reports, and task management.
 - 📋 [Tighten "Open GitHub Issue" Trigger in Bot System Prompt](tickets/.done/2026-05-31-tighten-issue-reporting-trigger.md)
 - 📋 [Design Spec: Bug Reports Daily Digest](tickets/.done/2026-06-07-bug-reports-digest.md)
 - 📋 [Ecosystem Projects → RAG Sync](tickets/.done/2026-06-11-ecosystem-projects-rag-sync.md)
+- 📋 [Chat response regression checks](tickets/.done/2026-11-25-chat-response-regression-checks.md)
 - 📋 [Add Conversational Context to RAG Retrieval](tickets/.done/rag-conversational-context-memory.md)
 - 📋 [Add External Chutes API Key Option](tickets/.done/external-chutes-api-key-option.md)
 - 📋 [Convert Settings Modal to Standalone Settings Page](tickets/.done/convert-settings-modal-to-page.md)
@@ -119,7 +123,7 @@ This is the main index for all documentation, bug reports, and task management.
 - 📋 [User Profile Customization (Username)](tickets/.done/user-profile-customization.md)
 - [Agent VPS deployment command rejected before execution](tickets/.done/2026-10-17-agent-vps-deployment-command-rejected.md)
 
-## 🗃️ Archived Issues
+## 🗃️ Archived Tickets
 
 - 📋 [Improve Humor and Sarcasm Handling in Bot Responses](tickets/.archived/2026-04-13-improve-humor-sarcasm-handling.md)
 - 📋 [Implement Jina Reranker as Free Alternative to Cohere](tickets/.archived/implement-jina-reranker.md)
@@ -161,4 +165,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-11-22 12:04:23
+**Last Updated**: 2026-11-25 12:11:56
