@@ -1,11 +1,7 @@
 /**
  * AI SDK v6 UI Message Stream parser.
  *
- * The chat API returns a streaming response where each line follows:
- *   PREFIX:JSON_PAYLOAD
- *
- * Prefixes: 0 (text events), e (data/source events), d (error), etc.
- * We extract text deltas, source URLs, follow-up questions, and status messages.
+ * The chat API sends JSON chunks in SSE data lines.
  */
 
 import type { ParsedResponse, SourceEntry } from './types.js';
@@ -21,6 +17,8 @@ export async function parseStreamResponse(
   const sources: SourceEntry[] = [];
   const followUpQuestions: string[] = [];
   const statusMessages: string[] = [];
+  let ragQuality: ParsedResponse['ragQuality'];
+  let error: string | undefined;
 
   const body = response.body;
   if (!body) {
@@ -38,6 +36,43 @@ export async function parseStreamResponse(
   const decoder = new TextDecoder();
   let buffer = '';
 
+  function consumeLine(line: string) {
+    if (!line.startsWith('data:')) return;
+    const json = line.slice(5).trim();
+    if (!json || json === '[DONE]') return;
+    let payload;
+    try {
+      payload = JSON.parse(json);
+    } catch {
+      // Keep reading so later text and sources survive, but surface the problem.
+      error ??= `Malformed stream line: ${json.slice(0, 80)}`;
+      return;
+    }
+    switch (payload.type) {
+      case 'text-delta':
+        textParts.push(payload.delta);
+        break;
+      case 'source-url':
+        sources.push(parseSourceEntry(payload));
+        break;
+      case 'data-follow-up':
+        if (Array.isArray(payload.data)) followUpQuestions.push(...payload.data);
+        break;
+      case 'data-status':
+        if (payload.data?.label) statusMessages.push(payload.data.label);
+        break;
+      case 'data-rag-quality':
+        ragQuality = payload.data?.quality;
+        break;
+      case 'data-error':
+        error ??= payload.data?.message || 'Chat stream reported an error';
+        break;
+      case 'error':
+        error ??= payload.errorText || 'Chat stream reported an error';
+        break;
+    }
+  }
+
   try {
     while (true) {
       const { done, value } = await reader.read();
@@ -47,63 +82,11 @@ export async function parseStreamResponse(
       const lines = buffer.split('\n');
       buffer = lines.pop() || '';
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
-
-        // Parse "PREFIX:JSON_PAYLOAD" format
-        const colonIndex = trimmed.indexOf(':');
-        if (colonIndex < 0) continue;
-
-        const jsonStr = trimmed.slice(colonIndex + 1);
-        try {
-          const payload = JSON.parse(jsonStr);
-
-          switch (payload.type) {
-            case 'text-delta':
-              if (payload.delta) {
-                textParts.push(payload.delta);
-              }
-              break;
-
-            case 'source-url':
-              sources.push(parseSourceEntry(payload));
-              break;
-
-            case 'data-follow-up':
-              if (Array.isArray(payload.data)) {
-                followUpQuestions.push(...payload.data);
-              }
-              break;
-
-            case 'data-status':
-              if (payload.data?.label) {
-                statusMessages.push(payload.data.label);
-              }
-              break;
-
-            // text-start, text-end are structural — skip
-          }
-        } catch {
-          // Not valid JSON or unrecognized format — skip
-        }
-      }
+      for (const line of lines) consumeLine(line);
     }
-
-    // Process any remaining buffer
-    if (buffer.trim()) {
-      const colonIndex = buffer.indexOf(':');
-      if (colonIndex >= 0) {
-        try {
-          const payload = JSON.parse(buffer.slice(colonIndex + 1));
-          if (payload.type === 'text-delta' && payload.delta) {
-            textParts.push(payload.delta);
-          }
-        } catch {
-          // ignore
-        }
-      }
-    }
+    consumeLine(buffer + decoder.decode());
+  } catch (cause) {
+    error ??= cause instanceof Error ? cause.message : String(cause);
   } finally {
     reader.releaseLock();
   }
@@ -113,6 +96,8 @@ export async function parseStreamResponse(
     sources,
     followUpQuestions,
     statusMessages,
+    ragQuality,
+    error,
     latencyMs: Date.now() - startTime,
   };
 }

@@ -55,3 +55,9 @@ jobs:
 
       - name: Typecheck
         run: yarn typecheck
+
+      # Offline: a scripted answer runs through the real web route and Discord
+      # handler, so source footers can't silently break (GitHub #169). No API
+      # keys, no network. Real model quality is `yarn test:live`, run by hand.
+      - name: Presentation regression tests
+        run: yarn test

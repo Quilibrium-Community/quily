@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 interface Source {
+  index: number;
   sourceId: string;
   url: string | null;
   title?: string;
@@ -96,13 +97,13 @@ function getSourceLabel(
  */
 function groupSourcesByUrl(sources: Source[]): { indices: number[]; source: Source }[] {
   const grouped = new Map<string, { indices: number[]; source: Source }>();
-  sources.forEach((source, index) => {
+  sources.forEach((source) => {
     const key = source.url || source.sourceId;
     const existing = grouped.get(key);
     if (existing) {
-      existing.indices.push(index + 1);
+      existing.indices.push(source.index);
     } else {
-      grouped.set(key, { indices: [index + 1], source });
+      grouped.set(key, { indices: [source.index], source });
     }
   });
   return Array.from(grouped.values());

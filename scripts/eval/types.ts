@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod';
+import type { RelevanceQuality } from '../../src/lib/rag/prompt';
 
 // ─── Test Suite Schemas (YAML input validation) ─────────────────────────────
 
@@ -144,6 +145,7 @@ export interface ParsedResponse {
   followUpQuestions: string[];
   statusMessages: string[];
   latencyMs: number;
+  ragQuality?: RelevanceQuality;
   error?: string;
 }
 

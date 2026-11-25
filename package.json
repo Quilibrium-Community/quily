@@ -54,7 +54,9 @@
     "sync-monorepo": "tsx scripts/sync-monorepo.ts",
     "sync-ecosystem": "tsx scripts/sync-ecosystem.ts",
     "retrieval:check": "tsx scripts/retrieval-regression.ts",
-    "doc:lint": "tsx scripts/doc-lint.ts"
+    "doc:lint": "tsx scripts/doc-lint.ts",
+    "test": "node --import tsx --test --test-force-exit scripts/eval/regression/presentation.test.ts bot/src/formatter.test.ts",
+    "test:live": "tsx scripts/eval/regression/live.ts"
   },
   "keywords": [],
   "author": "",
@@ -94,10 +96,12 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/jsdom": "^21",
     "@types/node": "^25.0.10",
     "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "jsdom": "^26",
     "png-to-ico": "^3.0.1",
     "tailwindcss": "^4.1.18",
     "tsx": "^4.21.0",
