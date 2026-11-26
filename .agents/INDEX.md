@@ -5,6 +5,7 @@ This is the main index for all documentation, bug reports, and task management.
 ## 📖 Documentation
 
 - [Daily Recap Posting](docs/2026-03-24-daily-recap-posting.md)
+- [Answer accuracy](docs/answer-accuracy.md)
 - [Automated Documentation Sync Pipeline](docs/automated-docs-sync-pipeline.md)
 - [Automated Versioning and Release System](docs/versioning-release-system.md)
 - [Chat latency pipeline](docs/chat-latency-pipeline.md)
@@ -43,6 +44,7 @@ This is the main index for all documentation, bug reports, and task management.
 - 📋 [Two-axis prompt rework: stop refusing adjacent questions](tickets/2026-07-29-quily-two-axis-prompt-rework.md)
 - 📋 [Provocation handling: replace the one-line jailbreak rule](tickets/2026-08-22-provocation-handling-rework.md)
 - 📋 [Curate Discord knowledge from Cassie and Black Swan](tickets/2026-11-23-prd-discord-knowledge-curation.md)
+- 📋 [Fix wrong answers on follow-up questions and confident gap-filling](tickets/2026-11-26-follow-up-retrieval-and-grounding.md)
 - 📋 [Add Self-Review / Fact Check Button to Bot Replies](tickets/self-review-fact-check-button.md)
 - 📋 [Add Web Fetching Capability to Chatbot](tickets/web-fetching-capability.md)
 - 📋 [Cross-Reference Verification Against Source Docs](tickets/cross-reference-verification.md)
@@ -165,4 +167,4 @@ This is the main index for all documentation, bug reports, and task management.
 
 ---
 
-**Last Updated**: 2026-11-25 12:11:56
+**Last Updated**: 2026-11-26 16:11:46

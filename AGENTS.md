@@ -27,9 +27,9 @@ yarn ingest count                    # Count chunks in database
 ### RAG Pipeline Flow
 
 ```
-User Query → Embed (text-embedding-3-small via OpenRouter)
-           → Vector Search (Supabase pgvector RPC: match_document_chunks)
-           → Rerank (Cohere rerank-v3.5, optional)
+User Query → Embed (baai/bge-m3 via OpenRouter)
+           → Vector Search (Supabase pgvector RPC: match_document_chunks_chutes)
+           → Rerank (broad queries only: Cohere rerank-v3.5 if configured, else Cloudflare bge-reranker-base)
            → Build Context + System Prompt
            → Stream Response (OpenRouter LLM)
            → Return Sources as source-url parts
@@ -39,7 +39,7 @@ User Query → Embed (text-embedding-3-small via OpenRouter)
 
 - **API Route** (`app/api/chat/route.ts`): Streaming endpoint using AI SDK's `createUIMessageStream`. Validates requests, retrieves RAG context, streams LLM response with sources.
 
-- **RAG Retriever** (`src/lib/rag/retriever.ts`): Two-stage retrieval - vector search (top 15) followed by optional Cohere reranking (top 5).
+- **RAG Retriever** (`src/lib/rag/retriever.ts`): vector search (top 15, or 25 with product fan-out for broad queries). Narrow questions keep all 15 candidates, so reranking is skipped. Broad questions are reranked (Cohere if configured, else Cloudflare) down to 20.
 
 - **RAG Prompt** (`src/lib/rag/prompt.ts`): Builds numbered context blocks and system prompt with citation instructions. Generates source URLs for docs.quilibrium.com.
 
@@ -61,6 +61,10 @@ SUPABASE_SERVICE_ROLE_KEY   # Service role key (server-side only)
 COHERE_API_KEY              # Optional reranking
 OPENROUTER_API_KEY          # For ingestion; users can use OpenRouter or Chutes for chat
 ```
+
+## Answer Accuracy
+
+Improving answer accuracy is ongoing work. Before changing the answer model, retrieval, prompts or ingestion, read `.agents/docs/answer-accuracy.md`. It covers the known failure causes, the experiments that did not work, the before/after benchmarks to run, and the project rules: official docs are read-only, answer models must be open-weight, and price per answer matters.
 
 ## Code Conventions
 
