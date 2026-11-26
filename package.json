@@ -55,7 +55,7 @@
     "sync-ecosystem": "tsx scripts/sync-ecosystem.ts",
     "retrieval:check": "tsx scripts/retrieval-regression.ts",
     "doc:lint": "tsx scripts/doc-lint.ts",
-    "test": "node --import tsx --test --test-force-exit scripts/eval/regression/presentation.test.ts bot/src/formatter.test.ts",
+    "test": "node --import tsx --test --test-force-exit scripts/eval/regression/presentation.test.ts bot/src/formatter.test.ts scripts/ingest/mdx.test.ts",
     "test:live": "tsx scripts/eval/regression/live.ts",
     "typecheck:regression": "tsc --noEmit -p scripts/eval/regression"
   },
