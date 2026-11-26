@@ -1,4 +1,4 @@
-import { generateText } from 'ai';
+import { APICallError, generateText } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { createChutes } from '@chutes-ai/ai-sdk-provider';
 import { retrieveWithReranking } from './retriever';
@@ -8,7 +8,8 @@ import { normalizeQuery } from './queryNormalizer';
 import { parseFollowUpQuestions } from './followUpParser';
 import { ANSWER_ONLY_INSTRUCTION, hasDraftingLeak, stripIssueMemoryNotes } from './visibleText';
 import { ragTools } from './tools';
-import { withZdr } from '../openrouter-routing';
+import { DEFAULT_OPENROUTER_CHAT_MODEL } from '../openrouter';
+import { getOpenRouterChatRouting } from '../openrouter-routing';
 import { reasoningSettings } from '../openrouter-reasoning';
 import type { RetrievedChunk, RetrievalOptions, SourceReference } from './types';
 import type { RelevanceQuality } from './prompt';
@@ -113,18 +114,7 @@ export async function prepareQuery(options: PrepareQueryOptions): Promise<Prepar
   };
 }
 
-// Default models per provider.
-// The `~` prefix is OpenRouter's alias namespace: it always resolves to the newest
-// revision in the DeepSeek V4 Flash family. See src/lib/openrouter.ts for why we
-// accept an auto-updating primary and what compensates for it.
-const OPENROUTER_DEFAULT_MODEL = '~deepseek/deepseek-v4-flash-latest';
 const CHUTES_DEFAULT_MODEL = 'chutes-deepseek-ai-deepseek-v3-2-tee';
-
-// OpenRouter provider pinning for the primary model: avoid slow/expensive
-// providers by preferring fast fp8/fp4 backends. allow_fallbacks=false makes
-// the request fail fast when pinned providers are unavailable, so the caller's
-// timeout handler triggers quickly instead of stalling on a slow fallback.
-export const OPENROUTER_PRIMARY_PROVIDER_ORDER = ['SiliconFlow', 'DeepInfra'];
 
 // Output budget. Whenever reasoning is ON this cap is SHARED with the thinking
 // phase, and deepseek-v4-flash exhausts it before writing a single visible
@@ -173,7 +163,7 @@ export async function processQuery(
   console.log(`[processQuery] prepareQuery took ${Date.now() - t0}ms`);
 
   const llmProvider = options.llmProvider || 'openrouter';
-  const defaultModel = llmProvider === 'chutes' ? CHUTES_DEFAULT_MODEL : OPENROUTER_DEFAULT_MODEL;
+  const defaultModel = llmProvider === 'chutes' ? CHUTES_DEFAULT_MODEL : DEFAULT_OPENROUTER_CHAT_MODEL;
   const primaryModel = options.model || process.env.BOT_MODEL || defaultModel;
 
   // All queries go to the LLM — the personality and system prompt handle
@@ -187,6 +177,7 @@ export async function processQuery(
   ];
 
   const modelsToTry = [...new Set([primaryModel, ...getFallbackModels(llmProvider)])];
+  const providerRouting = llmProvider === 'openrouter' ? getOpenRouterChatRouting() : undefined;
   let lastError: unknown;
   let lastEmpty: ProcessQueryResult | undefined;
 
@@ -203,18 +194,8 @@ export async function processQuery(
       : modelTimeout ?? options.abortSignal;
     try {
       const modelId = llmProvider === 'chutes' ? getChuteUrl(model) : model;
-      const isPrimaryOpenRouter = llmProvider !== 'chutes' && model === primaryModel;
       // Both providers return AI SDK-compatible models; Chutes types include
       // Promise<LanguageModelV2> which confuses the union — cast is safe.
-      // Merge the env-driven ZDR flag into whatever routing this model needs.
-      // Primary model pins fast providers; others use default routing. `withZdr`
-      // returns undefined when ZDR is off and there's no base routing, so we can
-      // pass model settings without an empty `provider: {}`.
-      const providerRouting = withZdr(
-        isPrimaryOpenRouter
-          ? { order: OPENROUTER_PRIMARY_PROVIDER_ORDER, allow_fallbacks: false }
-          : undefined
-      );
       // `reasoning` is passed as a raw setting: the SDK type wants max_tokens/effort
       // even for the pure-disable case, which the OpenRouter API does not.
       const openrouterSettings: Record<string, unknown> = {};
@@ -308,7 +289,8 @@ export async function processQuery(
       // A cancelled request must not cascade into three more paid attempts.
       if (options.abortSignal?.aborted) throw error;
       lastError = error;
-      const failure = modelTimeout?.aborted ? 'timed out' : 'failed';
+      const status = APICallError.isInstance(error) ? error.statusCode : undefined;
+      const failure = modelTimeout?.aborted ? 'timed out' : status ? `failed (HTTP ${status})` : 'failed';
       console.error(`Model ${model} ${failure}, ${hasFallback ? 'trying next fallback...' : 'no more fallbacks'}`);
     }
   }

@@ -15,9 +15,9 @@ import { parseFollowUpQuestions } from '@/src/lib/rag/followUpParser';
 import { ANSWER_ONLY_INSTRUCTION, createDraftingStreamGate, hasDraftingLeak, visibleAnswerText, leaksToolCallText, TOOL_CALL_TEXT_REGEX, MIN_USABLE_ANSWER_CHARS } from '@/src/lib/rag/visibleText';
 import { normalizeQuery } from '@/src/lib/rag/queryNormalizer';
 import { getOAuthConfig, refreshTokens, checkChutesBalance } from '@/src/lib/chutesAuth';
-import { validateApiKeyWithCredits } from '@/src/lib/openrouter';
+import { DEFAULT_OPENROUTER_CHAT_MODEL, validateApiKeyWithCredits } from '@/src/lib/openrouter';
 import { getProvider } from '@/src/lib/providers';
-import { withZdr } from '@/src/lib/openrouter-routing';
+import { getOpenRouterChatRouting } from '@/src/lib/openrouter-routing';
 import { reasoningSettings } from '@/src/lib/openrouter-reasoning';
 import { getCuratedModels, getChuteUrl } from '@/src/lib/chutes/chuteDiscovery';
 import {
@@ -42,7 +42,7 @@ console.log('[Chat route] Config:', {
 /** Default model for free mode when no model is specified by client. */
 function getDefaultFreeModel(): string {
   if (process.env.NEXT_PUBLIC_FREE_MODE !== 'true') return '';
-  return process.env.FREE_MODE_DEFAULT_MODEL || '~deepseek/deepseek-v4-flash-latest';
+  return process.env.FREE_MODE_DEFAULT_MODEL || DEFAULT_OPENROUTER_CHAT_MODEL;
 }
 
 /**
@@ -602,7 +602,7 @@ async function handleChat(
       body.model ||
       (provider === 'chutes'
         ? process.env.CHUTES_DEFAULT_MODEL || ''
-        : getDefaultFreeModel() || '~deepseek/deepseek-v4-flash-latest');
+        : getDefaultFreeModel() || DEFAULT_OPENROUTER_CHAT_MODEL);
 
     const isFreeMode = process.env.NEXT_PUBLIC_FREE_MODE === 'true';
 
@@ -1270,43 +1270,7 @@ async function handleChat(
         } // end normal (non-correction) flow
       } else {
         // OpenRouter and other providers: use standard toUIMessageStream()
-        // Provider routing for latency: OpenRouter's default load-balancing can land on a slow
-        // provider (measured TTFT p50 ~4.4s, worst run ~11s). `sort: 'latency'` cuts p50 to ~1.5s
-        // and removes the slow tail. The quantization allowlist excludes fp4 (DeepInfra/AtlasCloud
-        // serve deepseek-v4-flash at fp4 = degraded quality) so the latency sort can't trade
-        // quality for speed. Toggle: OPENROUTER_SORT="" disables the sort via env.
-        const providerSort = process.env.OPENROUTER_SORT ?? 'latency';
-        // Tail-latency cap (seconds, per-percentile): `sort:'latency'` orders by MEDIAN and
-        // does NOT protect against a provider that accepts then stalls (OpenRouter only
-        // deprioritizes providers that ERROR in the last 30s, not slow ones). Kaya measured
-        // SiliconFlow TTFT up to 222s when pinned, so a p90 cap is pure upside. Toggle:
-        // OPENROUTER_MAX_LATENCY_P90="" disables it; a number overrides the 4s default.
-        const maxLatencyEnv = process.env.OPENROUTER_MAX_LATENCY_P90 ?? '4';
-        const maxLatencyP90 = maxLatencyEnv.trim() === '' ? undefined : Number(maxLatencyEnv);
-        // Chronic-trap providers to exclude outright (belt-and-suspenders over the p90 cap).
-        // Empty by default — the trap set must be RE-MEASURED for Quily's ZDR/quant filters
-        // (its allowlist includes int8, unlike Kaya's) before pinning a name here.
-        // Set e.g. OPENROUTER_IGNORE="siliconflow" once measured.
-        const ignoreProviders = (process.env.OPENROUTER_IGNORE ?? '')
-          .split(',').map((s) => s.trim()).filter(Boolean);
-        // Build OpenRouter routing (latency sort + quantization allowlist + tail cap + ignore)
-        // and merge the env-driven ZDR flag on top. `withZdr` adds `zdr: true` when
-        // OPENROUTER_ZDR=true, else returns the base unchanged.
-        const openrouterRouting =
-          provider === 'openrouter'
-            ? withZdr(
-                providerSort
-                  ? {
-                      sort: providerSort as 'latency',
-                      quantizations: ['fp8', 'fp16', 'bf16', 'fp32', 'int8', 'unknown'],
-                      ...(maxLatencyP90 !== undefined && Number.isFinite(maxLatencyP90)
-                        ? { preferred_max_latency: { p90: maxLatencyP90 } }
-                        : {}),
-                      ...(ignoreProviders.length > 0 ? { ignore: ignoreProviders } : {}),
-                    }
-                  : undefined
-              )
-            : undefined;
+        const openrouterRouting = provider === 'openrouter' ? getOpenRouterChatRouting() : undefined;
         // Reasoning toggle. deepseek-v4-flash emits `delta.reasoning` before `delta.content`,
         // so with reasoning ON the user stares at a blank screen for the whole reasoning phase
         // (measured 3-4s of that gap in the A/B, see .agents/reports/*-reasoning-ab.md). Quily is

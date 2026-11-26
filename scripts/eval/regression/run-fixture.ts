@@ -10,6 +10,7 @@ interface Generation {
   requestedModel: string;
   servedModel: string;
   promptSha256: string;
+  routing: unknown;
 }
 
 function configureEnvironment(apiKey: string, model: string) {
@@ -164,8 +165,9 @@ export async function runFixture(
         requestedModel: payload.model,
         servedModel,
         promptSha256: createHash('sha256').update(systemPrompt).digest('hex'),
+        routing: payload.provider,
       }),
-      () => ({ requestedModel: payload.model, servedModel: '', promptSha256: '' }),
+      () => ({ requestedModel: payload.model, servedModel: '', promptSha256: '', routing: payload.provider }),
     ));
     return response;
   };

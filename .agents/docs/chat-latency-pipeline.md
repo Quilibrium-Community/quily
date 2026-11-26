@@ -50,19 +50,26 @@ The LLM call dominates. Measured medians (local, 2026-07-10):
 
 ### 1. LLM provider routing by latency (the biggest win)
 
-The web streaming path ([app/api/chat/route.ts](../../app/api/chat/route.ts), OpenRouter branch) pins
-`provider: { sort: 'latency', quantizations: [...] }`. Default OpenRouter load-balancing measured a
-TTFT p50 of ~4.4s with a worst run of ~11s; `sort: 'latency'` cuts p50 to ~0.7s and removes the tail.
+Web and Discord use the same [OpenRouter routing policy](../../src/lib/openrouter-routing.ts).
+OpenRouter ranks providers for the requested model by latency and can fail over between eligible
+providers. In the original web measurements, default routing had a median time to first token of
+~4.4s and a worst run of ~11s. Latency sorting brought the median down to ~0.7s.
 
 The quantization allowlist (`fp8, fp16, bf16, fp32, int8, unknown`) **excludes fp4** on purpose:
 DeepInfra and AtlasCloud serve `deepseek-v4-flash` at fp4 (faster but degraded quality), and a naked
 latency sort could route there. The filter keeps the speed without the quality trade.
 
-Toggle: `OPENROUTER_SORT=""` disables the sort via env.
+Set the same `OPENROUTER_SORT`, `OPENROUTER_MAX_LATENCY_P90`, `OPENROUTER_IGNORE`,
+`OPENROUTER_ZDR` and `OPENROUTER_REASONING` values on both deployments. A blank
+`OPENROUTER_SORT` uses OpenRouter's default routing with the configured ZDR policy.
+The p90 setting is a provider preference for time to first token. Discord also gives each
+non-final model half the remaining time before moving to the next model.
 
-> Note: the Discord/bot path ([src/lib/rag/service.ts](../../src/lib/rag/service.ts)) already pinned
-> providers via `OPENROUTER_PRIMARY_PROVIDER_ORDER` + `allow_fallbacks: false`. This guardrail closes
-> the same gap on the web path, which is the one users actually hit.
+Discord originally pinned SiliconFlow and DeepInfra after DeepSeek V3.2 requests took
+78–142 seconds against a 60-second deadline. Neither provider was listed as ZDR-eligible for
+DeepSeek V4 Flash 0731 or V4.1 Flash 1017 when checked on November 26, 2026.
+For production model parity, clear any inherited PM2 `BOT_MODEL` override or match it to the
+web app's `FREE_MODE_DEFAULT_MODEL`. Both paths default to the V4 Flash family alias.
 
 ### 2. Embedding provider routing (removes the slow-provider tail)
 
@@ -115,4 +122,4 @@ regardless of provider.
    `GET openrouter.ai/api/v1/models/<slug>/endpoints` and the effect of `OPENROUTER_SORT`.
 4. Everything low in logs but users perceive slowness → client-side rendering/streaming, not this pipeline.
 
-*Last updated: 2026-07-10*
+*Last updated: 2026-11-26*

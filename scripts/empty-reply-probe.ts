@@ -28,26 +28,25 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import {
   prepareQuery,
   processQuery,
-  OPENROUTER_PRIMARY_PROVIDER_ORDER,
   MAX_OUTPUT_TOKENS,
 } from '../src/lib/rag/service';
 import { parseFollowUpQuestions } from '../src/lib/rag/followUpParser';
 import { ragTools } from '../src/lib/rag/tools';
-import { withZdr } from '../src/lib/openrouter-routing';
+import { DEFAULT_OPENROUTER_CHAT_MODEL } from '../src/lib/openrouter';
+import { getOpenRouterChatRouting } from '../src/lib/openrouter-routing';
 
 loadEnv({ path: '.env.local' }); // fallback; never overrides values already set
 
 const apiKey = process.env.OPENROUTER_API_KEY;
 if (!apiKey) { console.error('OPENROUTER_API_KEY not set'); process.exit(1); }
 
-const MODEL = process.env.BOT_MODEL || '~deepseek/deepseek-v4-flash-latest';
+const MODEL = process.env.BOT_MODEL || DEFAULT_OPENROUTER_CHAT_MODEL;
 const RUNS = Number(process.env.PROBE_RUNS || 3);
 // Spurious tool calls on plain questions tolerated before the run fails.
 // Measured 2026-09-08 with reasoning off: 4/35 before the tool description
 // was tightened, 1/35 after. A residual ~3% is real, so zero tolerance makes
 // the check flaky; 1 per run catches a regression back to the old rate.
 const MAX_SPURIOUS = Number(process.env.PROBE_MAX_SPURIOUS ?? 1);
-const PROVIDER_ORDER = OPENROUTER_PRIMARY_PROVIDER_ORDER;
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
@@ -158,12 +157,7 @@ interface Obs {
 const log = (s: string) => process.stdout.write(s + '\n');
 
 function buildModel(arm: Extract<Arm, { viaService?: false }>) {
-  // service.ts pins providers for the primary model only. Set PROBE_NO_PIN=1
-  // when pointing BOT_MODEL at a fallback model, or the pin's
-  // allow_fallbacks=false fails with "no providers" and proves nothing.
-  const routing = process.env.PROBE_NO_PIN
-    ? withZdr(undefined)
-    : withZdr({ order: PROVIDER_ORDER, allow_fallbacks: false });
+  const routing = getOpenRouterChatRouting();
   const settings: Record<string, unknown> = {};
   if (routing) settings.provider = routing;
   if (arm.reasoningOff) settings.reasoning = { enabled: false };
