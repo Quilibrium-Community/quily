@@ -107,7 +107,7 @@ The worst case is always "falls back to today's behavior." Decomposition never m
 
 | Feature | Relationship |
 |---------|-------------|
-| **`isBroadQuery()` dynamic counts** | Still applies — broad queries get `initialCount=25`, `finalCount=10` regardless of decomposition |
+| **`isBroadQuery()` dynamic counts** | Still applies — broad queries get `initialCount=25`, `finalCount=20` regardless of decomposition (10 before 2026-11-26; see `answer-accuracy.md`) |
 | **`isTemporalQuery()` recent chunks** | Runs independently after decomposition — temporal augmentation applies to the merged candidate set |
 | **Priority docs (conversational context)** | Merged after decomposition — previously cited chunks are prepended to the candidate set |
 | **Reranking (Cohere/Cloudflare)** | Receives all RRF-merged candidates — no pre-truncation before reranking |
