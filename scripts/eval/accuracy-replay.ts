@@ -45,18 +45,18 @@ const catalogTests: AccuracyCase[] = [
     claims: [], uncertainty: 'Cover the product catalog without inventing services.' },
 ];
 type ChunkRow = Omit<RetrievedChunk, 'citationIndex'>;
-type Message = { role: 'user' | 'assistant'; content: string };
+export type Message = { role: 'user' | 'assistant'; content: string };
 type ArchivedTurn = { userMessage: string; response: {
   text: string; sources: Array<{ sourceId: string; file: string }>; statusMessages: string[];
 } };
 type Fetch = typeof fetch;
-type EvalRouting = NonNullable<ReturnType<typeof getOpenRouterChatRouting>> & {
+export type EvalRouting = NonNullable<ReturnType<typeof getOpenRouterChatRouting>> & {
   only?: string[];
   allow_fallbacks?: boolean;
 };
 const hash = (content: string) => createHash('sha256').update(content).digest('hex');
 const clean = (text: string) => text.replace(/\r\n/g, '\n');
-const isHidden = (file: string) => file.replaceAll('\\', '/').toLowerCase().endsWith(hiddenFile.toLowerCase());
+export const isHidden = (file: string) => file.replaceAll('\\', '/').toLowerCase().endsWith(hiddenFile.toLowerCase());
 const withIndices = (chunks: RetrievedChunk[]) =>
   chunks.map((chunk, index) => ({ ...chunk, citationIndex: index + 1 }));
 
@@ -130,7 +130,7 @@ function fixedWarning(normal: RetrievedChunk[], arm: RetrievedChunk[]) {
   return warning + blocks;
 }
 
-interface Trace {
+export interface Trace {
   vector: Array<{ query: string; rows: ChunkRow[] }>;
   stageErrors: string[];
   priority: ChunkRow[];
@@ -164,7 +164,7 @@ async function auditArchive(turns: ArchivedTurn[]) {
 // Observe production retrieval at its read-only transport boundary.
 // The vector RPC has no source filter, so refill requests where a hidden
 // row occupied a slot. The reranker and prompt never receive those rows.
-function retrievalTransport(send: Fetch, db: string, trace: Trace): Fetch {
+export function retrievalTransport(send: Fetch, db: string, trace: Trace): Fetch {
   const queriesByVector = new Map<string, string[]>();
   return async (input, init) => {
     const req = new Request(input, init);
@@ -278,8 +278,8 @@ function retrievalTransport(send: Fetch, db: string, trace: Trace): Fetch {
   };
 }
 
-async function answer(send: Fetch, apiKey: string, policy: EvalRouting,
-  system: string, messages: Message[], maxOutputTokens: number, rawOutput = false) {
+export async function answer(send: Fetch, apiKey: string, policy: EvalRouting,
+  system: string, messages: Message[], maxOutputTokens: number, rawOutput = false, answerModel = model) {
   let wire: { model: string; provider: string; cost: number | null; id: string } | undefined;
   const client = createOpenRouter({
     apiKey,
@@ -288,7 +288,7 @@ async function answer(send: Fetch, apiKey: string, policy: EvalRouting,
       const url = new URL(req.url);
       assert.equal(url.origin + url.pathname, 'https://openrouter.ai/api/v1/chat/completions');
       const body = await req.clone().json();
-      assert.equal(body.model, model);
+      assert.equal(body.model, answerModel);
       assert(!body.models, 'Unexpected model fallback');
       assert.deepEqual(body.provider, policy);
       assert.equal(body.provider.zdr, true);
@@ -306,7 +306,8 @@ async function answer(send: Fetch, apiKey: string, policy: EvalRouting,
       const response = await send(req);
       if (response.ok) {
         const data = await response.clone().json();
-        assert.equal(data.model, model, 'Serving model differs from pin');
+        // Some providers report a dated snapshot of the requested slug.
+        assert(typeof data.model === 'string' && data.model.startsWith(answerModel), 'Serving model differs from pin');
         assert(typeof data.provider === 'string' && data.provider, 'No serving provider reported');
         if (policy.only) assert(policy.only.includes(data.provider.toLowerCase()), 'Serving host differs from pin');
         wire = { model: data.model, provider: data.provider, cost: data.usage?.cost ?? null, id: data.id };
@@ -317,7 +318,7 @@ async function answer(send: Fetch, apiKey: string, policy: EvalRouting,
   const started = performance.now();
   const settings = { provider: policy, ...reasoningSettings(), usage: { include: true } };
   const result = await generateText({
-    model: client(model, settings as Parameters<typeof client>[1]),
+    model: client(answerModel, settings as Parameters<typeof client>[1]),
     system, messages, maxOutputTokens, tools: rawOutput ? undefined : ragTools,
     maxRetries: 0, abortSignal: AbortSignal.timeout(45_000),
   });
@@ -363,7 +364,12 @@ async function main() {
     'history-ablation': { type: 'boolean' }, 'reserve-direct': { type: 'boolean' },
     'passage-selection': { type: 'boolean' },
     'selection-holdout': { type: 'boolean' },
+    // Model comparison on frozen contexts: same prompt, history and passages.
+    'answer-model': { type: 'string' }, 'baseline-only': { type: 'boolean' },
   } });
+  const answerModel = values['answer-model'] ?? model;
+  assert(!values['answer-model'] && !values['baseline-only'] || values['grounding-from'],
+    'Answer-model comparisons require a frozen snapshot');
   if (values.zdr) process.env.OPENROUTER_ZDR = 'true';
   if (values['check-config']) {
     assert(!values.live && !values['dry-run'] && !values['audit-archive'], 'Config check is a standalone mode');
@@ -681,22 +687,24 @@ async function main() {
     const ablation = values['history-ablation'] ? rows.filter(row => row.messages.some(message => message.role === 'assistant')) : rows;
     await save('manifest', { mode: values.live ? 'grounding-live' : 'grounding-synthetic',
       commit, model, effectivePolicy: replayPolicy, archivedHistorySha256: sha256, hiddenFile,
-      sourceSnapshot: values['grounding-from'], callCount: 2 * ablation.length,
+      sourceSnapshot: values['grounding-from'], callCount: (values['baseline-only'] ? 1 : 2) * ablation.length,
       maxUsd: values.live ? budget : null, groundingInstruction, compact: Boolean(values['compact-grounding']),
       historyAblation: Boolean(values['history-ablation']), reserveDirect: Boolean(values['reserve-direct']), passageSelection,
+      answerModel, baselineOnly: Boolean(values['baseline-only']),
       reservations: ablation.map(row => ({ test: row.test.id, ids: row.reservedIds })) });
     for (const [index, row] of ablation.entries()) {
-      const order = index % 2 ? ['grounded', 'baseline'] as const : ['baseline', 'grounded'] as const;
+      const order = values['baseline-only'] ? ['baseline'] as const :
+        index % 2 ? ['grounded', 'baseline'] as const : ['baseline', 'grounded'] as const;
       for (const arm of order) {
         const transport: Fetch = values.live ? send : async () => Response.json({
-          id: 'synthetic', model, provider: replayPolicy.only ? 'DigitalOcean' : 'synthetic',
+          id: 'synthetic', model: answerModel, provider: replayPolicy.only ? 'DigitalOcean' : 'synthetic',
           choices: [{ index: 0, message: { role: 'assistant', content: `Synthetic ${arm} response` },
             finish_reason: 'stop' }], usage: { prompt_tokens: 100, completion_tokens: 5, total_tokens: 105, cost: 0 },
         });
         const messages = values['history-ablation'] && arm === 'grounded' ?
           row.messages.filter(message => message.role === 'user') : row.messages;
         const result = await answer(transport, values.live ? apiKey! : 'offline', replayPolicy,
-          row[arm], messages, MAX_OUTPUT_TOKENS);
+          row[arm], messages, MAX_OUTPUT_TOKENS, false, answerModel);
         if (values['dry-run']) assert.equal(result.text, `Synthetic ${arm} response`);
         await save(`${row.test.id}-${arm}`, { ...result, sources: arm === 'grounded' ? row.candidateChunks : row.chunks,
           systemSha256: hash(row[arm]), historySha256: hash(JSON.stringify(messages)) });
@@ -939,6 +947,8 @@ if (require.main === module) main().catch(error => {
   // without serializing the SDK error or the request.
   const status = typeof error?.statusCode === 'number' ? ` HTTP ${error.statusCode}` : '';
   console.error(error instanceof assert.AssertionError ? error.message :
-    `Replay stopped (${error instanceof Error ? error.name : 'unknown error'}${status}).`);
+    `Replay stopped (${error instanceof Error ? error.name : 'unknown error'}${status}).` +
+    // Opt-in detail: the message only, never the SDK request object.
+    (process.env.ACCURACY_DEBUG && error instanceof Error ? ` ${error.message.slice(0, 400)}` : ''));
   process.exitCode = 1;
 });

@@ -166,7 +166,7 @@ const BROAD_QUERY_KEYWORDS = [
  * Uses word-boundary matching to avoid false positives from substring matches
  * (e.g., "chronologically" should not match "all").
  */
-function isBroadQuery(query: string): boolean {
+export function isBroadQuery(query: string): boolean {
   const lowerQuery = query.toLowerCase();
   return BROAD_QUERY_KEYWORDS.some(keyword => {
     // Multi-word keywords use simple includes (low false-positive risk)
