@@ -97,6 +97,34 @@ async function webFooter(response: ParsedResponse): Promise<{ labels: string[]; 
 
 // ─── Cases ──────────────────────────────────────────────────────────────────
 
+test('web and Discord send the same OpenRouter provider settings', async (t) => {
+  const settings = {
+    OPENROUTER_ZDR: 'true',
+    OPENROUTER_SORT: 'latency',
+    OPENROUTER_MAX_LATENCY_P90: '4',
+    OPENROUTER_IGNORE: 'slow-provider',
+  };
+  for (const [key, value] of Object.entries(settings)) {
+    const previous = process.env[key];
+    process.env[key] = value;
+    t.after(() => {
+      if (previous === undefined) delete process.env[key];
+      else process.env[key] = previous;
+    });
+  }
+  const { webGenerations, discordGenerations } = await runFixture(evidence.high, MODEL, {
+    answer: 'External developers cannot deploy a DEX today [2].',
+  });
+  assert.deepEqual(webGenerations[0].routing, {
+    sort: 'latency',
+    quantizations: ['fp8', 'fp16', 'bf16', 'fp32', 'int8', 'unknown'],
+    preferred_max_latency: { p90: 4 },
+    ignore: ['slow-provider'],
+    zdr: true,
+  });
+  assert.deepEqual(discordGenerations[0].routing, webGenerations[0].routing);
+});
+
 test('strong retrieval, cited answer: both surfaces list exactly the cited sources by their real numbers', async () => {
   const { web, discord } = await run(evidence.high, 'External developers cannot deploy a DEX today [2]. Public deployment tooling is required [3].');
 

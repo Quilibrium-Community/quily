@@ -1,3 +1,5 @@
+import { DEFAULT_OPENROUTER_CHAT_MODEL } from '@/src/lib/openrouter';
+
 // Read env at request time, so the settings page reflects what the chat route
 // actually uses instead of a value baked into the client bundle at build time.
 export const dynamic = 'force-dynamic';
@@ -10,7 +12,7 @@ export async function GET() {
   const freeMode = process.env.NEXT_PUBLIC_FREE_MODE === 'true';
   return Response.json({
     model: freeMode
-      ? process.env.FREE_MODE_DEFAULT_MODEL || '~deepseek/deepseek-v4-flash-latest'
+      ? process.env.FREE_MODE_DEFAULT_MODEL || DEFAULT_OPENROUTER_CHAT_MODEL
       : null,
   });
 }

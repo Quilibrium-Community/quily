@@ -39,7 +39,8 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { prepareQuery } from '../src/lib/rag/service';
 import { visibleAnswerText, leaksToolCallText, MIN_USABLE_ANSWER_CHARS } from '../src/lib/rag/visibleText';
 import { ragTools } from '../src/lib/rag/tools';
-import { withZdr } from '../src/lib/openrouter-routing';
+import { DEFAULT_OPENROUTER_CHAT_MODEL } from '../src/lib/openrouter';
+import { getOpenRouterChatRouting } from '../src/lib/openrouter-routing';
 import { reasoningSettings } from '../src/lib/openrouter-reasoning';
 
 loadEnv({ path: '.env.local' });
@@ -48,7 +49,7 @@ const apiKey = process.env.OPENROUTER_API_KEY;
 if (!apiKey) { console.error('OPENROUTER_API_KEY not set'); process.exit(1); }
 
 // Same resolution order as app/api/chat/route.ts getFreeModeModel().
-const MODEL = process.env.FREE_MODE_DEFAULT_MODEL || '~deepseek/deepseek-v4-flash-latest';
+const MODEL = process.env.FREE_MODE_DEFAULT_MODEL || DEFAULT_OPENROUTER_CHAT_MODEL;
 const RUNS = Number(process.env.PROBE_RUNS || 5);
 // F is in the default set because it is the arm that matches the SHIPPED
 // recovery. Leaving it out meant the documented invocation never exercised the
@@ -68,26 +69,9 @@ const CASES: Case[] = [
   { id: 'control', query: "what's the difference between QKMS and AWS KMS?", note: 'answered fine in prod (1952 chars)' },
 ];
 
-/** Rebuilt from app/api/chat/route.ts so routing matches what prod sends. */
+/** Use the same OpenRouter routing and reasoning policy as the chat route. */
 function buildModel() {
-  const providerSort = process.env.OPENROUTER_SORT ?? 'latency';
-  const maxLatencyEnv = process.env.OPENROUTER_MAX_LATENCY_P90 ?? '4';
-  const maxLatencyP90 = maxLatencyEnv.trim() === '' ? undefined : Number(maxLatencyEnv);
-  const ignoreProviders = (process.env.OPENROUTER_IGNORE ?? '').split(',').map((s) => s.trim()).filter(Boolean);
-
-  const routing = withZdr(
-    providerSort
-      ? {
-          sort: providerSort as 'latency',
-          quantizations: ['fp8', 'fp16', 'bf16', 'fp32', 'int8', 'unknown'],
-          ...(maxLatencyP90 !== undefined && Number.isFinite(maxLatencyP90)
-            ? { preferred_max_latency: { p90: maxLatencyP90 } }
-            : {}),
-          ...(ignoreProviders.length > 0 ? { ignore: ignoreProviders } : {}),
-        }
-      : undefined
-  );
-
+  const routing = getOpenRouterChatRouting();
   const settings: Record<string, unknown> = {};
   if (routing) settings.provider = routing;
   Object.assign(settings, reasoningSettings());

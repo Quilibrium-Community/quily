@@ -21,12 +21,11 @@
  * money and quality checks are run locally against the Max subscription instead.
  * `.github/workflows/monthly-model-scout.yml` is the compensating control — it
  * reports monthly on what the alias resolves to and what else has appeared.
- *
- * Verified 2026-09-08: resolves to `deepseek/deepseek-v4-flash-0731` and still
- * honours the SiliconFlow/DeepInfra pin in rag/service.ts with allow_fallbacks:false.
  */
+export const DEFAULT_OPENROUTER_CHAT_MODEL = '~deepseek/deepseek-v4-flash-latest';
+
 export const DEFAULT_MODEL_ID =
-  process.env.NEXT_PUBLIC_DEFAULT_MODEL_ID || '~deepseek/deepseek-v4-flash-latest';
+  process.env.NEXT_PUBLIC_DEFAULT_MODEL_ID || DEFAULT_OPENROUTER_CHAT_MODEL;
 
 /**
  * The model used in free mode. Driven by NEXT_PUBLIC_FREE_MODE_DEFAULT_MODEL
@@ -34,7 +33,7 @@ export const DEFAULT_MODEL_ID =
  * Matches FREE_MODE_DEFAULT_MODEL on the server side.
  */
 export const FREE_MODE_DEFAULT_MODEL_ID =
-  process.env.NEXT_PUBLIC_FREE_MODE_DEFAULT_MODEL || '~deepseek/deepseek-v4-flash-latest';
+  process.env.NEXT_PUBLIC_FREE_MODE_DEFAULT_MODEL || DEFAULT_OPENROUTER_CHAT_MODEL;
 
 export interface ModelMetadata {
   id: string;
@@ -47,7 +46,7 @@ export interface ModelMetadata {
 const BASE_RECOMMENDED_MODELS: ModelMetadata[] = [
   // Open Source Models - Recommended
   {
-    id: '~deepseek/deepseek-v4-flash-latest',
+    id: DEFAULT_OPENROUTER_CHAT_MODEL,
     name: 'DeepSeek V4 Flash',
     description: 'Best open-source value. Same quality as V3.2 at half the cost.',
     isOpenSource: true,
