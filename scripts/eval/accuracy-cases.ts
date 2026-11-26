@@ -188,3 +188,39 @@ export const confirmation: Array<AccuracyCase & { previousUser?: string }> = [
     uncertainty: 'Stay on object lock and avoid a catalog overview.',
   },
 ];
+
+function headerCase(id: string, operation: string, first: string, firstStatus: string,
+  second: string, secondStatus: string): AccuracyCase {
+  return {
+    id: `selection-${id}`,
+    question: `For QStorage ${operation}, which of ${first} and ${second} must the client send on the request? Cite the documentation for this operation.`,
+    claims: [
+      { id: 'first', expected: `${first} is ${firstStatus}.`, evidence: [] },
+      { id: 'second', expected: `${second} is ${secondStatus}.`, evidence: [] },
+    ],
+    uncertainty: 'Credit each citation only if the numbered passage for this operation states the requirement. Do not infer requirement from request syntax.',
+  };
+}
+
+export const selectionHoldout: AccuracyCase[] = [
+  headerCase('bucket', 'CreateBucket', 'x-amz-object-ownership', 'optional', 'x-amz-bucket-object-lock-enabled', 'optional'),
+  headerCase('copy', 'CopyObject', 'x-amz-copy-source', 'required', 'x-amz-metadata-directive', 'optional'),
+  headerCase('upload', 'UploadPart', 'Content-Length', 'required', 'Content-MD5', 'optional'),
+  headerCase('legal-hold', 'PutObjectLegalHold', 'Content-MD5', 'required', 'x-amz-request-payer', 'optional'),
+  headerCase('complete', 'CompleteMultipartUpload', 'If-Match', 'optional', 'x-amz-mp-object-size', 'optional'),
+  headerCase('delete', 'DeleteObject', 'x-amz-mfa', 'listed as optional (MFA requirements may be conditional)',
+    'x-amz-expected-bucket-owner', 'optional'),
+  headerCase('head', 'HeadObject', 'If-None-Match', 'optional', 'x-amz-checksum-mode', 'optional'),
+  {
+    id: 'selection-upload-sla',
+    question: 'What exact contracted p99 response time does QStorage promise for UploadPart with a 10 MiB part?',
+    claims: [],
+    uncertainty: 'No documented contractual latency for that operation and size. Do not substitute a network or protocol metric.',
+  },
+  {
+    id: 'selection-ping-sla',
+    question: 'What exact percentage of notifications does QPing contractually guarantee to deliver within 500 ms?',
+    claims: [],
+    uncertainty: 'No documented delivery percentage or contracted 500 ms threshold.',
+  },
+];
