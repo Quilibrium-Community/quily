@@ -31,7 +31,10 @@ class LiteralParser {
     if (word === 'false') return false;
     if (word === 'null' || word === 'undefined') return null;
     // A reference to another constant on the page, or an unknown symbol.
-    return this.scope.get(word) ?? word;
+    const value: unknown = this.scope.get(word);
+    // A value built from an unparseable constant would silently miss rows.
+    if (typeof value === 'symbol') throw new Error(`Depends on unparsed constant ${word}`);
+    return (value as Literal | undefined) ?? word;
   }
 
   private space() {
@@ -136,8 +139,19 @@ function jsxEnd(src: string, start: number): number {
   return -1;
 }
 
-const stripHtml = (text: string) => text.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+// Only real HTML tags. Type names such as Array<string> must survive.
+const HTML_TAG = /<\/?(?:a|b|i|em|strong|code|span|p|br|ul|ol|li|sup|sub)\b[^>]*>/gi;
+const stripHtml = (text: string) => text.replace(HTML_TAG, '').replace(/\s+/g, ' ').trim();
 const cell = (text: string) => stripHtml(text).replace(/\|/g, '\\|');
+const requiredFlag = (value: Literal) => value === true || value === 'true' ? 'Yes' :
+  value === false || value === 'false' ? 'No' : '';
+// Fields shown in their own column, nested as rows, or only used by the interactive tester.
+const OWN_COLUMN = new Set(['name', 'type', 'required', 'description', 'validValues', 'values', 'children', 'fields', 'placeholder']);
+const fieldLabel = (key: string) => key === 'httpCode' ? 'HTTP status' :
+  key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, c => c.toUpperCase());
+const flat = (value: Literal): string | null => Array.isArray(value) ?
+  (value.every(item => item === null || typeof item !== 'object') ? value.join('; ') : null) :
+  value !== null && typeof value === 'object' ? null : String(value);
 
 function rows(items: Literal, prefix = ''): Array<Record<string, Literal>> {
   if (!Array.isArray(items)) return [];
@@ -156,16 +170,20 @@ function renderTable(items: Literal, lead: string): string {
 
 None.` : '';
   const hasType = list.some(row => row.type != null);
-  const hasRequired = list.some(row => typeof row.required === 'boolean');
+  const hasRequired = list.some(row => requiredFlag(row.required) !== '');
   const header = ['Name', ...(hasType ? ['Type'] : []), ...(hasRequired ? ['Required'] : []), 'Description'];
   const lines = list.map(row => {
     const values = Array.isArray(row.validValues) ? row.validValues : Array.isArray(row.values) ? row.values : null;
-    const description = [String(row.description ?? ''), values ? `Valid values: ${values.join(', ')}.` : '']
+    // Other scalar fields (HTTP status, constraints, enums, limits) are facts too.
+    const extras = Object.entries(row).filter(([key]) => !OWN_COLUMN.has(key))
+      .map(([key, value]) => [key, flat(value)] as const).filter(([, value]) => value)
+      .map(([key, value]) => `${fieldLabel(key)}: ${value}.`);
+    const description = [String(row.description ?? ''), values ? `Valid values: ${values.join(', ')}.` : '', ...extras]
       .filter(Boolean).join(' ');
     return `| ${[
       `\`${cell(String(row.name))}\``,
       ...(hasType ? [cell(String(row.type ?? ''))] : []),
-      ...(hasRequired ? [row.required === true ? 'Yes' : row.required === false ? 'No' : ''] : []),
+      ...(hasRequired ? [requiredFlag(row.required)] : []),
       cell(description),
     ].join(' | ')} |`;
   });
@@ -199,35 +217,58 @@ export function isMdx(content: string): boolean {
   return MDX_MARKER.test(content);
 }
 
-/** Split out fenced code blocks so tag rewriting never touches code samples. */
-function outsideFences(content: string, transform: (text: string) => string): string {
-  return content.split(/(^```[\s\S]*?^```[^\n]*$)/m)
-    .map((part, index) => index % 2 ? part : transform(part)).join('');
+const FENCE = /(^```[\s\S]*?^```[^\n]*$|^~~~[\s\S]*?^~~~[^\n]*$)/m;
+const UNPARSED = Symbol('unparsed');
+type Scope = Map<string, Literal | typeof UNPARSED>;
+
+/** End of a bracketed value starting at `start`, skipping strings; -1 if unbalanced. */
+function valueEnd(src: string, start: number): number {
+  let depth = 0;
+  for (let i = start; i < src.length; i++) {
+    const c = src[i];
+    if (c === '"' || c === "'" || c === '`') {
+      for (i++; i < src.length && src[i] !== c; i += src[i] === '\\' ? 2 : 1);
+    } else if (c === '[' || c === '{') depth++;
+    else if ((c === ']' || c === '}') && --depth === 0) return i + 1;
+  }
+  return -1;
 }
 
-export function mdxToMarkdown(content: string, title?: string): string {
-  if (!isMdx(content)) return content;
-  const scope = new Map<string, Literal>();
-
-  // 1. Collect and remove top-level constants. Later constants may spread earlier ones.
-  let text = content.replace(/\r\n/g, '\n');
+/** Remove top-level constant declarations from prose, recording their values. */
+function extractConstants(text: string, scope: Scope, warn: (message: string) => void): string {
   for (;;) {
-    const match = /^(?:export\s+)?const\s+(\w+)\s*=\s*/m.exec(text);
-    if (!match) break;
-    const parser = new LiteralParser(text.slice(match.index + match[0].length), scope);
+    const match = /^(?:export\s+)?const\s+(\w+)\s*=\s*(?=[[{])/m.exec(text);
+    if (!match) return text;
+    const start = match.index + match[0].length;
+    const parser = new LiteralParser(text.slice(start), scope as Map<string, Literal>);
     let end: number;
     try {
       scope.set(match[1], parser.parse());
-      end = match.index + match[0].length + parser.index;
+      end = start + parser.index;
     } catch {
-      // Unparseable constant: drop the line that declares it and keep the rest.
-      end = text.indexOf('\n', match.index);
+      // Drop the whole declaration so its source does not leak into the page,
+      // and make any table that uses it say so instead of vanishing.
+      const close = /[[{]/.test(text[start]) ? valueEnd(text, start) : -1;
+      end = close > 0 ? close : (text.indexOf('\n', start) + 1 || text.length);
+      scope.set(match[1], UNPARSED);
+      warn(`could not parse constant ${match[1]}`);
     }
     if (text[end] === ';') end++;
     text = text.slice(0, match.index) + text.slice(end);
   }
+}
 
-  return outsideFences(text, part => {
+export function mdxToMarkdown(content: string, title?: string,
+  warn: (message: string) => void = message => console.warn(`MDX: ${message}`)): string {
+  if (!isMdx(content)) return content;
+  const scope: Scope = new Map();
+  // Fenced code samples are never rewritten. Constants are only read from prose,
+  // so a code sample such as `const client = ...` is left intact.
+  const parts = content.replace(/\r\n/g, '\n').split(FENCE);
+  for (let i = 0; i < parts.length; i += 2) parts[i] = extractConstants(parts[i], scope, warn);
+  const literalScope = scope as Map<string, Literal>;
+
+  return parts.map((part, index) => index % 2 ? part : (() => {
     let out = part.replace(/^import\s.+from\s+['"][^'"]+['"];?[ \t]*\n?/gm, '');
     // 2. Replace self-closing components in order of appearance.
     const component = /<(ParamsTable|ApiExample|ApiTester)\b/g;
@@ -239,17 +280,29 @@ export function mdxToMarkdown(content: string, title?: string): string {
       let replacement = '';
       if (match[1] === 'ParamsTable') {
         const ref = ['parameters', 'responseElements', 'data'].map(name => attribute(tag, name)).find(Boolean)?.trim();
-        const data = ref ? scope.get(ref) ?? (() => {
-          try { return new LiteralParser(ref, scope).parse(); } catch { return null; }
-        })() : null;
+        const known = ref ? scope.get(ref) : undefined;
+        let data: Literal | null = null;
+        if (ref && known !== UNPARSED) {
+          try {
+            data = known ?? new LiteralParser(ref, literalScope).parse();
+          } catch { data = null; }
+        }
         const heading = [...out.slice(0, match.index).matchAll(/^#{1,6}\s+(.+)$/gm)].at(-1)?.[1]?.trim();
         const lead = `**${[title, heading].filter(Boolean).join(': ') || 'Parameters'}**`;
-        replacement = data ? renderTable(data, lead) : '';
+        if (Array.isArray(data)) replacement = renderTable(data, lead);
+        else {
+          // An unknown symbol parses to its own name. Never let a lost table read as "no parameters".
+          warn(`table ${ref ?? '(no data)'} could not be converted`);
+          replacement = `${lead}\n\nThis parameter table could not be converted from the source page.`;
+        }
       } else if (match[1] === 'ApiExample') {
         const parse = (name: string) => {
           const value = attribute(tag, name);
           if (!value) return null;
-          try { return new LiteralParser(value, scope).parse(); } catch { return null; }
+          try { return new LiteralParser(value, literalScope).parse(); } catch {
+            warn(`example ${name} could not be converted`);
+            return null;
+          }
         };
         replacement = [renderHttp(parse('request'), 'request'), renderHttp(parse('response'), 'response')]
           .filter(Boolean).join('\n\n');
@@ -261,5 +314,5 @@ export function mdxToMarkdown(content: string, title?: string): string {
     out = out.replace(/^[ \t]*<TabItem\b[^>]*?\blabel=["']([^"']+)["'][^>]*>[ \t]*$/gm, '**$1**')
       .replace(/^[ \t]*<\/?(Tabs|TabItem)\b[^>]*>[ \t]*$/gm, '');
     return out.replace(/\n{3,}/g, '\n\n');
-  }).trim() + '\n';
+  })()).join('').trim() + '\n';
 }

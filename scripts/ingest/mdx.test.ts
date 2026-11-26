@@ -63,3 +63,25 @@ test('leaves plain Markdown unchanged', () => {
   assert.equal(isMdx(plain), false);
   assert.equal(mdxToMarkdown(plain), plain);
 });
+
+test('a table built from an unparseable constant says so instead of losing rows', () => {
+  const warnings: string[] = [];
+  const out = mdxToMarkdown([
+    "import X from '@site/x';",
+    'export const P = [ { name: "a", required: cond ? true : false } ];',
+    'export const Q = [ ...P, { name: "c", required: true } ];',
+    '',
+    '### Headers',
+    '',
+    '<ParamsTable parameters={Q} />',
+    '',
+    '~~~js',
+    'const keep = [1, 2];',
+    '~~~',
+  ].join('\n'), 'Op', message => warnings.push(message));
+  assert.match(out, /could not be converted/);
+  assert(!out.includes('| `c` |'), 'partial table rendered');
+  assert.match(out, /const keep = \[1, 2\];/);
+  assert(!out.includes('cond ?'), 'unparseable source leaked');
+  assert(warnings.length >= 2);
+});
