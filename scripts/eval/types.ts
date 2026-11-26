@@ -221,4 +221,6 @@ export interface RunnerConfig {
   direct?: boolean;
   /** Embedding model for direct mode (defaults to baai/bge-m3) */
   directEmbeddingModel?: string;
+  /** Run each turn through processQuery, the Discord bot path (see bot-adapter.ts) */
+  bot?: boolean;
 }
