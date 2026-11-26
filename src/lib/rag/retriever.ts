@@ -166,7 +166,7 @@ const BROAD_QUERY_KEYWORDS = [
  * Uses word-boundary matching to avoid false positives from substring matches
  * (e.g., "chronologically" should not match "all").
  */
-function isBroadQuery(query: string): boolean {
+export function isBroadQuery(query: string): boolean {
   const lowerQuery = query.toLowerCase();
   return BROAD_QUERY_KEYWORDS.some(keyword => {
     // Multi-word keywords use simple includes (low false-positive risk)
@@ -457,12 +457,20 @@ export async function retrieveWithReranking(
     finalCount: requestedFinalCount,
     similarityThreshold = 0.35, // Lower threshold - text-embedding-3-small typically produces 0.3-0.6 similarity scores
     priorityDocIds = [],
+    catalogIntent,
+    supplementalQuery,
   } = options;
 
-  // Dynamic retrieval: broad/multi-topic queries get more chunks for better coverage
-  const broad = isBroadQuery(query);
+  // Dynamic retrieval: broad/multi-topic queries get more chunks for better coverage.
+  // The Cloudflare reranker often demoted the passage that answers a narrow
+  // question to the bottom of its 15 candidates (2026-11-26 accuracy study).
+  // Narrow questions therefore keep every candidate, which skips the rerank
+  // cutoff, and broad ones keep 20 of the fused pool instead of 10. In a blind
+  // graded live comparison this raised essential claims met from 31/39 to
+  // 36/39 with the same model, and narrow retrieval got about 1 s faster.
+  const broad = catalogIntent ?? isBroadQuery(query);
   const initialCount = requestedInitialCount ?? (broad ? 25 : 15);
-  const finalCount = requestedFinalCount ?? (broad ? 10 : 5);
+  const finalCount = requestedFinalCount ?? (broad ? 20 : 15);
 
   // Fetch priority docs in parallel with vector search for better latency
   const priorityChunksPromise =
@@ -475,7 +483,7 @@ export async function retrieveWithReranking(
   // Trigger A: broad query → sub-queries for ALL entities
   // Trigger B: 2+ entities matched by keywords → sub-queries for matched entities only
   const matchedEntities = findMatchedEntities(query);
-  const shouldDecompose = broad || matchedEntities.length >= 2;
+  const shouldDecompose = broad || matchedEntities.length >= 2 || Boolean(supplementalQuery);
   const decomposedEntities = broad ? [...KNOWN_ENTITIES] : matchedEntities;
 
   let candidates: {
@@ -508,9 +516,10 @@ export async function retrieveWithReranking(
   if (shouldDecompose) {
     // Build sub-query list: original query + one per matched entity
     const allQueries = [query, ...decomposedEntities.map(e => e.query)];
+    if (supplementalQuery && !allQueries.includes(supplementalQuery)) allQueries.push(supplementalQuery);
 
     console.log('[RAG] Query decomposition triggered:', {
-      trigger: broad ? 'broad' : 'multi-entity',
+      trigger: broad ? 'broad' : matchedEntities.length >= 2 ? 'multi-entity' : 'supplemental',
       matchedEntities: decomposedEntities.map(e => e.name),
       totalSubQueries: allQueries.length,
     });
@@ -591,7 +600,7 @@ export async function retrieveWithReranking(
     // should spend slots on breadth; for the concentrated case the reranker is already right.
     const originalList =
       successfulEmbeddings[0]?.query === query && rankedLists.length > 0 ? rankedLists[0] : null;
-    if (originalList && originalList.length > 0) {
+    if (originalList && originalList.length > 0 && (broad || matchedEntities.length >= 2)) {
       const sample = originalList.slice(0, CONCENTRATION_SAMPLE);
       const perFile = new Map<string, number>();
       for (const c of sample) perFile.set(c.source_file, (perFile.get(c.source_file) ?? 0) + 1);

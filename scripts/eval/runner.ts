@@ -12,6 +12,7 @@
 import { parseStreamResponse } from './stream-parser.js';
 import { evaluateCriterion } from './judge.js';
 import { sendChatRequestDirect } from './direct-adapter.js';
+import { sendChatRequestBot } from './bot-adapter.js';
 import { getCitedIndices, getSourceCitationIndex } from '../../src/lib/rag/utils';
 import type {
   TestCase,
@@ -47,6 +48,15 @@ async function sendChatRequest(
   messages: { role: string; content: string }[],
   config: RunnerConfig
 ): Promise<ParsedResponse> {
+  // Bot mode: the production processQuery path (see bot-adapter.ts).
+  if (config.bot) {
+    return await sendChatRequestBot(messages, {
+      apiKey: config.providerApiKey,
+      model: config.model || undefined,
+      timeoutMs: config.timeout,
+    });
+  }
+
   // Direct mode: skip the dev server entirely (see direct-adapter.ts).
   // Only OpenRouter is wired in direct mode for now — Chutes auth would
   // need additional plumbing and we use OpenRouter for all benchmarking.

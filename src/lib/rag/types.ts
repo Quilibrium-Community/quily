@@ -63,6 +63,10 @@ export interface RetrievalOptions {
   similarityThreshold?: number;
   /** Document IDs to prioritize from previous conversation */
   priorityDocIds?: number[];
+  /** Explicit catalog-intent decision for controlled evaluation. */
+  catalogIntent?: boolean;
+  /** Standalone follow-up query to search in addition to the original. */
+  supplementalQuery?: string;
 }
 
 /**

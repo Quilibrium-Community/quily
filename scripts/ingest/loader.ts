@@ -2,6 +2,7 @@ import { glob } from 'glob';
 import { readFile } from 'fs/promises';
 import { join, relative } from 'path';
 import type { LoadedDocument } from './types.js';
+import { mdxToMarkdown } from './mdx.js';
 
 /**
  * Parse frontmatter from markdown content
@@ -80,7 +81,10 @@ export async function loadDocuments(docsPath: string): Promise<LoadedDocument[]>
 
     // Only parse frontmatter for markdown files
     if (isMarkdown) {
-      const { content, frontmatter } = parseFrontmatter(rawContent);
+      const parsed = parseFrontmatter(rawContent);
+      const frontmatter = parsed.frontmatter;
+      // Official API pages are Docusaurus MDX. Ingest the text a reader sees.
+      const content = mdxToMarkdown(parsed.content, frontmatter?.title as string | undefined);
       if (content.trim().length === 0) {
         emptyFiles.push(relativePath);
         continue;

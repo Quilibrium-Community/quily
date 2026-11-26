@@ -185,6 +185,7 @@ program
   .option('--auto-start', 'Auto-start the dev server if not already running')
   .option('--direct', 'Run RAG + LLM in-process (skip dev server entirely). OpenRouter only. ~5x less RAM, no Turbopack.')
   .option('--direct-embedding <model>', 'Embedding model for --direct mode', 'baai/bge-m3')
+  .option('--bot', 'Run each turn through processQuery, the production bot path, with history. OpenRouter only.')
   .action(async (options) => {
     const spinner = ora();
 
@@ -291,8 +292,14 @@ program
 
     console.log('');
 
-    // Health check (skipped in direct mode — no server involved)
-    if (options.direct) {
+    // Health check (skipped in direct and bot modes — no server involved)
+    if (options.bot) {
+      if (options.provider !== 'openrouter' || (!openrouterApiKey && !options.apiKey)) {
+        console.error(chalk.red('--bot requires --provider openrouter and OPENROUTER_API_KEY'));
+        process.exit(1);
+      }
+      spinner.info('Bot mode: in-process processQuery (production routing, model and retrieval defaults)');
+    } else if (options.direct) {
       if (options.provider !== 'openrouter') {
         console.error(chalk.red('--direct only supports --provider openrouter'));
         process.exit(1);
@@ -335,6 +342,7 @@ program
         skipJudge: options.judge === false,
         collectMode: options.collect || false,
         direct: options.direct || false,
+        bot: options.bot || false,
         directEmbeddingModel: options.directEmbedding,
       },
       (completed, total, result) => {
