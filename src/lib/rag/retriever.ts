@@ -461,10 +461,16 @@ export async function retrieveWithReranking(
     supplementalQuery,
   } = options;
 
-  // Dynamic retrieval: broad/multi-topic queries get more chunks for better coverage
+  // Dynamic retrieval: broad/multi-topic queries get more chunks for better coverage.
+  // The Cloudflare reranker often demoted the passage that answers a narrow
+  // question to the bottom of its 15 candidates (2026-11-26 accuracy study).
+  // Narrow questions therefore keep every candidate, which skips the rerank
+  // cutoff, and broad ones keep 20 of the fused pool instead of 10. In a blind
+  // graded live comparison this raised essential claims met from 31/39 to
+  // 36/39 with the same model, and narrow retrieval got about 1 s faster.
   const broad = catalogIntent ?? isBroadQuery(query);
   const initialCount = requestedInitialCount ?? (broad ? 25 : 15);
-  const finalCount = requestedFinalCount ?? (broad ? 10 : 5);
+  const finalCount = requestedFinalCount ?? (broad ? 20 : 15);
 
   // Fetch priority docs in parallel with vector search for better latency
   const priorityChunksPromise =

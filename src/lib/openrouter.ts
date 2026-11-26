@@ -9,20 +9,18 @@
  */
 
 /**
- * Default model ID — DeepSeek V4 Flash, via OpenRouter's auto-updating alias.
+ * Default chat model: DeepSeek V4.1 Flash, pinned to the 2026-10-17 snapshot.
  *
- * The `~` prefix is OpenRouter's alias namespace: it always routes to the newest
- * revision in the V4 Flash family, so we don't silently sit on a stale build the
- * way we did between 2026-04 and 2026-09 (the pinned `deepseek/deepseek-v4-flash`
- * is the April release; a retrained `-0731` shipped in July and we never noticed).
- *
- * Tradeoff, accepted deliberately: the model can change under production without
- * passing an eval first. We take that because the judge-based eval costs real API
- * money and quality checks are run locally against the Max subscription instead.
- * `.github/workflows/monthly-model-scout.yml` is the compensating control — it
- * reports monthly on what the alias resolves to and what else has appeared.
+ * The previous `~deepseek/deepseek-v4-flash-latest` alias only follows the V4
+ * family, so it never picked up V4.1. In a blind graded comparison on 25
+ * accuracy cases (2026-11-26) with the same passages and prompt, this snapshot
+ * scored 57/75 against 45/75 for V4 Flash 0731, with less than half the
+ * unsupported details, at about the same price per answer. Pinned because the
+ * measurement applies to this exact revision. The monthly model scout
+ * (`.github/workflows/monthly-model-scout.yml`) reports newer revisions; rerun
+ * `scripts/eval/accuracy-replay.ts --answer-model` before moving the pin.
  */
-export const DEFAULT_OPENROUTER_CHAT_MODEL = '~deepseek/deepseek-v4-flash-latest';
+export const DEFAULT_OPENROUTER_CHAT_MODEL = 'deepseek/deepseek-v4.1-flash-1017';
 
 export const DEFAULT_MODEL_ID =
   process.env.NEXT_PUBLIC_DEFAULT_MODEL_ID || DEFAULT_OPENROUTER_CHAT_MODEL;
@@ -47,8 +45,8 @@ const BASE_RECOMMENDED_MODELS: ModelMetadata[] = [
   // Open Source Models - Recommended
   {
     id: DEFAULT_OPENROUTER_CHAT_MODEL,
-    name: 'DeepSeek V4 Flash',
-    description: 'Best open-source value. Same quality as V3.2 at half the cost.',
+    name: 'DeepSeek V4.1 Flash',
+    description: 'Best open-source value. Fewer unsupported claims than V4 Flash at a similar price.',
     isOpenSource: true,
     isRecommended: true,
   },
