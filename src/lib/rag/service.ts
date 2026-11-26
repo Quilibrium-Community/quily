@@ -18,6 +18,7 @@ export interface PrepareQueryOptions {
   query: string;
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>;
   priorityDocIds?: number[];
+  retrievalExperiment?: Pick<RetrievalOptions, 'catalogIntent' | 'supplementalQuery' | 'initialCount' | 'finalCount'>;
   llmProvider?: 'openrouter' | 'chutes';
   llmApiKey?: string;
   model?: string;
@@ -86,6 +87,7 @@ export async function prepareQuery(options: PrepareQueryOptions): Promise<Prepar
     embeddingModel: options.embeddingModel,
     cohereApiKey: options.cohereApiKey,
     priorityDocIds: options.priorityDocIds,
+    ...options.retrievalExperiment,
   };
 
   const chunks = await retrieveWithReranking(normalizedQuery, retrievalOptions);
