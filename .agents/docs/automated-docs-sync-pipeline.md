@@ -379,6 +379,14 @@ It performs a `git pull --rebase origin main` before pushing to avoid conflicts 
 - **Discord first-run limit**: The first Discord scrape fetches only the latest 100 messages per channel (Discord API default). Older announcements from the 28-day window won't be backfilled. Subsequent daily runs capture everything going forward.
 - **Discord bot permissions**: The bot must have explicit View Channel + Read Message History permissions on each announcement channel. Server-level permissions may not be sufficient if channels have permission overrides.
 
+## Weekly upstream review for custom guides
+
+The [Weekly Upstream Docs Review](../../.github/workflows/review-upstream-docs.yml) runs on Mondays at 09:23 UTC. Its first publishing run records the public QuilibriumNetwork inventory and default-branch heads. Later runs open one GitHub issue when a new public repository appears or a watched repository shows a release or changes to selected review paths. Use the issue checklist to validate the change against the linked guide before opening a documentation PR.
+
+Run the workflow manually with **publish** unchecked to preview the report in the Actions job summary. Publishing uses the repository's built-in workflow token to open issues and save `checkpoint.json` on `upstream-docs-review-state`. It saves the checkpoint after issue creation and looks for an existing issue before publishing the same report again. The workflow leaves guide edits and RAG ingestion to the existing review and sync processes.
+
+The [watchlist and path rules](../../scripts/review-upstream-docs.py) cover Coppice Client, Coppice Research, Klearu, MetaVM, and Quorum Desktop, Mobile, and Shared. The check uses default branches and up to 100 recent releases per repo. Source and build changes count even when upstream docs stay untouched. Recognizable test-only paths and GitHub housekeeping normally stay quiet. The issue signals a candidate for review, and a maintainer decides whether a guide needs an edit. MegaRPC currently depends on announcement and integration sources.
+
 ## Related Documentation
 
 - [RAG Knowledge Base Workflow](rag-knowledge-base-workflow.md) — Full RAG pipeline including ingestion, retrieval, and runtime query flow
@@ -390,3 +398,5 @@ It performs a `git pull --rebase origin main` before pushing to avoid conflicts 
 
 _Created: 2026-02-24_
 _Updated: 2026-03-19_
+
+*Last updated: 2026-11-27*
