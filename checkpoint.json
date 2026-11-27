@@ -1,0 +1,85 @@
+{
+  "seen_ids": [
+    628151963,
+    757285837,
+    809693959,
+    832934277,
+    840556954,
+    850172185,
+    864439605,
+    918890322,
+    918890526,
+    1118181217,
+    1118256546,
+    1125590126,
+    1126087603,
+    1154894466,
+    1170830028,
+    1172469518,
+    1195975604,
+    1209462641,
+    1253882296,
+    1425045081,
+    1474093658
+  ],
+  "watches": {
+    "coppice-client": {
+      "id": 1474093658,
+      "branch": "master",
+      "head": "af46f04547471926586cda20706bb0f470243fc6",
+      "public": true,
+      "releases": []
+    },
+    "coppice-research": {
+      "id": 1425045081,
+      "branch": "main",
+      "head": "16d7e25029f967f62150cf20fa1bef2c463f81d5",
+      "public": true,
+      "releases": []
+    },
+    "klearu": {
+      "id": 1170830028,
+      "branch": "master",
+      "head": "11cfacd78a7d3f971b8ef9ed35c54ae854242c2b",
+      "public": true,
+      "releases": []
+    },
+    "metavm": {
+      "id": 1172469518,
+      "branch": "master",
+      "head": "12d28e2984fa9edef070e0646df85d4999c68942",
+      "public": true,
+      "releases": []
+    },
+    "quorum-desktop": {
+      "id": 918890322,
+      "branch": "main",
+      "head": "cb1614726edacf000809d711984d951d0f54d2d2",
+      "public": true,
+      "releases": [
+        338732532,
+        343453919,
+        345903258,
+        355788167,
+        362916150,
+        365646332,
+        369376760,
+        374896664
+      ]
+    },
+    "quorum-mobile": {
+      "id": 1126087603,
+      "branch": "master",
+      "head": "d70c7cf751427e3f3fc73fde1f190cebf07449c1",
+      "public": true,
+      "releases": []
+    },
+    "quorum-shared": {
+      "id": 1125590126,
+      "branch": "master",
+      "head": "103c9862f22e2c392a82c30cc57cea0f1551297f",
+      "public": true,
+      "releases": []
+    }
+  }
+}
