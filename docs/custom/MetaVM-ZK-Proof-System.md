@@ -1,7 +1,7 @@
 ---
 title: "MetaVM — Zero-Knowledge Proof System for VM Execution"
 source: MetaVM GitHub repo (QuilibriumNetwork/metavm) + transcripts + dev updates
-date: 2026-08-23
+date: 2026-11-27
 type: technical_reference
 topics:
   - MetaVM
@@ -23,57 +23,21 @@ topics:
   - NTT
 ---
 
-# MetaVM — Zero-Knowledge Proof System for VM Execution
+# MetaVM: Zero-Knowledge Proof System for VM Execution
 
-MetaVM is Quilibrium's modular zero-knowledge proof system for proving correct execution of RISC-V, EVM, and Solana BPF programs. It is **not** a "Metaverse Virtual Machine" — the name refers to a meta-level virtual machine framework that can target multiple instruction set architectures.
+## Availability and target runtimes
 
-**Repository**: [github.com/QuilibriumNetwork/metavm](https://github.com/QuilibriumNetwork/metavm)
+MetaVM is Quilibrium's public Rust library for proving VM execution. The repository contains RV64IMAC RISC-V execution and Linux boot tooling, an Ethereum EVM executor and prover, and Solana BPF (SBF) execution tracing and proof constraints. The November 21, 2026 roadmap reports extensive RISC-V use by the team and a multiparty Doom demo. It targets MetaVM as a Quilibrium mainnet intrinsic in 2.1.1 and identifies it as a prerequisite for the planned FFX serverless service. The demo and public library establish experimentation and implementation. Network execution, FFX and managed Q Console access remain roadmap work. [November roadmap livestream](https://www.youtube.com/watch?v=OppCHV3tsHw)
 
----
+MetaVM's workspace has five crates. `core` supplies field arithmetic, Shamir secret sharing and transcripts. `zkp` handles proving, verification, KZG commitments and recursive folding. `riscv` includes the emulator, ELF loading, Linux boot and proof constraints. `evm` traces execution through revm and defines EVM proof constraints. `sbf` traces Solana BPF execution through solana-rbpf and defines SBF constraints. [MetaVM source](https://github.com/QuilibriumNetwork/metavm)
 
-## What MetaVM Does
+## Ethereum execution, inclusion and finality
 
-MetaVM takes a program execution (RISC-V binary, Ethereum transaction, or Solana BPF program) and produces a cryptographic proof that the execution was carried out correctly. This proof can be verified cheaply without re-executing the program. It uses KZG polynomial commitments and supports both BLS48-581 (Quilibrium's own ceremony) and BLS12-381 (Ethereum KZG ceremony) curves.
+The public MetaVM master branch ends at the June 8, 2026 EVM prover update. It adds EVM constraint code for operations including storage, calls, gas accounting and precompiles, alongside Ethereum proof components for Merkle Patricia trie paths, beacon data and stake-weighted finality. There are separate code paths for proving block execution and for composing execution, inclusion and finality. The `prove-block` CLI fetches a block from an Ethereum RPC, replays its transactions and produces a folded execution proof. [June EVM prover diff](https://github.com/QuilibriumNetwork/metavm/commit/12d28e2)
 
-> **Note (2026-08-23):** MetaVM was **not** part of the v2.1.0.25 post-quantum migration. That release moved Quilibrium's state trees to Merkle and its consensus signatures to Falcon, but MetaVM is a separate subsystem and still uses KZG over BLS48-581 and BLS12-381, as described throughout this document. Note that the node's own storage proofs have since also moved off KZG (to hash-based STARK proofs, from mainnet epoch 1314); MetaVM is the remaining KZG user. See [Post-Quantum Cryptography Migration](Post-Quantum-Cryptography-Migration.md).
+The joint finality proof test in MetaVM uses a synthetic witness for one transaction, one execution block, one beacon block header and one Casper FFG finalization. It uses cross-system LogUp arguments to link values between specialized constraint systems. The linked proof of a real Ethereum mainnet transaction through economic finality still requires real execution, trie, beacon and attestation witnesses and full-width bindings in place of the demo's single-column anchors. This test shows how the proof layers fit together. A deployed QUIL/wQUIL bridge using the complete stack remains unverified. [MetaVM finality composition test](https://github.com/QuilibriumNetwork/metavm/blob/12d28e2/crates/zkp/src/integration_finality_proof_master_joint_prove.rs)
 
-### Key Capabilities
-
-- **Prove RISC-V ELF binary execution** — bare-metal programs compiled for rv64imac
-- **Prove Linux boot** — full Linux kernel boot with OpenSBI, device emulation (CLINT, PLIC, UART, VirtIO), and initramfs
-- **Prove Ethereum transactions and blocks** — replay and prove all transactions in an Ethereum block
-- **Prove Solana BPF programs and slots** — execute and prove Solana transactions with BPF program tracing
-- **Recursive proof composition** — long executions are split into chunks, each proven independently, then aggregated via binary tree folding into a single proof
-
----
-
-## Architecture
-
-MetaVM is organized as a Rust workspace with five crates:
-
-| Crate | Purpose |
-|-------|---------|
-| `core` | Field arithmetic, Shamir secret sharing, Fiat-Shamir transcript |
-| `zkp` | Curve-agnostic prover/verifier, KZG commitments, recursive IVC, tree fold |
-| `riscv` | RV64IMAC emulator, ELF loader, Linux boot, execution trace, constraints |
-| `evm` | EVM executor (revm), U256 limb decomposition, EVM constraints |
-| `sbf` | Solana BPF executor (solana-rbpf), SBF constraints |
-
-### Constraint Systems
-
-Each supported VM has a specific constraint system:
-
-| VM | Columns | Constraints | Selectors | Oracle Selectors |
-|----|---------|-------------|-----------|------------------|
-| RISC-V (RV64IMAC) | 84 (20 data + 64 selectors) | 128 + 1 shifted | 64 | 0 |
-| EVM | 61 (20 data + 41 selectors) | 106 + 1 shifted | 41 | 13 |
-| SBF | 39 (17 data + 22 selectors) | 47 + 1 shifted | 22 | 1 |
-
-Oracle selectors mark operations verified externally (complex opcodes like KECCAK, storage, calls).
-
----
-
-## Proof System
+## MetaVM Proof System
 
 ### How It Works
 
@@ -85,7 +49,7 @@ Oracle selectors mark operations verified externally (complex opcodes like KECCA
 
 ### Recursive Proof Composition (Tree Folding)
 
-For long executions (like booting Linux), MetaVM splits execution into fixed-size chunks. Each chunk produces an independent KZG proof. These are aggregated via a binary tree fold that accumulates pairing arguments, producing a single final proof verified by one pairing operation. State hash chains ensure chunk continuity.
+For long executions, MetaVM can split execution traces into fixed-size chunks. Each chunk produces an independent KZG proof. These are aggregated via a binary tree fold that accumulates pairing arguments, producing a single final proof verified by one pairing operation. State hash chains ensure chunk continuity.
 
 ### Auxiliary Arguments
 
@@ -106,90 +70,6 @@ BLS12-381 uses NTT-based (Number Theoretic Transform) polynomial multiplication 
 
 ---
 
-## Cross-Chain Verification with MetaVM
+The public MetaVM prover still uses KZG over BLS48-581 and BLS12-381. Quilibrium's v2.1.0.25 node cryptography migration concerns separate state, consensus and storage mechanisms. MetaVM's publicly visible KZG proof implementation is therefore distinct from the node's post-quantum storage proofs.
 
-MetaVM enables Quilibrium to verify the state of external chains (Ethereum, Solana, and others) cryptographically, rather than relying on trusted oracle networks like LayerZero. This is the foundation of Quilibrium's cross-chain architecture.
-
-### How It Works for Ethereum
-
-When proving Ethereum state for cross-chain operations (such as the QUIL/wQUIL bridge), MetaVM verifies four layers:
-
-| Layer | What MetaVM Proves | Why It Matters |
-|-------|-------------------|----------------|
-| **Execution proof** | Correct execution of Ethereum transactions via EVM constraints | Prevents invalid state transitions |
-| **Data validity** | SLOAD/SSTORE operations + Merkle Patricia Trie (MPT) proofs | Ensures account balances and storage are real |
-| **Consensus** | Ethereum validator set and attestation signatures | Confirms the block was agreed upon by the network |
-| **Finality** | ≥2/3 attestations for a finalized checkpoint | Prevents re-org attacks |
-
-This is a **full ZKP proof model** — every claim about Ethereum's state is cryptographically verified inside Quilibrium's proof system, not assumed true because an oracle said so.
-
-### Comparison: Quilibrium vs LayerZero
-
-| Aspect | LayerZero / Traditional Oracles | Quilibrium (MetaVM) |
-|--------|--------------------------------|---------------------|
-| **Trust model** | Relies on oracle network honesty | Cryptographic proof, no trusted parties |
-| **Verification** | Off-chain oracle signatures | On-chain ZKP verification |
-| **Privacy** | Oracle sees what you query | ORAM-based queries (via MegaRPC) hide intent |
-| **Decentralization** | Oracle operators are permissioned | Anyone can verify the proof |
-| **Cost** | Oracle fees + protocol fees | ~74 bytes of consensus state per import |
-
-### The Bridge as an Application
-
-The QUIL/wQUIL bridge is the first concrete application of this cross-chain proof stack. It imports Ethereum execution state into an alt-fee basis app shard, enabling bidirectional bridging with cryptographic guarantees rather than custodial trust.
-
-### Cryptographic Foundations
-
-The cross-chain proof stack builds on:
-- **BLS12-381 / BLS48-581 curves** — for KZG polynomial commitments
-- **KZG commitment scheme** — with parameters from both the Ethereum KZG ceremony and Quilibrium's own ceremony
-- **Fiat-Shamir transform** — for non-interactive proof generation
-- **Polynomial composition** — for composing execution, consensus, and finality into a single proof
-- **VM constraints** — EVM execution trace constraints prove every opcode was executed correctly
-- **Recursive IVC / tree folding** — long Ethereum block histories are chunked and folded into a single verifiable proof
-
----
-
-## Role of FFT/NTT in MetaVM
-
-FFT (Fast Fourier Transform) and its finite-field variant NTT (Number Theoretic Transform) are used internally by MetaVM for efficient polynomial multiplication during proof generation. This is standard in ZK proof systems — FFT/NTT enables O(n log n) polynomial operations rather than O(n^2) naive convolution. Notably, the discrete Fourier transform can be used to calculate KZG commitments faster than the naive approach (computing multi-scalar multiplications directly), because polynomial evaluation in the frequency domain maps naturally to the commitment structure. In MetaVM specifically:
-
-- BLS12-381 proofs use NTT-based polynomial multiplication for larger domains (>= 64 elements)
-- The `bls48581-fast` variant uses optimized FFT with precomputed roots of unity for the BLS48-581 curve
-- FFT/NTT is an internal implementation detail of the prover, not a user-facing feature
-
-FFT does **not** stand for "Fault-Tolerant Framing" or any other Quilibrium-specific acronym. In this context, it is always the standard Fast Fourier Transform algorithm.
-
----
-
-## Roadmap Context
-
-MetaVM is positioned as a foundational infrastructure component for Quilibrium's compute layer:
-
-- **Equinox phase** — MetaVM / metavirtualization runtime is planned for the Equinox roadmap phase (after the 2.1/Dusk release)
-- **EC2 equivalent** — Described by Cassie as "like EC2 on Amazon but on the network," enabling users to run Linux servers on Quilibrium
-- **Prerequisite for f(x)/Lambda** — The f(x) serverless compute platform (Quilibrium's AWS Lambda equivalent) depends on MetaVM
-- **RPC runner** — Being used as a MetaVM runner for Ethereum and other chains, removing dependency on external RPCs like QuickNode
-- **QConsole integration** — "Raw MetaVM support" announced as a fast-follow feature for QConsole (March 2026)
-- **Dynamic fee model** — Execution on MetaVM will use Quilibrium's dynamic fee market with a baseline execution fee
-
----
-
-## Relationship to Other Compute Primitives
-
-| Component | What It Does | Status |
-|-----------|-------------|--------|
-| **MetaVM** | ZK proofs of VM execution (RISC-V, EVM, Solana BPF) | Repo available, integration in progress |
-| **QCL** | Privacy-preserving compute via garbled circuits/MPC | Shipped (mainnet since 2.0) |
-| **f(x) / Q Lambda** | Serverless compute platform (like AWS Lambda) | Planned, requires MetaVM |
-| **Klearu** | E2EE ML inference runtime (2PC-based) | Open-sourced, mainnet integration planned |
-
-MetaVM handles **verifiable execution** (proving a computation ran correctly), while QCL handles **private execution** (computing on encrypted data). They serve different purposes and are complementary.
-
----
-
-## Common Misconceptions
-
-- **"MetaVM stands for Metaverse Virtual Machine"** — Incorrect. MetaVM is a meta-level VM framework, not related to any metaverse concept.
-- **"MetaVM is Quilibrium's smart contract execution environment"** — Partially correct but misleading. MetaVM proves correct execution of programs; it is not a smart contract platform in the Ethereum sense. QCL serves the privacy-preserving compute role.
-- **"FFT in MetaVM refers to Fault-Tolerant Framing"** — Incorrect. FFT refers to the standard Fast Fourier Transform algorithm used for polynomial multiplication in the proof system.
-- **"MetaVM supports ZK-native operations optimized for zero-knowledge proofs"** — Not how it works. MetaVM proves execution of standard instruction sets (RISC-V, EVM, SBF). Programs are written normally; the ZK proof is generated after execution.
+*Last updated: 2026-11-27*
