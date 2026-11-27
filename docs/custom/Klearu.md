@@ -2,7 +2,7 @@
 title: "Klearu: E2EE ML Primitives and Runtime"
 source: github_readme + discord
 author: Cassandra Heart
-date: 2025-03-02
+date: 2026-11-27
 type: technical_reference
 topics:
   - Klearu
@@ -28,156 +28,29 @@ topics:
 
 # Klearu: E2EE ML Primitives and Runtime
 
-## Current Status (as of March 2026)
+## Availability
 
-**Can you run AI on Quilibrium?** Yes — Klearu is a real, functional runtime for private LLM inference, officially open-sourced by Quilibrium Inc. in early 2026. It is not yet integrated into the Quilibrium mainnet, but the library is available now and works today.
+Klearu is Quilibrium's publicly available Rust toolkit for machine learning. Developers can build it from source and experiment with local text, image and video workloads and a separate two-party private LLM inference path. Quilibrium's November 21, 2026 roadmap targets Klearu as a mainnet intrinsic in 2.1.1. That target describes future protocol integration. The repository provides a standalone runtime today, with mainnet deployment and managed Q Console access unconfirmed. [November roadmap livestream](https://www.youtube.com/watch?v=OppCHV3tsHw)
 
-**Is Klearu a Q Console service?** No. Klearu is a **protocol-layer** component, described on the official ecosystem page as "a core piece of Quilibrium, built into the network itself", and tracked under Protocol (not Web Services) in the Tech Tree. It is available on the network as an open-source library and a browser demo, not as a managed service you provision in Q Console. Native network integration is planned for a future protocol upgrade, at which point private inference becomes a built-in capability for any application running on Quilibrium. See [Quilibrium Service Classification](Quilibrium-Service-Classification.md).
+## Models and local tools
 
-**Can you train LLMs on Quilibrium?** Klearu is currently focused on **inference**, not general user-facing LLM training. It uses SLIDE-based sparse training internally for its own models, but training arbitrary LLMs is not yet implemented. Nothing in the architecture technically prevents extending it to support training in the future — it is a current scope limitation, not a fundamental one. Mainnet AI integration is planned for a future protocol upgrade.
+Klearu started with the SLIDE family of sparse learning methods and grew to include transformer inference, vision encoders and generative media. The LLM runtime includes LLaMA-compatible models and additional architecture-specific support such as Qwen3.5. Model loading depends on the architecture and checkpoint format. The CPU runtime includes AVX2 and NEON acceleration, BF16 support and optional transformer sparsity. Parts of the media stack also have Apple Metal GPU paths.
 
-**Is AI on Q just a roadmap item?** No longer. Klearu moves private AI from a future roadmap concept to a shipped, open-source codebase. The "Event Horizon" roadmap language predates this release — Klearu is its concrete realization for inference.
+The public diffusion code includes FLUX and HiDream image generation. The October 30 update adds Krea 2 image generation, Wan 2.2 video generation and corresponding desktop paths. Upstream includes model-specific tests, some requiring local model weights. A supported local runner does not establish that the same model can run over private two-party computation or on mainnet. [October upstream changes](https://github.com/QuilibriumNetwork/klearu/commit/0dde9f6)
 
----
+The November 15 update adds a `token_similarity` CLI and library support for comparing cosine similarity between a model's input embeddings. It accepts text or token IDs, loads embeddings from local safetensors and averages the vectors when an input contains multiple tokens. This measures similarity in the model's input embedding table. [Token similarity implementation and tests](https://github.com/QuilibriumNetwork/klearu/commit/11cfacd)
 
-Klearu is a Rust implementation of the SLIDE paper family (Sub-LInear Deep learning Engine), extended with support for large language model inference, transformer sparsity optimization, and secure two-party computation (2PC). It is open-source under AGPL-3.0 with additional non-commercial terms, licensed exclusively for use on the Quilibrium mainnet for commercial deployments.
+## Training and private inference
 
-GitHub: [QuilibriumNetwork/klearu](https://github.com/QuilibriumNetwork/klearu)
+Klearu includes SLIDE sparse-network training and an experimental image-transformer training and sampling toolkit in `klearu-image`. Its data-parallel trainer runs worker threads on one machine. The module also describes a multi-machine design. Quilibrium reported training and experimenting with an internal image model in November. General LLM training as a service and distributed private image training on mainnet remain outside the demonstrated public capabilities.
 
----
+Klearu's private LLM inference crate implements a client-server two-party computation (2PC) protocol using Ferret oblivious transfer and an oblivious pseudorandom function (OPRF). The aim is to keep the client's inputs and outputs private from the evaluating server under the protocol's assumptions. The repository documents different leakage and communication costs by mode. Its lower mode description includes a plaintext forward pass after revealing the client embedding. The high mode description lists exposure of norms, queries and gate values. Performance depends on model, mode and hardware. Local inference, including the desktop app's media features, does not automatically use this protocol.
 
-## What Is Klearu?
+## Building and licensing
 
-Klearu enables **end-to-end encrypted (E2EE) ML inference** — meaning a user can run AI inference on remote nodes without the node learning anything about the user's inputs or outputs. This is fundamentally different from how AI services work today.
+The Cargo workspace manifest lists 17 members, including the Tauri app. Major components include `klearu-llm` for text inference, `klearu-vision` for vision models, `klearu-diffusion` for media generation, `klearu-image` for image-transformer training, `klearu-private` and `klearu-mpc` for private computation, and desktop, server and WebAssembly components. Klearu uses AGPL-3.0 with additional terms, including a restriction on commercial use outside Quilibrium mainnet. [Klearu repository and build instructions](https://github.com/QuilibriumNetwork/klearu)
 
-> "If you want llama to be 'private', you'd have to also control the server. What I mean is that Klearu can be on nodes, remote from the users, and can still do inference, but the data is not revealed to the evaluating node." — Cassie
-
----
-
-## Why Not Just Use a TEE or FHE?
-
-There are two competing privacy approaches in the AI industry today, both with significant limitations:
-
-### Trusted Execution Environments (TEEs)
-Many AI companies claim "private inference" via TEEs (e.g., secure enclaves). As Cassie put it:
-
-> "Whenever someone says their AI is private, and they actually mean they're using a TEE, they're saying 'we super pinky swear we aren't looking inside the box.'"
-
-TEEs are trust-based — you're trusting the hardware manufacturer and operator not to inspect the enclave.
-
-### Fully Homomorphic Encryption (FHE)
-FHE allows computation on fully encrypted data without ever decrypting, but:
-
-> "FHE is still years out there — not to mention that one particular company has decided to patent-swarm it." — Cassie
-
-FHE is computationally impractical for LLM inference at this stage.
-
-### Klearu's Approach: Two-Party Computation (2PC)
-Klearu uses a **2PC protocol** between client and server:
-
-> "The trick here is that the client is interacting with the server in a 2PC protocol. With a 2PC-driven approach, a TEE isn't required — and it's way faster than FHE." — Cassie
-
-The output is effectively encrypted in memory during inference. The evaluating node cannot observe the inputs or outputs.
-
----
-
-## Performance
-
-Klearu is CPU-native — it does not require GPUs:
-
-> "Faster than llama for base runtime. With lower security mode, roughly as fast. With high security mode, slightly slower. But we haven't done a massive perf grind and there's lots of room on the table." — Cassie
-
-Performance characteristics:
-- **Lower security mode**: ~4.6 KB communication per token, comparable speed to llama.cpp CPU-only
-- **High security mode**: ~2 MB/token, slightly slower but stronger privacy guarantees
-- Speedups depend on: **model size, CPU model, L1/L2/L3 cache sizes, core count, and RAM speed**
-
-> "Klearu makes this fast enough to be comparable in some cases." — Cassie
-
-Benchmarking against llama.cpp has been flagged as a community task.
-
----
-
-## Model Support and Size
-
-Klearu currently ships examples with LLaMA-compatible models (SmolLM up to 1.7B in the README), but is not limited to small models:
-
-> "You can run 7B+." — Cassie
-
-> "There isn't a limit on size — you're just dealing with time to complete at that point, and by extension, increased cost to run." — Agent 002 (confirmed by context)
-
-Models must be in HuggingFace's LLaMA architecture using safetensors format.
-
----
-
-## Quantization and Sparsity
-
-Klearu has built-in support for both:
-
-> "We have built-in quantization, and also some heavy optimizations for sparseness." — Cassie
-
-**Sparsity prediction** (via the `klearu-dejavu` crate) identifies which transformer components (attention heads, FFN layers) matter per token, allowing the system to skip unnecessary computation — reducing inference cost without sacrificing accuracy.
-
-Hardware acceleration uses **AVX2/NEON SIMD with BF16 quantization** for CPU efficiency.
-
----
-
-## Distributed Inference
-
-Multiple nodes can collaborate on inference:
-
-> "Distributed inference is definitely possible." — Cassie
-
-> "Chaining primitives together is possible." — Cassie
-
-Cost is the same as regular Quilibrium compute, based on **Oblivious Transfers (OTs)**.
-
----
-
-## Licensing
-
-Klearu is licensed under **AGPL-3.0 with additional terms**:
-- Commercial use is restricted to the **Quilibrium mainnet**
-- Automated reimplementation for competing commercial products is prohibited
-- The license is intentionally non-permissive toward VCs and competitors
-
-> "Went with AGPL + non-commercial outside of Q mainnet for now." — Cassie
-
----
-
-## Crate Architecture (13-Crate Workspace)
-
-| Crate | Purpose |
-|-------|---------|
-| `klearu-core` | LSH hash families, sparse tensors, SLIDE network training |
-| `klearu-accel` | Platform-adaptive SIMD (AVX2/NEON) with BF16 quantization |
-| `klearu-mongoose` | Trainable hash functions with adaptive rebuild scheduling |
-| `klearu-bolt` | Automatic LSH hyperparameter tuning for target recall |
-| `klearu-dejavu` | Transformer sparsity prediction (attention and FFN) |
-| `klearu-llm` | LLaMA-compatible inference with GQA, RoPE, and RMSNorm |
-| `klearu-dpf` | AES-based Distributed Point Functions for MPC protocols |
-| `klearu-mpc` | Two-party computation with fixed-point arithmetic and Beaver triples |
-| `klearu-private` | End-to-end private inference via Ferret OT and OPRF |
-
----
-
-## Getting Started
-
-The README includes a simple guide. For the Quilibrium monorepo, check out the `develop` branch:
-
-```bash
-git checkout develop
-```
-
-Binaries are included for:
-- Interactive chat
-- Model diagnostics
-- Sparse inference calibration
-- Private client-server inference
-
-### Run the macOS desktop app from source
-
-Install Xcode, Rust, and Node.js with npm. Clone `QuilibriumNetwork/klearu` and `QuilibriumNetwork/monorepo` as sibling directories, then run the desktop development script from the Klearu checkout:
+To run the macOS desktop app from source, install Xcode, Rust and Node.js with npm. Clone `QuilibriumNetwork/klearu` and `QuilibriumNetwork/monorepo` as sibling directories so Cargo can resolve the Ferret dependency. From the Klearu checkout, run:
 
 ```bash
 cd web
@@ -185,8 +58,6 @@ npm install
 npm run tauri:dev
 ```
 
-The package script starts Tauri in release mode. Download the model files required by the model you intend to run. [Cassie's setup notes](https://discord.com/channels/1212446221395042335/1212446222367985726/1554118498878488639) · [Klearu build instructions](https://github.com/QuilibriumNetwork/klearu#building) · [Desktop package scripts](https://github.com/QuilibriumNetwork/klearu/blob/master/web/package.json)
+The desktop script starts Tauri in release mode. Download the weights and other files required by the model you want to run.
 
----
-
-*Last updated: 2026-11-23*
+*Last updated: 2026-11-27*
